@@ -47,7 +47,12 @@ class controllerHomepage extends Controller
          * $this->(class variable)->(model name)->(method from model);
          */
          
+        /*
+         * Sample get instance of component
+         * $componentEmail = Framework::gi()->loadComponent('email', array($this->router));
+         */
         
+        $this->set('variable', 'how to set variable to view');
     }
     
     
