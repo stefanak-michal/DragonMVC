@@ -1,43 +1,19 @@
-<?php defined('BASE_PATH') OR exit('No direct script access allowed');
+<?php
 
 /**
  * Debug
  * 
  * Developer tools
- * @todo Think about if we needed construct and gi()
+ * @todo Do it better
  */
 final class Debug
 {
-    /**
-     * Instance of class
-     *
-     * @static
-     * @var Debug
-     */
-    protected static $instance;
-    
     /**
      * Construct
      */
     public function __construct()
     {
         
-    }
-    
-    /**
-     * Get class instance
-     * 
-     * @return object
-     * @static
-     */
-    public static function gi() 
-    {
-        if( self::$instance === NULL )
-        {
-            self::$instance = new self();
-        }
-        
-        return self::$instance;
     }
     
     /**

@@ -1,4 +1,4 @@
-<?php defined('BASE_PATH') OR exit('No direct script access allowed');
+<?php
 /*
     Copyright (C) 2008-2012 Sergey Tsalkov (stsalkov@gmail.com)
 
@@ -59,18 +59,6 @@ class DB {
     if ($mdb->nested_transactions !== DB::$nested_transactions) $mdb->nested_transactions = DB::$nested_transactions;
     
     return $mdb;
-  }
-  
-  /**
-   * Get database model instance
-   * 
-   * @param string $model
-   * @return Object
-   */
-  public function __get($model)
-  {
-    $this->$model = Framework::gi()->loadModel($model);
-    return $this->$model;
   }
   
   public static function get() { $args = func_get_args(); return call_user_func_array(array(DB::getMDB(), 'get'), $args); }

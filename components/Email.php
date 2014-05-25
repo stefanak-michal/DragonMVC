@@ -1,11 +1,13 @@
-<?php defined('BASE_PATH') OR exit('No direct script access allowed');
+<?php
+
+namespace component;
 
 /**
  * componentEmail
  * 
  * Sending different emails
  */
-class componentEmail
+class Email
 {
     /**
      * Instance for work with URI
@@ -14,6 +16,13 @@ class componentEmail
      * @var Router
      */
     protected $router;
+    /**
+     * core\Config
+     *
+     * @access protected
+     * @var core\Config
+     */
+    protected $config;
     
     /**
      * URL of project
@@ -40,13 +49,14 @@ class componentEmail
     /**
      * Construct
      */
-    public function __construct($router)
+    public function __construct($config, $router)
     {
         $this->router = $router;
+        $this->config = $config;
         
-        $this->project_host = Config::gi()->get('project_host');
-        $this->project_title = Config::gi()->get('project_title');
-        $this->project_email = Config::gi()->get('project_email');
+        $this->project_host = $this->config->get('project_host');
+        $this->project_title = $this->config->get('project_title');
+        $this->project_email = $this->config->get('project_email');
     }
     
     /**

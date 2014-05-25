@@ -1,5 +1,6 @@
 Hello World.<br>
 <br>
-Print some variable <?= $variable ?><br>
+Print some variable: <?= $variable ?><br>
 <br>
-<? View::renderElement('test', array('project_host' => $project_host)) ?>
+Render element:<br>
+<? \core\View::renderElement('test', array('project_host' => $project_host)) ?>

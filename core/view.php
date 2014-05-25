@@ -1,4 +1,6 @@
-<?php defined('BASE_PATH') OR exit('No direct script access allowed');
+<?php
+
+namespace core;
 
 /**
  * View
@@ -8,46 +10,38 @@
 final class View
 {
     /**
-     * Instancia objektu
-     *
-     * @static
-     * @var View
-     */
-    protected static $instance;
-    
-    /**
-     * Layout do ktoreho sa vykresluje
+     * Layout for draw
      *
      * @var string
      */
     private $layout;
     /**
-     * Pohlad ktory sa ma vykreslit
+     * View for draw
      *
      * @var string
      */
     private $view;
     /**
-     * Priecinok v ktorom su obsiahnute pohlady
+     * Folder with views
      *
      * @var string
      */
     private static $views_dir = 'views';
     /**
-     * Default koncovka pohladov
+     * Default file extension for views
      *
      * @var string
      */
     private static $views_ext = '.phtml';
     /**
-     * Premenne posielane do pohladu
+     * Variables set up to view
      *
      * @var array
      */
     private $viewVars = array();
     
     /**
-     * Konstruktor triedy
+     * Construct
      */
     public function __construct()
     {
@@ -55,23 +49,7 @@ final class View
     }
     
     /**
-     * Ziskanie instancie triedy
-     * 
-     * @return object
-     * @static
-     */
-    public static function gi() 
-    {
-        if( self::$instance === NULL )
-        {
-            self::$instance = new self();
-        }
-        
-        return self::$instance;
-    }
-    
-    /**
-     * Nastavenie pohladu na vykreslenie
+     * Set view to render
      * 
      * @param string $view
      */
@@ -83,7 +61,7 @@ final class View
     }
     
     /**
-     * Nastavenie layoutu do ktoreho sa vykresluje
+     * Set layout to render
      * 
      * @param string $layout
      */
@@ -93,14 +71,15 @@ final class View
     }
     
     /**
-     * Nastavi title stranky
+     * Set title of page
      * 
      * @param string $value
-     * @param boolean $projectTitle Urcuje ci sa ma dat prefix s nazvom projektu
+     * @param boolean $projectTitle Add prefix with project name
      */
     public function setTitle($value = '', $projectTitle = true)
     {
-        $title = Config::gi()->get('project_title');
+        $config = new Config();
+        $title = $config->get('project_title');
         
         if (empty($value))
         {
@@ -118,7 +97,7 @@ final class View
     }
     
     /**
-     * Nastavenie premennej do pohladu
+     * Set variable to view
      * 
      * @param string $key
      * @param mixed $value
@@ -129,7 +108,7 @@ final class View
     }
     
     /**
-     * Vykreslenie pohladu
+     * Render view
      */
     public function render()
     {
@@ -150,31 +129,31 @@ final class View
                 }
             }
             
-            //ak mame aj nejaky layout
+            //if we have some layout
             if ( ! empty($this->layout))
             {
                 ob_start();
             }
 
             extract($this->viewVars);
-            include_once BASE_PATH . DS . self::$views_dir . DS . $this->view . self::$views_ext;
+            include BASE_PATH . DS . self::$views_dir . DS . $this->view . self::$views_ext;
             
-            //po vykresleni si trochu vyprazdnime pamat
+            //clear memory after render
             foreach ($this->viewVars as $key => $variable)
             {
                 unset(${$key});
             }
 
-            //druha cast ked mame layout
+            //Second part if we have layout
             if ( ! empty($this->layout))
             {
                 $content = ob_get_clean();
 //                ob_end_clean();
 
                 extract($this->viewVars);
-                include_once BASE_PATH . DS . self::$views_dir . DS . 'layout' . DS . $this->layout . self::$views_ext;
+                include BASE_PATH . DS . self::$views_dir . DS . 'layout' . DS . $this->layout . self::$views_ext;
                 
-                //po vykresleni si trochu vyprazdnime pamat
+                //again release some memory after render
                 foreach ($this->viewVars as $key => $variable)
                 {
                     unset(${$key});
@@ -187,7 +166,7 @@ final class View
     }
     
     /**
-     * Vykreslenie elementu
+     * Render element
      * 
      * @param string $element Filename of element, optionally with path, without extension
      * @param array $variables
@@ -203,7 +182,7 @@ final class View
                 extract($variables);
             }
 
-            include_once $elementFile;
+            include $elementFile;
 
             //po vykresleni si trochu vyprazdnime pamat
             foreach ($variables as $key => $variable)
@@ -214,7 +193,7 @@ final class View
     }
 
     /**
-     * Skontroluje existenciu pohladu
+     * Check if view exists
      * 
      * @access private
      */
@@ -222,7 +201,7 @@ final class View
     {
         if ( ! file_exists(BASE_PATH . DS . self::$views_dir . DS . $this->view . self::$views_ext))
         {
-            Framework::gi()->show_error(404, $this->view);
+            Framework::show_error(404, $this->view);
         }
     }
 

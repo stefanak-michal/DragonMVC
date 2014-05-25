@@ -1,4 +1,6 @@
-<?php defined('BASE_PATH') OR exit('No direct script access allowed');
+<?php
+
+namespace core;
 
 /**
  * Config
@@ -7,13 +9,6 @@
  */
 final class Config
 {
-    /**
-     * Instance of class
-     *
-     * @static
-     * @var Config
-     */
-    protected static $instance;
     
     /**
      * Array of all config variables
@@ -40,7 +35,7 @@ final class Config
         {
             foreach ($configFiles AS $file)
             {
-                include_once $file;
+                include $file;
                 
                 if (isset($aConfig) AND ! empty($aConfig))
                 {
@@ -55,14 +50,14 @@ final class Config
             unset($file, $variables, $key, $value);
         }
         unset($configFiles);
-        
+
         //read all lookup table files
         $ltFiles = glob(BASE_PATH . DS . 'config' . DS . '*.lt.php');
         if ( ! empty($ltFiles))
         {
             foreach ($ltFiles AS $file)
             {
-                include_once $file;
+                include $file;
                 
                 if (isset($lookUpTable) AND ! empty($lookUpTable))
                 {
@@ -77,22 +72,6 @@ final class Config
             unset($file, $key, $value);
         }
         unset($ltFiles);
-    }
-    
-    /**
-     * Get instance of class
-     * 
-     * @return Config
-     * @static
-     */
-    public static function gi() 
-    {
-        if( self::$instance === NULL )
-        {
-            self::$instance = new self();
-        }
-        
-        return self::$instance;
     }
     
     /**

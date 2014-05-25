@@ -1,46 +1,49 @@
-<?php defined('BASE_PATH') OR exit('No direct script access allowed');
+<?php
+
+namespace controller;
 
 /**
  * controllerApp
  * 
  * Base controller for extending
  */
-abstract class Controller
+abstract class App
 {
     /**
      * Instance for drawing views
      *
-     * @access protected
-     * @var View
+     * @var core\View
      */
     protected $view;
         
     /**
      * Instance for work with URI
      *
-     * @access protected
-     * @var Router
+     * @var core\Router
      */
     protected $router;
     
     /**
-     * Access to database
+     * Instance for configuration data
      *
-     * @access protected
-     * @var DB
+     * @var core\Config
      */
-    protected $database;
+    protected $config;
     
     /**
      * Construct
      */
     public function __construct()
     {
-        $this->view = new View();
-        $this->router = new Router();
+        $this->config = new \core\Config();
+        //we need database config ;)
+        \DB::$host = $this->config->get('dbServer');
+        \DB::$user = $this->config->get('dbUser');
+        \DB::$password = $this->config->get('dbPass');
+        \DB::$dbName = $this->config->get('dbDatabase');
         
-        $this->database = DB::getMDB();
-        
+        $this->view = new \core\View();
+        $this->router = new \core\Router($this->config);
     }
     
     /**
@@ -61,11 +64,11 @@ abstract class Controller
     {
         //base actions
         $this->view->setTitle();
-        $this->set('project_host', Config::gi()->get('project_host'));
-        $this->set('project_title', Config::gi()->get('project_title'));
-        
+        $this->set('project_host', $this->config->get('project_host'));
+        $this->set('project_title', $this->config->get('project_title'));
+
         //add to view all needed CSS
-        $cssFiles = Config::gi()->get('css');
+        $cssFiles = $this->config->get('css');
         $tplCssFiles = array();
         if ( ! empty($cssFiles))
         {
@@ -78,7 +81,7 @@ abstract class Controller
         unset($cssFiles, $tplCssFiles);
         
         //add to view all needed JS
-        $jsFiles = Config::gi()->get('js');
+        $jsFiles = $this->config->get('js');
         $tplJsFiles = array();
         if ( ! empty($jsFiles))
         {

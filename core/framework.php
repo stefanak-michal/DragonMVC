@@ -1,4 +1,6 @@
-<?php defined('BASE_PATH') OR exit('No direct script access allowed');
+<?php
+
+namespace core;
 
 /**
  * Framework
@@ -7,13 +9,6 @@
  */
 final class Framework
 {
-    /**
-     * Instance of class
-     *
-     * @static
-     * @var Framework
-     */
-    protected static $instance;
     
     /**
      * Called controller
@@ -41,41 +36,6 @@ final class Framework
         {
             include_once $file;
         }
-        
-        //read all database model files
-        $modelFiles = glob(BASE_PATH . DS . 'models' . DS . '*.php');
-        if ( ! empty($modelFiles))
-        {
-            foreach ($modelFiles AS $file)
-            {
-                include_once $file;
-            }
-        }
-
-        define('IS_WORKSPACE', (strpos(Config::gi()->get('project_host'), 'localhost') !== false) ? true : false);
-        
-        //we need database config ;)
-        DB::$host = Config::gi()->get('dbServer');
-        DB::$user = Config::gi()->get('dbUser');
-        DB::$password = Config::gi()->get('dbPass');
-        DB::$dbName = Config::gi()->get('dbDatabase');
-//        DB::debugMode();
-    }
-    
-    /**
-     * Get instance of class
-     * 
-     * @return Framework
-     * @static
-     */
-    public static function gi() 
-    {
-        if( self::$instance === NULL )
-        {
-            self::$instance = new self();
-        }
-        
-        return self::$instance;
     }
     
     /**
@@ -84,9 +44,10 @@ final class Framework
     public function run()
     {
         //default
+        $config = new Config();
         $defaultCMV = array(
-            'controller' => Config::gi()->get('defaultController'),
-            'method' => Config::gi()->get('defaultMethod'),
+            'controller' => $config->get('defaultController'),
+            'method' => $config->get('defaultMethod'),
             'vars' => array()
         );
         
@@ -126,7 +87,8 @@ final class Framework
         unset($uri);
         
         //check route
-        if ( ! Router::gi()->existsRoute($cmv))
+        $router = new Router($config);
+        if ( ! $router->existsRoute($cmv))
         {
             $cmv = $defaultCMV;
         }
@@ -141,7 +103,7 @@ final class Framework
      * @param int $code
      * @param string $message
      */
-    public function show_error($code = 404, $message = '')
+    public static function show_error($code = 404, $message = '')
     {
         $eMessage = $code . ' Error - ';
         
@@ -163,122 +125,75 @@ final class Framework
     }
 
     /**
-     * Load model
-     * 
-     * @param string $model
-     * @return object
-     */
-    public function loadModel($model)
-    {
-        if ( ! class_exists('Model'))
-        {
-            $this->show_error(400, 'Abstract Model not exists');
-        }
-        
-        //add prefix
-        $model = 'model' . ucfirst($model);
-        if ( ! class_exists($model))
-        {
-            $this->show_error(400, 'Database Model not exists');
-        }
-        
-        if ( ! isset($this->$model) OR ! $this->$model instanceof $model)
-        {
-            $this->$model = new $model();
-        }
-        
-        return $this->$model;
-    }
-
-    /**
      * Load controller
      * 
      * @param array $cmv array('controller' => '', 'method' => '', 'vars' => array())
      */
     public function loadController($cmv)
     {
-        if ( ! class_exists('Controller'))
-        {
-            $abstractControllerFile = BASE_PATH . DS . 'controllers' . DS . 'controller.php';
-            if ( ! file_exists($abstractControllerFile))
-            {
-                $this->show_error(404, $abstractControllerFile);
-            }
-            include_once $abstractControllerFile;
-        }
-        
         //if we have nothing to do, then quit
         if ( empty($cmv) OR  empty($cmv['controller']) OR empty($cmv['method']) )
         {
-            $this->show_error(400, 'Not call controller->method');
+            self::show_error(400, 'Not call controller->method');
         }
         
         self::$controller = $cmv['controller'];
         self::$method = $cmv['method'];
         
         //add prefix
-        $cmv['controller'] = 'controller' . ucfirst($cmv['controller']);
-        $controller_file = BASE_PATH . DS . 'controllers' . DS . $cmv['controller'] . '.php';
+        $cmv['controller'] = '\\controller\\' . ucfirst($cmv['controller']);
+        $controller = new $cmv['controller'];
 
-        if ( ! file_exists($controller_file))
+        if (method_exists($controller, 'beforeFilter'))
         {
-            $this->show_error(404, $controller_file);
+            $controller->beforeFilter();
         }
-        else
-        {
-            include_once $controller_file;
-            unset($controller_file);
-            
-            $controller = new $cmv['controller'];
-            
-            if (method_exists($controller, 'beforeFilter'))
-            {
-                $controller->beforeFilter();
-            }
 
-            if ( is_callable(array($controller, $cmv['method']), true) )
-            {
-                call_user_func_array(array($controller, $cmv['method']), $cmv['vars']);
-            }
-            
-            if (method_exists($controller, 'afterFilter'))
-            {
-                $controller->afterFilter();
-            }
+        if ( is_callable(array($controller, $cmv['method']), true) )
+        {
+            call_user_func_array(array($controller, $cmv['method']), $cmv['vars']);
+        }
+
+        if (method_exists($controller, 'afterFilter'))
+        {
+            $controller->afterFilter();
         }
     }
     
     /**
-     * Load component
+     * Autoload method
      * 
-     * @param string $component
-     * @param array $arguments
-     * @return object
+     * @param string $name
      */
-    public function loadComponent($component, $arguments = array())
+    public function autoload($name)
     {
-        //add prefix
-        $component = 'component' . ucfirst($component);
-        
-        if ( ! isset($this->$component) OR empty($this->$component))
+        $parts = explode("\\", $name);
+        $parts = array_filter($parts);
+
+        if ( count($parts) >= 2 )
         {
-            $component_file = BASE_PATH . DS . 'components' . DS . $component . '.php';
-
-            if ( ! file_exists($component_file))
+            $path = BASE_PATH;
+            foreach ( $parts AS $i => $part )
             {
-                $this->show_error(404, $component_file);
+                if ( $i == 0 )
+                {
+                    $path .= DS . $part . 's';
+                }
+                elseif ( $i == count($parts) - 1 )
+                {
+                    $path .= DS . ucfirst($part) . '.php';
+                }
+                else
+                {
+                    $path .= DS . $part;
+                }
             }
-            else
-            {
-                include_once $component_file;
-                unset($component_file);
 
-                $reflection = new ReflectionClass($component);
-                $this->$component = $reflection->newInstanceArgs((array) $arguments);
+            if ( file_exists($path) )
+            {
+                include_once($path);
             }
         }
-        
-        return $this->$component;
     }
     
 }

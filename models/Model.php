@@ -1,4 +1,6 @@
-<?php defined('BASE_PATH') OR exit('No direct script access allowed');
+<?php
+
+namespace model;
 
 /**
  * Model
@@ -40,22 +42,22 @@ abstract class Model
         
         if (empty($ids))
         {
-            $output = DB::query('SELECT * FROM ' . $this->table);
+            $output = \DB::query('SELECT * FROM ' . $this->table);
         }
         elseif ( ! is_array($ids))
         {
-            $output = DB::query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', $ids);
+            $output = \DB::query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', $ids);
         }
         elseif (count($ids) == 1)
         {
-            $output = DB::query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', reset($ids));
+            $output = \DB::query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', reset($ids));
         }
         else
         {
-            $output = DB::query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' IN %li', $ids);
+            $output = \DB::query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' IN %li', $ids);
         }
         
-        return DBHelper::reIndex($output, $this->primary_key);
+        return \DBHelper::reIndex($output, $this->primary_key);
     }
     
 }

@@ -1,9 +1,11 @@
-<?php defined('BASE_PATH') OR exit('No direct script access allowed');
+<?php
+
+namespace controller;
 
 /**
  * controllerHomepage
  */
-class controllerHomepage extends Controller
+class Homepage extends App
 {
     /**
      * Construct
@@ -41,16 +43,17 @@ class controllerHomepage extends Controller
         
         /*
          * Sample information about access to database data
-         * Default read:
-         * $this->database->sample->get();
          * Explanation of command:
          * $this->(class variable)->(model name)->(method from model);
+         * Default read:
          */
+        $modelSample = new \model\Sample();
+//        $modelSample->get();
          
         /*
          * Sample get instance of component
-         * $componentEmail = Framework::gi()->loadComponent('email', array($this->router));
          */
+        $componentEmail = new \component\Email($this->config, $this->router);
         
         $this->set('variable', 'how to set variable to view');
     }

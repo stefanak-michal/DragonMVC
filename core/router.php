@@ -1,4 +1,6 @@
-<?php defined('BASE_PATH') OR exit('No direct script access allowed');
+<?php
+
+namespace core;
 
 /**
  * Router
@@ -15,40 +17,24 @@ final class Router
     private $project_host;
     
     /**
-     * Instance of class
+     * core\Config
      *
-     * @static
-     * @var Router
+     * @var core\Config
      */
-    protected static $instance;
+    private $config;
     
     /**
      * Construct
      */
-    public function __construct()
+    public function __construct($config)
     {
-        $this->project_host = Config::gi()->get('project_host');
+        $this->config = $config;
+        $this->project_host = $this->config->get('project_host');
         
         if ($_SERVER['SERVER_PORT'] == 443 AND strpos($this->project_host, 'https') === false)
         {
             $this->setSecureHost();
         }
-    }
-    
-    /**
-     * Get instance of class
-     * 
-     * @return object
-     * @static
-     */
-    public static function gi() 
-    {
-        if( self::$instance === NULL )
-        {
-            self::$instance = new self();
-        }
-        
-        return self::$instance;
     }
     
     /**
@@ -167,7 +153,7 @@ final class Router
             switch ($assetType)
             {
                 case 'css':
-                    $cssFiles = (array) Config::gi()->get($assetType);
+                    $cssFiles = (array) $this->config->get($assetType);
                     if (array_key_exists($name, $cssFiles))
                     {
                         $output = $this->project_host . 'assets/' . $assetType . '/' . $cssFiles[$name]['file'] . '?v=' . $cssFiles[$name]['version'];
@@ -176,7 +162,7 @@ final class Router
                     break;
                 
                 case 'js':
-                    $jsFiles = (array) Config::gi()->get($assetType);
+                    $jsFiles = (array) $this->config->get($assetType);
                     if (array_key_exists($name, $jsFiles))
                     {
                         $output = $this->project_host . 'assets/' . $assetType . '/' . $jsFiles[$name]['file'] . '?v=' . $jsFiles[$name]['version'];
@@ -185,7 +171,7 @@ final class Router
                     break;
                 
                 case 'img':
-                    $imgFiles = (array) Config::gi()->get($assetType);
+                    $imgFiles = (array) $this->config->get($assetType);
                     if (array_key_exists($name, $imgFiles))
                     {
                         $output = $this->project_host . 'assets/' . $assetType . '/' . $imgFiles[$name]['file'] . '?v=' . $imgFiles[$name]['version'];
@@ -208,7 +194,7 @@ final class Router
      */
     public function existsRoute($cmv)
     {
-        $routes = Config::gi()->get('routes');
+        $routes = $this->config->get('routes');
         $routes = array_map('strtolower', $routes);
         $output = false;
         

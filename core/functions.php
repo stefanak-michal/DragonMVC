@@ -1,10 +1,4 @@
-<?php defined('BASE_PATH') OR exit('No direct script access allowed');
-/**
- * Special user PHP functions
- * 
- * @author Michal Stefanak
- */
-
+<?php
 /**
  * Better var_dump
  */

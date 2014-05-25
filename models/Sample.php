@@ -1,11 +1,13 @@
-<?php defined('BASE_PATH') OR exit('No direct script access allowed');
+<?php
+
+namespace model;
 
 /**
  * modelSample
  * 
  * Sample model for table "Sample"
  */
-class modelSample extends Model
+class Sample extends Model
 {
     /**
      * Const for column status
