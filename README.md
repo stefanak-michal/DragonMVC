@@ -8,6 +8,7 @@
     * For define CSS/JS config files use assets.cfg.php
     * Defining routes in routes.cfg.php
 
+
 * Models is for database access methods (ideal usage, one model for one table)
 * Available define lookup table in lt.cfg.php
 * Namespaces
@@ -16,4 +17,5 @@
 * Initialization file
 
 Database class is MeekroDB http://www.meekro.com/
+
 Logo designed by Freepik.com
