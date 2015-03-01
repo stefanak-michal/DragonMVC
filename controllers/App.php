@@ -1,6 +1,12 @@
 <?php
 
-namespace controller;
+namespace controllers;
+
+use core\Config,
+    core\View,
+    core\Router,
+    core\DB,
+    helpers\Assets;
 
 /**
  * controllerApp
@@ -12,38 +18,47 @@ abstract class App
     /**
      * Instance for drawing views
      *
-     * @var core\View
+     * @var View
      */
     protected $view;
         
     /**
      * Instance for work with URI
      *
-     * @var core\Router
+     * @var Router
      */
     protected $router;
     
     /**
      * Instance for configuration data
      *
-     * @var core\Config
+     * @var Config
      */
     protected $config;
     
     /**
+     * helper Assets
+     *
+     * @var Assets
+     */
+    protected $assets;
+    
+    /**
      * Construct
      */
-    public function __construct()
+    public function __construct($config, $router)
     {
-        $this->config = new \core\Config();
-        //we need database config ;)
-        \DB::$host = $this->config->get('dbServer');
-        \DB::$user = $this->config->get('dbUser');
-        \DB::$password = $this->config->get('dbPass');
-        \DB::$dbName = $this->config->get('dbDatabase');
+        $this->config = $config;
+        $this->router = $router;
         
-        $this->view = new \core\View();
-        $this->router = new \core\Router($this->config);
+        //we need database config ;)
+        DB::$host = $this->config->get('dbServer');
+        DB::$user = $this->config->get('dbUser');
+        DB::$password = $this->config->get('dbPass');
+        DB::$dbName = $this->config->get('dbDatabase');
+        
+        $this->view = new View($this->config);
+        $this->assets = new Assets($this->router);
     }
     
     /**
@@ -60,44 +75,17 @@ abstract class App
     /**
      * Some action before method, what is needed ..or do not
      */
-    protected function beforeFilter()
+    public function beforeFilter()
     {
-        //base actions
         $this->view->setTitle();
         $this->set('project_host', $this->config->get('project_host'));
         $this->set('project_title', $this->config->get('project_title'));
-
-        //add to view all needed CSS
-        $cssFiles = $this->config->get('css');
-        $tplCssFiles = array();
-        if ( ! empty($cssFiles))
-        {
-            foreach ($cssFiles AS $name => $cssFile)
-            {
-                $tplCssFiles[] = $this->router->getAssetUrl($name, 'css');
-            }
-        }
-        $this->set('cssFiles', $tplCssFiles);
-        unset($cssFiles, $tplCssFiles);
-        
-        //add to view all needed JS
-        $jsFiles = $this->config->get('js');
-        $tplJsFiles = array();
-        if ( ! empty($jsFiles))
-        {
-            foreach ($jsFiles AS $name => $jsFile)
-            {
-                $tplJsFiles[] = $this->router->getAssetUrl($name, 'js');
-            }
-        }
-        $this->set('jsFiles', $tplJsFiles);
-        unset($jsFiles, $tplJsFiles);
     }
     
     /**
      * Action after method
      */
-    protected function afterFilter()
+    public function afterFilter()
     {
         $this->view->render();
     }
@@ -106,14 +94,16 @@ abstract class App
      * Get some global variable
      * 
      * @param string $name
-     * @param int $type
+     * @param string $type
      * @param mixed $default
      * @return mixed
      */
-    protected function param($name, $type = INPUT_GET, $default = null)
+    final protected function param($name, $type = 'GET', $default = null)
     {
-        $output = filter_input($type, $name);
-        return $output ?: $default;
+        $type = '_' . strtoupper($type);
+        $output = isset($GLOBALS[$type][$name]) ? $GLOBALS[$type][$name] : $default;
+        
+        return $output;
     }
     
 }

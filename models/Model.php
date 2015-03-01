@@ -1,6 +1,9 @@
 <?php
 
-namespace model;
+namespace models;
+
+use core\DB,
+    core\DBHelper;
 
 /**
  * Model
@@ -42,22 +45,34 @@ abstract class Model
         
         if (empty($ids))
         {
-            $output = \DB::query('SELECT * FROM ' . $this->table);
+            $output = DB::query('SELECT * FROM ' . $this->table);
         }
         elseif ( ! is_array($ids))
         {
-            $output = \DB::query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', $ids);
+            $output = DB::query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', $ids);
         }
         elseif (count($ids) == 1)
         {
-            $output = \DB::query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', reset($ids));
+            $output = DB::query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', reset($ids));
         }
         else
         {
-            $output = \DB::query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' IN %li', $ids);
+            $output = DB::query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' IN %li', $ids);
         }
         
-        return \DBHelper::reIndex($output, $this->primary_key);
+        return DBHelper::reIndex($output, $this->primary_key);
+    }
+    
+    /**
+     * Delete row by primary key
+     * 
+     * @param int $id
+     */
+    public function delete($id)
+    {
+        if ( is_numeric($id) ) {
+            DB::delete($this->table, $this->primary_key . ' = %i', $id);
+        }
     }
     
 }

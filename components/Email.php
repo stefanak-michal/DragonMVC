@@ -1,6 +1,6 @@
 <?php
 
-namespace component;
+namespace components;
 
 /**
  * componentEmail

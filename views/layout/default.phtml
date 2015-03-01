@@ -17,14 +17,11 @@
         <title><?= $title ?></title>
         
         <!--<link rel="shortcut icon" href="<?= $project_host ?>favicon.ico">-->
+        <?= helpers\Assets::draw() ?>
         
-        <? foreach ($cssFiles AS $file): ?>
-            <link rel="stylesheet" type="text/css" href="<?= $file ?>" />
-        <? endforeach; ?>
-        
-        <? foreach ($jsFiles AS $file): ?>
-            <script type="application/javascript" src="<?= $file ?>" ></script>
-        <? endforeach; ?>
+        <script type="text/javascript">
+            var project_host = "<?= $project_host ?>";
+        </script>
     </head>
     
     <body>

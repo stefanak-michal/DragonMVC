@@ -1,6 +1,9 @@
 <?php
 
-namespace model;
+namespace models;
+
+use core\DB,
+    core\DBHelper;
 
 /**
  * modelSample
@@ -27,13 +30,5 @@ class Sample extends Model
      * @var string
      */
     protected $primary_key = 'idSample';
-    
-    /**
-     * Construct
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
     
 }

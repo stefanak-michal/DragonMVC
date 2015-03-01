@@ -17,9 +17,9 @@ final class Router
     private $project_host;
     
     /**
-     * core\Config
+     * Config
      *
-     * @var core\Config
+     * @var Config
      */
     private $config;
     
@@ -29,9 +29,14 @@ final class Router
     public function __construct($config)
     {
         $this->config = $config;
-        $this->project_host = $this->config->get('project_host');
         
-        if ($_SERVER['SERVER_PORT'] == 443 AND strpos($this->project_host, 'https') === false)
+        $this->project_host = $this->config->get('project_host');
+        if ( empty($this->project_host) ) {
+            $this->project_host = ( $_SERVER['SERVER_PORT'] == 80 ? 'http://' : 'https://' ) . $_SERVER['HTTP_HOST'] . '/';
+        }
+        $this->config->set('project_host', $this->project_host);
+        
+        if ( $_SERVER['SERVER_PORT'] == 443 )
         {
             $this->setSecureHost();
         }
@@ -61,14 +66,32 @@ final class Router
     }
     
     /**
+     * Generate homepage URI
+     * 
+     * @param array $query
+     * @return string
+     */
+    public function getHomepageUrl($query = array())
+    {
+        $uri = $this->project_host;
+        
+        if ( is_array($query) && !empty($query) ) {
+            $uri .= '?' . http_build_query($query);
+        }
+        
+        return $uri;
+    }
+    
+    /**
      * Generate URI
      * 
      * @param string $controller
      * @param string $method
      * @param array $vars
+     * @param array $query
      * @return string
      */
-    public function getUrl($controller, $method, $vars = array())
+    public function getUrl($controller, $method, $vars = array(), $query = array())
     {
         $uri = $this->current();
         
@@ -76,9 +99,12 @@ final class Router
         {
             $uri = $this->project_host . $controller . '/' . $method . '/';
             
-            if ( ! empty($vars))
-            {
+            if ( ! empty($vars)) {
                 $uri .= implode('/', $vars);
+            }
+            
+            if ( is_array($query) && !empty($query) ) {
+                $uri .= '?' . http_build_query($query);
             }
         }
         
@@ -146,41 +172,13 @@ final class Router
      */
     public function getAssetUrl($name, $assetType)
     {
-        $output = null;
+        $output = '';
         
-        if ( ! empty($name) AND ! empty($assetType))
-        {
-            switch ($assetType)
-            {
-                case 'css':
-                    $cssFiles = (array) $this->config->get($assetType);
-                    if (array_key_exists($name, $cssFiles))
-                    {
-                        $output = $this->project_host . 'assets/' . $assetType . '/' . $cssFiles[$name]['file'] . '?v=' . $cssFiles[$name]['version'];
-                    }
-                    unset($cssFiles);
-                    break;
-                
-                case 'js':
-                    $jsFiles = (array) $this->config->get($assetType);
-                    if (array_key_exists($name, $jsFiles))
-                    {
-                        $output = $this->project_host . 'assets/' . $assetType . '/' . $jsFiles[$name]['file'] . '?v=' . $jsFiles[$name]['version'];
-                    }
-                    unset($jsFiles);
-                    break;
-                
-                case 'img':
-                    $imgFiles = (array) $this->config->get($assetType);
-                    if (array_key_exists($name, $imgFiles))
-                    {
-                        $output = $this->project_host . 'assets/' . $assetType . '/' . $imgFiles[$name]['file'] . '?v=' . $imgFiles[$name]['version'];
-                    }
-                    unset($imgFiles);
-                    break;
+        if ( ! empty($name) AND ! empty($assetType) ) {
+            $files = (array) $this->config->get($assetType);
+            if ( array_key_exists($name, $files) ) {
+                $output = $this->project_host . 'assets/' . $assetType . '/' . $files[$name]['file'] . '?v=' . $files[$name]['version'];
             }
-            
-            unset($assetType, $name);
         }
         
         return $output;

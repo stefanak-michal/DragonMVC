@@ -30,48 +30,36 @@ final class Config
     public function __construct()
     {
         //read all config files
-        $configFiles = glob(BASE_PATH . DS . 'config' . DS . '*.cfg.php');
-        if ( ! empty($configFiles))
-        {
-            foreach ($configFiles AS $file)
-            {
-                include $file;
-                
-                if (isset($aConfig) AND ! empty($aConfig))
-                {
-                    foreach ($aConfig AS $key => $value)
-                    {
-                        $this->set($key, $value);
-                    }
-                }
-                
-                unset($aConfig);
-            }
-            unset($file, $variables, $key, $value);
-        }
-        unset($configFiles);
-
+        $this->loadFiles('*.cfg.php', 'aConfig', 'configVars');
+        $this->loadFiles((IS_WORKSPACE ? 'development' : 'production') . DS . '*.cfg.php', 'aConfig', 'configVars');
+        
         //read all lookup table files
-        $ltFiles = glob(BASE_PATH . DS . 'config' . DS . '*.lt.php');
-        if ( ! empty($ltFiles))
-        {
-            foreach ($ltFiles AS $file)
-            {
+        $this->loadFiles('*.lt.php', 'lookUpTable', 'lookUpTables');
+        $this->loadFiles((IS_WORKSPACE ? 'development' : 'production') . DS . '*.lt.php', 'lookUpTable', 'lookUpTables');
+    }
+    
+    /**
+     * Load config files
+     * 
+     * @param string $path
+     * @param string $variable
+     * @param string $objVar
+     */
+    private function loadFiles($path, $variable, $objVar)
+    {
+        $files = glob(BASE_PATH . DS . 'config' . DS . $path);
+        if ( !empty($files) ) {
+            foreach ($files AS $file) {
                 include $file;
-                
-                if (isset($lookUpTable) AND ! empty($lookUpTable))
-                {
-                    foreach ($lookUpTable AS $key => $value)
-                    {
-                        $this->lookUpTables[$key] = $value;
+                if ( !empty($$variable) ) {
+                    foreach ($$variable AS $key => $value) {
+                        $this->{$objVar}[$key] = $value;
+                        //$this->set($key, $value);
                     }
                 }
-                
-                unset($lookUpTable);
+                unset($$variable);
             }
-            unset($file, $key, $value);
         }
-        unset($ltFiles);
     }
     
     /**

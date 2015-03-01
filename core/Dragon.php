@@ -7,7 +7,7 @@ namespace core;
  * 
  * Base class of MVC framework
  */
-final class Framework
+final class Dragon
 {
     
     /**
@@ -24,19 +24,23 @@ final class Framework
      * @var string
      */
     public static $method;
+    /**
+     * Config
+     *
+     * @var Config
+     */
+    private $config;
+    /**
+     * Router
+     *
+     * @var Router
+     */
+    private $router;
     
     /**
      * Construct
      */
-    public function __construct()
-    {
-        //read all core files
-        $coreFiles = glob(__DIR__ . DS . '*.php');
-        foreach ($coreFiles AS $file)
-        {
-            include_once $file;
-        }
-    }
+    public function __construct() { }
     
     /**
      * Run a project
@@ -44,52 +48,40 @@ final class Framework
     public function run()
     {
         //default
-        $config = new Config();
+        $this->config = new Config();
         $defaultCMV = array(
-            'controller' => $config->get('defaultController'),
-            'method' => $config->get('defaultMethod'),
+            'controller' => $this->config->get('defaultController'),
+            'method' => $this->config->get('defaultMethod'),
             'vars' => array()
         );
         
         $cmv = $defaultCMV;
         
+        $_uri = new URI();
+        $_uri->_fetch_uri_string();
+        $path = (string) $_uri;
+        
         // explode URI
-        if (isset($_SERVER['PATH_INFO']))
-        {
-            $uri = $_SERVER['PATH_INFO'];
-            $uri = preg_split("[\\/]", $uri, -1, PREG_SPLIT_NO_EMPTY);
+        if ( !empty($path) ) {
+            $uri = preg_split("[\\/]", $path, -1, PREG_SPLIT_NO_EMPTY);
 
             // we have some URI
-            if (count($uri) > 0)
-            {
-                // find a write controller
-                $cmv['controller'] = $uri[0];
-                unset($uri[0]);
+            if (count($uri) > 0) {
+                $cmv['controller'] = array_shift($uri);
 
-                // if we have something else, it is method
-                if (isset($uri[1]))
-                {
-                    $cmv['method'] = $uri[1];
-                    unset($uri[1]);
+                if ( !empty($uri) ) {
+                    $cmv['method'] = array_shift($uri);
                 }
 
-                // if we still have something else, it is variables
-                if ( ! empty($uri))
-                {
-                    foreach ($uri AS $value)
-                    {
-                        $cmv['vars'][] = $value;
-                    }
+                if ( !empty($uri) ) {
+                    $cmv['vars'] = array_values($uri);
                 }
             }
         }
 
-        unset($uri);
-        
         //check route
-        $router = new Router($config);
-        if ( ! $router->existsRoute($cmv))
-        {
+        $this->router = new Router($this->config);
+        if ( !$this->router->existsRoute($cmv) ) {
             $cmv = $defaultCMV;
         }
         
@@ -141,8 +133,8 @@ final class Framework
         self::$method = $cmv['method'];
         
         //add prefix
-        $cmv['controller'] = '\\controller\\' . ucfirst($cmv['controller']);
-        $controller = new $cmv['controller'];
+        $cmv['controller'] = '\\controllers\\' . ucfirst($cmv['controller']);
+        $controller = new $cmv['controller']($this->config, $this->router);
 
         if (method_exists($controller, 'beforeFilter'))
         {
@@ -177,7 +169,7 @@ final class Framework
             {
                 if ( $i == 0 )
                 {
-                    $path .= DS . $part . 's';
+                    $path .= DS . $part;
                 }
                 elseif ( $i == count($parts) - 1 )
                 {

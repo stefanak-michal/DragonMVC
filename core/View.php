@@ -22,6 +22,12 @@ final class View
      */
     private $view;
     /**
+     * Config
+     *
+     * @var Config
+     */
+    private $config;
+    /**
      * Folder with views
      *
      * @var string
@@ -43,9 +49,10 @@ final class View
     /**
      * Construct
      */
-    public function __construct()
+    public function __construct($config)
     {
-        $this->view = Framework::$controller . DS . Framework::$method;
+        $this->config = $config;
+        $this->view = Dragon::$controller . DS . Dragon::$method;
     }
     
     /**
@@ -56,8 +63,6 @@ final class View
     public function setView($view)
     {
         $this->view = $view;
-        
-        $this->checkExistsView();
     }
     
     /**
@@ -78,8 +83,7 @@ final class View
      */
     public function setTitle($value = '', $projectTitle = true)
     {
-        $config = new Config();
-        $title = $config->get('project_title');
+        $title = $this->config->get('project_title');
         
         if (empty($value))
         {
@@ -115,19 +119,6 @@ final class View
         if ( ! empty($this->view))
         {
             $this->checkExistsView();
-            
-            //helpers
-            if (file_exists(BASE_PATH . DS . 'helpers'))
-            {
-                $helpers = glob(BASE_PATH . DS . 'helpers' . DS . 'helper*.php');
-                if ( ! empty($helpers))
-                {
-                    foreach ($helpers AS $helper)
-                    {
-                        require_once ($helper);
-                    }
-                }
-            }
             
             //if we have some layout
             if ( ! empty($this->layout))
@@ -201,7 +192,7 @@ final class View
     {
         if ( ! file_exists(BASE_PATH . DS . self::$views_dir . DS . $this->view . self::$views_ext))
         {
-            Framework::show_error(404, $this->view);
+            Dragon::show_error(404, $this->view);
         }
     }
 

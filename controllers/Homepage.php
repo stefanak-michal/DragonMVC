@@ -1,20 +1,16 @@
 <?php
 
-namespace controller;
+namespace controllers;
+
+use helpers\Assets,
+    models\Sample AS mSample,
+    components\Email AS cEmail;
 
 /**
  * controllerHomepage
  */
 class Homepage extends App
 {
-    /**
-     * Construct
-     */
-    public function __construct()
-    {
-        parent::__construct();
-        
-    }
     
     /**
      * Some action before any method
@@ -24,7 +20,7 @@ class Homepage extends App
         parent::beforeFilter();
         
         //layout stranky
-        $this->view->setLayout('clear');
+        $this->view->setLayout('default');
     }
     
     /**
@@ -40,6 +36,9 @@ class Homepage extends App
      */
     public function index()
     {
+        $this->assets
+                ->add('main', Assets::TYPE_CSS)
+                ->add('default', Assets::TYPE_JS);
         
         /*
          * Sample information about access to database data
@@ -47,16 +46,15 @@ class Homepage extends App
          * $this->(class variable)->(model name)->(method from model);
          * Default read:
          */
-        $modelSample = new \model\Sample();
+        $modelSample = new mSample();
 //        $modelSample->get();
          
         /*
          * Sample get instance of component
          */
-        $componentEmail = new \component\Email($this->config, $this->router);
+        $componentEmail = new cEmail($this->config, $this->router);
         
         $this->set('variable', 'how to set variable to view');
     }
-    
     
 }
