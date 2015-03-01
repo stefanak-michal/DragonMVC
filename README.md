@@ -16,3 +16,4 @@
 * Initialization file
 
 Database class is MeekroDB http://www.meekro.com/
+Logo designed by Freepik.com
