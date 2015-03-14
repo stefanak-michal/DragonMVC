@@ -49,42 +49,25 @@ final class Dragon
     {
         //default
         $this->config = new Config();
-        $defaultCMV = array(
+        $this->router = new Router($this->config);
+        
+        $cmv = array(
             'controller' => $this->config->get('defaultController'),
             'method' => $this->config->get('defaultMethod'),
             'vars' => array()
         );
         
-        $cmv = $defaultCMV;
-        
         $_uri = new URI();
         $_uri->_fetch_uri_string();
         $path = (string) $_uri;
         
-        // explode URI
         if ( !empty($path) ) {
-            $uri = preg_split("[\\/]", $path, -1, PREG_SPLIT_NO_EMPTY);
-
-            // we have some URI
-            if (count($uri) > 0) {
-                $cmv['controller'] = array_shift($uri);
-
-                if ( !empty($uri) ) {
-                    $cmv['method'] = array_shift($uri);
-                }
-
-                if ( !empty($uri) ) {
-                    $cmv['vars'] = array_values($uri);
-                }
+            $founded = $this->router->findRoute($path);
+            if ( !empty($founded) ) {
+                $cmv = $founded;
             }
         }
 
-        //check route
-        $this->router = new Router($this->config);
-        if ( !$this->router->existsRoute($cmv) ) {
-            $cmv = $defaultCMV;
-        }
-        
         //finally we have something to show
         $this->loadController($cmv);
     }

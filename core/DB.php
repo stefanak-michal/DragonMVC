@@ -1,9 +1,5 @@
 <?php
 
-namespace core;
-
-use \Exception;
-
 /*
     Copyright (C) 2008-2012 Sergey Tsalkov (stsalkov@gmail.com)
 

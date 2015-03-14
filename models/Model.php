@@ -2,8 +2,8 @@
 
 namespace models;
 
-use core\DB,
-    core\DBHelper;
+use \DB,
+    \DBHelper;
 
 /**
  * Model

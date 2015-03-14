@@ -5,7 +5,7 @@ namespace controllers;
 use core\Config,
     core\View,
     core\Router,
-    core\DB,
+    \DB,
     helpers\Assets;
 
 /**

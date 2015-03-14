@@ -24,22 +24,25 @@ final class Router
     private $config;
     
     /**
+     * Definition of allowed routes from config file
+     *
+     * @var array
+     */
+    private $routes = array();
+    
+    /**
      * Construct
      */
     public function __construct($config)
     {
         $this->config = $config;
+        $this->routes = $this->config->get('routes');
         
         $this->project_host = $this->config->get('project_host');
         if ( empty($this->project_host) ) {
-            $this->project_host = ( $_SERVER['SERVER_PORT'] == 80 ? 'http://' : 'https://' ) . $_SERVER['HTTP_HOST'] . '/';
+            $this->project_host = ( $_SERVER['SERVER_PORT'] == 80 ? 'http://' : 'https://' ) . $_SERVER['HTTP_HOST'];
         }
-        $this->config->set('project_host', $this->project_host);
-        
-        if ( $_SERVER['SERVER_PORT'] == 443 )
-        {
-            $this->setSecureHost();
-        }
+        $this->config->set('project_host', trim($this->project_host, '/') . '/');
     }
     
     /**
@@ -95,12 +98,38 @@ final class Router
     {
         $uri = $this->current();
         
-        if ( ! empty($controller) AND ! empty($method))
-        {
-            $uri = $this->project_host . $controller . '/' . $method . '/';
+        if ( ! empty($controller) && ! empty($method) ) {
+            $uri = $this->project_host;
             
-            if ( ! empty($vars)) {
-                $uri .= implode('/', $vars);
+            //find allowed route
+            $mask = array_search($controller . '/' . $method, $this->routes);
+            if ( $mask === false ) {
+                Dragon::show_error(400, 'No defined route');
+            }
+            
+            if ( is_integer($mask) ) {
+                $uri .= $controller . '/' . $method;
+            } else {
+                $uri .= $mask;
+            }
+            
+            //complete path variables
+            if ( ! empty($vars) ) {
+                if ( !is_array($vars) ) {
+                    $vars = array($vars);
+                }
+                
+                foreach ( $vars AS $var ) {
+                    if ( strpos($uri, '%') !== false ) {
+                        if ( is_numeric($var) ) {
+                            $uri = preg_replace("/%[id]/", $var, $uri);
+                        } else {
+                            $uri = preg_replace("/%s/", $var, $uri);
+                        }
+                    } else {
+                        $uri .= '/' . $var;
+                    }
+                }
             }
             
             if ( is_array($query) && !empty($query) ) {
@@ -185,24 +214,27 @@ final class Router
     }
     
     /**
-     * Check if exists route
+     * Find route
      * 
-     * @param array $cmv
-     * @return boolean
+     * @param string $path
+     * @return string
      */
-    public function existsRoute($cmv)
+    public function findRoute($path)
     {
-        $routes = $this->config->get('routes');
-        $routes = array_map('strtolower', $routes);
-        $output = false;
+        $output = array();
         
-        if (is_array($cmv))
-        {
-            $output = in_array(strtolower($cmv['controller'] . '/' . $cmv['method']), $routes);
-        }
-        elseif (preg_match("/\w+\/\w+/", $cmv))
-        {
-            $output = in_array(strtolower($cmv), $routes);
+        foreach ( $this->routes AS $mask => $route ) {
+            $res = preg_match("/^" . str_replace('/', '\/', 
+                        is_integer($mask) ? $route : str_replace(array('%i', '%s', '%d'), array('(\d+)', '(\w+)', '([\d\.]+)'), $mask)
+                    ) . "$/", $path, $vars);
+            if ( $res ) {
+                $uri = preg_split("[\\/]", $route, -1, PREG_SPLIT_NO_EMPTY);
+                $output['controller'] = $uri[0];
+                $output['method'] = $uri[1];
+                array_shift($vars);
+                $output['vars'] = array_values($vars);
+                break;
+            }
         }
         
         return $output;
