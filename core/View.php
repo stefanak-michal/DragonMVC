@@ -161,19 +161,30 @@ final class View
      * 
      * @param string $element Filename of element, optionally with path, without extension
      * @param array $variables
+     * @param boolean $return if want return html as string ..default echo
      * @static
      */
-    public static function renderElement($element, $variables = array())
+    public static function renderElement($element, $variables = array(), $return = false)
     {
+        $content = '';
+        
         $elementFile = BASE_PATH . DS . self::$views_dir . DS . 'elements' . DS . $element . self::$views_ext;
         if (file_exists($elementFile))
         {
+            if ( $return ) {
+                ob_start();
+            }
+            
             if (is_array($variables) AND ! empty($variables))
             {
                 extract($variables);
             }
 
             include $elementFile;
+            
+            if ( $return ) {
+                $content = ob_get_clean();
+            }
 
             //po vykresleni si trochu vyprazdnime pamat
             foreach ($variables as $key => $variable)
@@ -181,6 +192,8 @@ final class View
                 unset(${$key});
             }
         }
+        
+        return $content;
     }
 
     /**

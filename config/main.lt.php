@@ -1,7 +1,9 @@
 <?php
 $lookUpTable = array(
-    'mainMenu' => array(
-        
-    ),
+     'allowedTemplates' => array(
+        'email' => array(
+            'sample',
+        )
+    )
     
 );

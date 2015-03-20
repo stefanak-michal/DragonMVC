@@ -2,20 +2,22 @@
 
 namespace components;
 
+use core\View,
+    helpers\Validation;
+
 /**
- * componentEmail
+ * Notification
  * 
- * Sending different emails
+ * Sending different service/notification emails
+ * @internal For default magic __call is allowed templates list in lookuptable
+ * 
+ * <pre>
+ * $_email = new Email($this->config);
+ * $_email->setTo('john.doe@email.com', 'John Doe')->setTitle('Do not read this')->sample();
+ * </pre>
  */
 class Email
 {
-    /**
-     * Instance for work with URI
-     *
-     * @access protected
-     * @var Router
-     */
-    protected $router;
     /**
      * core\Config
      *
@@ -25,122 +27,166 @@ class Email
     protected $config;
     
     /**
-     * URL of project
+     * Where to send email
      *
-     * @access private
-     * @var string
+     * @var array
      */
-    private $project_host;
+    private $emails = array();
     /**
-     * Title of project
-     *
-     * @access private
+     * Title of email
+     * 
      * @var string
      */
-    private $project_title;
+    private $title = '';
+    
     /**
-     * Email of project
+     * If want call reset after send
      *
-     * @access private
-     * @var string
+     * @var boolean
      */
-    private $project_email;
+    private $resetAfterSend = true;
     
     /**
      * Construct
      */
-    public function __construct($config, $router)
+    public function __construct($config)
     {
-        $this->router = $router;
         $this->config = $config;
-        
-        $this->project_host = $this->config->get('project_host');
-        $this->project_title = $this->config->get('project_title');
-        $this->project_email = $this->config->get('project_email');
+        $this->setTitle();
     }
     
     /**
-     * Sample email
+     * Set to
      * 
-     * @param string $name
      * @param string $email
+     * @param string $name
+     * @return Email
+     */
+    public function setTo($email, $name = '')
+    {
+        if ( Validation::isEmail($email) ) {
+            empty($name) ? ($this->emails[] = $email) : ($this->emails[$name] = $email);
+        }
+        
+        return $this;
+    }
+    
+    /**
+     * Set title
+     * 
+     * @param string $title
+     * @return Email
+     */
+    public function setTitle($title = '', $prefix = true)
+    {
+        $titleParts = array();
+        if ( $prefix ) {
+            $titleParts[] = $this->config->get('project_title');
+        }
+        
+        if ( !empty($title) ) {
+            $titleParts[] = $title;
+        }
+        
+        $this->title = implode(' - ', $titleParts);
+        return $this;
+    }
+    
+    /**
+     * Set to call reset after send
+     * 
+     * @param boolean $reset
+     */
+    public function setResetAfterSend($reset = true)
+    {
+        $this->resetAfterSend = (boolean) $reset;
+    }
+    
+    /**
+     * Standart send any email allowed in lookuptable and exists
+     * 
+     * @param string $template
+     * @param array $variables
      * @return boolean
      */
-    public function sample($name, $email)
+    public function __call( $template, $variables = array() )
     {
-        $title = 'Sample email';
+        $output = false;
         
-        $content = '<html>'.
-            '<head>'.
-            '<title>'. $title .'</title>'.
-            '</head>'.
-            '<body>'.
-            '<h1>'. $title .'</h1>'.
-            'This is a sample email. Hello World.';
+        $templates = $this->config->lt('allowedTemplates.email');
+        if ( in_array($template, $templates) ) {
+            if ( !empty($this->title) && !isset($variables['title']) ) {
+                $variables['title'] = $this->title;
+            }
+
+            $content = View::renderElement('email/' . $template, $variables, true);
+            if ( !empty($content) ) {
+                $output = $this->send($content);
+            }
+        }
         
-        return $this->send($name, $email, $this->project_title . ' - ' . $title, $content);
+        return $output;
     }
     
     /**
-     * Signature
-     * 
-     * @access private
-     * @return string
+     * Reset email settings
      */
-    private function signature()
+    public function reset()
     {
-        return '<br><br><small>This e-mail was generated automatically. Copyright &copy; ' . date('Y') . ' ' . $this->project_title;
+        $this->emails = array();
+        $this->setTitle();
     }
-    
+        
     /**
      * Headers for email
      * 
-     * @access private
-     * @param string $nick
-     * @param string $email
      * @return string
      */
-    private function headers($nick, $email)
+    private function headers()
     {
+        $prTitle = $this->config->get('project_title');
+        $prEmail = $this->config->get('project_email');
+        
         return ( 
             'MIME-Version: 1.0' . "\r\n".
             'Content-type: text/html; charset=utf-8' . "\r\n".
-            'From: ' . $this->project_title . ' <' . $this->project_email . '>' . "\r\n" .
-            'Reply-To: ' . $this->project_title . ' <' . $this->project_email . '>' . "\r\n" .
-            'To: ' . $nick . ' <' . $email . '>' . "\r\n".
-            'X-Mailer: PHP/' . phpversion());
+            'From: ' . $prTitle . ' <' . $prEmail . '>' . "\r\n" .
+            'Reply-To: ' . $prTitle . ' <' . $prEmail . '>' . "\r\n" .
+            'X-Mailer: PHP/' . phpversion()
+        );
     }
     
     /**
      * Send email
      * 
-     * @access private
-     * @param string $nick
-     * @param string $email
-     * @param string $title
      * @param string $content
      * @param boolean $headers
-     * @param boolean $signature
      * @return boolean
      */
-    private function send($nick, $email, $title, $content, $headers = true, $signature = true)
+    private function send($content, $headers = true)
     {
-        if ($signature)
-        {
-            $content .= $this->signature();
-        }
-        $content .= '</body></html>';
+        $output = false;
         
-        if ($headers)
-        {
-            $headers = $this->headers($nick, $email);
-        }
-        else
-        {
-            $headers = '';
+        if ( !empty($this->emails) ) {
+            $headers = $headers ? $this->headers() : '';
+            
+            $emails = array();
+            foreach ( $this->emails AS $name => $email ) {
+                if ( empty($name) || is_numeric($name) ) {
+                    $emails[] = $email;
+                } else {
+                    $emails[] = $name . ' <' . $email . '>';
+                }
+            }
+            
+            //var_dump(implode(', ', $emails), $this->title, $content, $headers);
+            $output = mail(implode(', ', $emails), $this->title, $content, $headers);
+            if ( $this->resetAfterSend ) {
+                $this->reset();
+            }
         }
         
-        return mail($email, $title, $content, $headers);
+        return $output;
     }
     
 }

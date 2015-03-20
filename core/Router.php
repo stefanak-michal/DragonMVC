@@ -225,7 +225,7 @@ final class Router
         
         foreach ( $this->routes AS $mask => $route ) {
             $res = preg_match("/^" . str_replace('/', '\/', 
-                        is_integer($mask) ? $route : str_replace(array('%i', '%s', '%d'), array('(\d+)', '([\w\-]+)', '([\d\.]+)'), $mask)
+                        is_integer($mask) ? ($route . '.*') : str_replace(array('%i', '%s', '%d'), array('(\d+)', '([\w\-]+)', '([\d\.]+)'), $mask)
                     ) . "$/", $path, $vars);
             if ( $res ) {
                 $uri = preg_split("[\\/]", $route, -1, PREG_SPLIT_NO_EMPTY);

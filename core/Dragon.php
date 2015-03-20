@@ -65,6 +65,8 @@ final class Dragon
             $founded = $this->router->findRoute($path);
             if ( !empty($founded) ) {
                 $cmv = $founded;
+            } else {
+                $cmv['vars'] = explode('/', $path);
             }
         }
 
