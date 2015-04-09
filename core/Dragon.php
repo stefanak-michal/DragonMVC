@@ -114,11 +114,18 @@ final class Dragon
             self::show_error(400, 'Not call controller->method');
         }
         
-        self::$controller = $cmv['controller'];
+        if ( !is_array($cmv['controller']) ) {
+            $cmv['controller'] = array($cmv['controller']);
+        }
+        
+        self::$controller = implode("\\", $cmv['controller']);
         self::$method = $cmv['method'];
         
-        //add prefix
-        $cmv['controller'] = '\\controllers\\' . ucfirst($cmv['controller']);
+        //add controllers folder to begin and uppercase first letter class name
+        array_unshift($cmv['controller'], 'controllers');
+        end($cmv['controller']);
+        $cmv['controller'][key($cmv['controller'])] = ucfirst($cmv['controller'][key($cmv['controller'])]);
+        $cmv['controller'] = "\\" . implode("\\", $cmv['controller']);
         $controller = new $cmv['controller']($this->config, $this->router);
 
         if (method_exists($controller, 'beforeFilter'))

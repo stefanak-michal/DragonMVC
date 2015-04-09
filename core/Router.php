@@ -229,8 +229,8 @@ final class Router
                     ) . "$/", $path, $vars);
             if ( $res ) {
                 $uri = preg_split("[\\/]", $route, -1, PREG_SPLIT_NO_EMPTY);
-                $output['controller'] = $uri[0];
-                $output['method'] = $uri[1];
+                $output['method'] = array_pop($uri);
+                $output['controller'] = $uri;
                 array_shift($vars);
                 $output['vars'] = array_values($vars);
                 break;
