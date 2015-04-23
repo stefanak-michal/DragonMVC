@@ -42,7 +42,9 @@ final class Router
         if ( empty($this->project_host) ) {
             $this->project_host = ( $_SERVER['SERVER_PORT'] == 80 ? 'http://' : 'https://' ) . $_SERVER['HTTP_HOST'];
         }
-        $this->config->set('project_host', trim($this->project_host, '/') . '/');
+        
+        $this->project_host = rtrim($this->project_host, '/') . '/';
+        $this->config->set('project_host', $this->project_host);
     }
     
     /**
