@@ -52,7 +52,7 @@ final class View
     public function __construct($config)
     {
         $this->config = $config;
-        $this->view = Dragon::$controller . DS . Dragon::$method;
+        $this->setView(Dragon::$controller . DS . Dragon::$method);
     }
     
     /**
@@ -62,7 +62,7 @@ final class View
      */
     public function setView($view)
     {
-        $this->view = $view;
+        $this->view = str_replace(array('/', "\\"), DS, $view);
     }
     
     /**
