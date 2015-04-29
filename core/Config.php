@@ -25,17 +25,50 @@ final class Config
     private $lookUpTables = array();
     
     /**
+     * Lookuptable file affix
+     *
+     * @var string
+     */
+    private $ltAffix = '.lt.php';
+    /**
+     * Config file affix
+     *
+     * @var string
+     */
+    private $cfgAffix = '.cfg.php';
+    
+    /**
      * Construct
      */
     public function __construct()
     {
-        //read all config files
-        $this->loadFiles('*.cfg.php', 'aConfig', 'configVars');
-        $this->loadFiles((IS_WORKSPACE ? 'development' : 'production') . DS . '*.cfg.php', 'aConfig', 'configVars');
-        
-        //read all lookup table files
-        $this->loadFiles('*.lt.php', 'lookUpTable', 'lookUpTables');
-        $this->loadFiles((IS_WORKSPACE ? 'development' : 'production') . DS . '*.lt.php', 'lookUpTable', 'lookUpTables');
+        //read main config files
+        $this->loadLookuptable('main');
+        $this->loadConfig('assets');
+        $this->loadConfig('main');
+        $this->loadConfig('routes');
+    }
+    
+    /**
+     * Load lookuptable file
+     * 
+     * @param string $name
+     */
+    public function loadLookuptable($name)
+    {
+        $this->loadFiles($name . $this->ltAffix, 'lookUpTable', 'lookUpTables');
+        $this->loadFiles((IS_WORKSPACE ? 'development' : 'production') . DS . $name . $this->ltAffix, 'lookUpTable', 'lookUpTables');
+    }
+    
+    /**
+     * Load config file
+     * 
+     * @param string $name
+     */
+    public function loadConfig($name)
+    {
+        $this->loadFiles($name . $this->cfgAffix);
+        $this->loadFiles((IS_WORKSPACE ? 'development' : 'production') . DS . $name . $this->cfgAffix);
     }
     
     /**
@@ -45,9 +78,10 @@ final class Config
      * @param string $variable
      * @param string $objVar
      */
-    private function loadFiles($path, $variable, $objVar)
+    private function loadFiles($path, $variable = 'aConfig', $objVar = 'configVars')
     {
         $files = glob(BASE_PATH . DS . 'config' . DS . $path);
+        $files = array_filter($files);
         if ( !empty($files) ) {
             foreach ($files AS $file) {
                 include $file;
