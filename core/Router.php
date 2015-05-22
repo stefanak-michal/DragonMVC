@@ -124,9 +124,9 @@ final class Router
                 foreach ( $vars AS $var ) {
                     if ( strpos($uri, '%') !== false ) {
                         if ( is_numeric($var) ) {
-                            $uri = preg_replace("/%[id]/", $var, $uri);
+                            $uri = preg_replace("/%[id]/", $var, $uri, 1);
                         } else {
-                            $uri = preg_replace("/%s/", $var, $uri);
+                            $uri = preg_replace("/%s/", $var, $uri, 1);
                         }
                     } else {
                         $uri .= '/' . $var;
