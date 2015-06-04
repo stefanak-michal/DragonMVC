@@ -36,6 +36,12 @@ final class Config
      * @var string
      */
     private $cfgAffix = '.cfg.php';
+    /**
+     * JSON config affix
+     *
+     * @var string
+     */
+    private $jsonAffix = '.json';
     
     /**
      * Construct
@@ -69,6 +75,30 @@ final class Config
     {
         $this->loadFiles($name . $this->cfgAffix);
         $this->loadFiles((IS_WORKSPACE ? 'development' : 'production') . DS . $name . $this->cfgAffix);
+    }
+    
+    /**
+     * Nacita json config
+     * 
+     * @param string $file
+     * @param boolean $assoc
+     * @return array
+     */
+    public function getJson($file, $assoc = true)
+    {
+        $json = array();
+        
+        $file = BASE_PATH . DS . 'config' . DS . $file . $this->jsonAffix;
+        if ( file_exists($file) ) {
+            $content = file_get_contents($file);
+            $json = json_decode($content, $assoc);
+            
+            if ( json_last_error() != JSON_ERROR_NONE ) {
+                $json = array();
+            }
+        }
+        
+        return $json;
     }
     
     /**
@@ -162,10 +192,6 @@ final class Config
                     }
                 }
             }
-        }
-        else
-        {
-            $output = $this->lookUpTables;
         }
         
         return $output;
