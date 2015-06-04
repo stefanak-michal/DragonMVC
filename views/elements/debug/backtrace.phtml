@@ -1,0 +1,22 @@
+<h1>Redirect (<?= $code ?>)</h1>
+<a href="<?= $url ?>"><?= $url ?></a>
+<br><br>
+
+<table>
+<? foreach ( $bt AS $row ): ?>
+    <tr>
+        <td><?= isset($row['class'], $row['type']) ? ('<b>' . $row['class'] . $row['type'] . '</b>') : '' ?><?= $row['function'] ?></td>
+        <td><?= isset($row['line']) ? 'r. ' . $row['line'] : '' ?></td>
+    </tr>
+    <tr>
+        <td colspan="2" style="border-bottom: 1px solid gray; ">
+            <? if ( !empty($row['args']) ) {
+                $row['args'] = helpers\ArrayUtil::array_map_recursive(function($item) { return is_object($item) ? false : $item; }, $row['args']);
+                if ( !empty($row['args']) ) {
+                    echo 'args: ';
+                    print_r($row['args']);
+                }
+            } ?>
+    </tr>
+<? endforeach; ?>
+</table>
