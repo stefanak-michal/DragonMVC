@@ -57,6 +57,12 @@ abstract class App
         DB::$password = $this->config->get('dbPass');
         DB::$dbName = $this->config->get('dbDatabase');
         
+        if ( !IS_WORKSPACE ) {
+            DB::$error_handler = function($params) {
+                trigger_error(implode(PHP_EOL, $params), E_USER_WARNING);
+            };
+        }
+        
         $this->view = new View($this->config);
         $this->assets = new Assets($this->router);
     }

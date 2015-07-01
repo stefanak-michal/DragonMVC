@@ -3,7 +3,7 @@
 namespace models;
 
 use \DB,
-    \DBHelper;
+    helpers\ArrayUtil;
 
 /**
  * Model
@@ -26,11 +26,18 @@ abstract class Model
     protected $primary_key;
     
     /**
+     * MeekroDB
+     *
+     * @var MeekroDB
+     */
+    protected $db;
+    
+    /**
      * Construct
      */
     public function __construct()
     {
-        
+        $this->db = DB::getMDB();
     }
     
     /**
@@ -45,22 +52,22 @@ abstract class Model
         
         if (empty($ids))
         {
-            $output = DB::query('SELECT * FROM ' . $this->table);
+            $output = $this->db->query('SELECT * FROM ' . $this->table);
         }
         elseif ( ! is_array($ids))
         {
-            $output = DB::query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', $ids);
+            $output = $this->db->query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', $ids);
         }
         elseif (count($ids) == 1)
         {
-            $output = DB::query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', reset($ids));
+            $output = $this->db->query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', reset($ids));
         }
         else
         {
-            $output = DB::query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' IN %li', $ids);
+            $output = $this->db->query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' IN %li', $ids);
         }
         
-        return DBHelper::reIndex($output, $this->primary_key);
+        return ArrayUtil::reIndex($output, $this->primary_key);
     }
     
     /**
@@ -71,7 +78,7 @@ abstract class Model
     public function delete($id)
     {
         if ( is_numeric($id) ) {
-            DB::delete($this->table, $this->primary_key . ' = %i', $id);
+            $this->db->delete($this->table, $this->primary_key . ' = %i', $id);
         }
     }
     

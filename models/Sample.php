@@ -2,9 +2,6 @@
 
 namespace models;
 
-use core\DB,
-    core\DBHelper;
-
 /**
  * modelSample
  * 

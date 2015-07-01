@@ -2,8 +2,7 @@
 
 namespace models;
 
-use core\DB,
-    core\DBHelper;
+use core\DB;
 
 /**
  * Users
@@ -69,7 +68,7 @@ class Users extends Model
                 $update['lastSession'] = $sessionHash;
             }
             
-            DB::update($this->table, $update, $this->primary_key . ' = %i', $idUser);
+            $this->db->update($this->table, $update, $this->primary_key . ' = %i', $idUser);
         }
     }
     
@@ -83,7 +82,7 @@ class Users extends Model
     {
         if ( ! empty($idUser) AND is_array($columns) AND ! empty($columns))
         {
-            DB::update($this->table, $columns, $this->primary_key . ' = %i', $idUser);
+            $this->db->update($this->table, $columns, $this->primary_key . ' = %i', $idUser);
         }
     }
     
@@ -99,7 +98,7 @@ class Users extends Model
         
         if ( ! empty($sessionHash))
         {
-            $output = DB::queryFirstRow('SELECT * FROM ' . $this->table . ' WHERE lastSession = %s', $sessionHash);
+            $output = $this->db->queryFirstRow('SELECT * FROM ' . $this->table . ' WHERE lastSession = %s', $sessionHash);
         }
         
         return $output;
@@ -117,7 +116,7 @@ class Users extends Model
         
         if ( ! empty($nick))
         {
-            $output = DB::queryFirstRow('SELECT * FROM ' . $this->table . ' WHERE nick LIKE %s', $nick);
+            $output = $this->db->queryFirstRow('SELECT * FROM ' . $this->table . ' WHERE nick LIKE %s', $nick);
         }
         
         return $output;
@@ -135,7 +134,7 @@ class Users extends Model
         
         if ( ! empty($email))
         {
-            $output = DB::queryFirstRow('SELECT * FROM ' . $this->table . ' WHERE email LIKE %s', $email);
+            $output = $this->db->queryFirstRow('SELECT * FROM ' . $this->table . ' WHERE email LIKE %s', $email);
         }
         
         return $output;
@@ -151,7 +150,7 @@ class Users extends Model
     {
         if ( ! empty($idUser) AND is_int($status))
         {
-            DB::update($this->table, array('cisStatus' => $status), 'idUser = %i', $idUser);
+            $this->db->update($this->table, array('cisStatus' => $status), 'idUser = %i', $idUser);
         }
     }
     
@@ -164,7 +163,7 @@ class Users extends Model
     {
         if ( ! empty($days))
         {
-            DB::delete($this->table, 'lastActivityTime < DATE_SUB(NOW(), INTERVAL %i DAY)', $days);
+            $this->db->delete($this->table, 'lastActivityTime < DATE_SUB(NOW(), INTERVAL %i DAY)', $days);
         }
     }
     
