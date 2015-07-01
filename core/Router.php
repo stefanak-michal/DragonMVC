@@ -42,7 +42,9 @@ final class Router
         if ( empty($this->project_host) ) {
             $this->project_host = ( $_SERVER['SERVER_PORT'] == 80 ? 'http://' : 'https://' ) . $_SERVER['HTTP_HOST'];
         }
-        $this->config->set('project_host', trim($this->project_host, '/') . '/');
+        
+        $this->project_host = rtrim($this->project_host, '/') . '/';
+        $this->config->set('project_host', $this->project_host);
     }
     
     /**
@@ -101,39 +103,71 @@ final class Router
         if ( ! empty($controller) && ! empty($method) ) {
             $uri = $this->project_host;
             
-            //find allowed route
-            $mask = array_search($controller . '/' . $method, $this->routes);
-            if ( $mask === false ) {
-                Dragon::show_error(400, 'No defined route');
+            //find right routes
+            $masks = array_keys($this->routes, $controller . '/' . $method);
+            if ( empty($masks) ) {
+                Dragon::show_error(400, 'No defined route ' . $controller . '/' . $method);
             }
             
-            if ( is_integer($mask) ) {
-                $uri .= $controller . '/' . $method;
-            } else {
-                $uri .= $mask;
+            if ( !empty($vars) && !is_array($vars) ) {
+                $vars = array($vars);
             }
             
-            //complete path variables
-            if ( ! empty($vars) ) {
-                if ( !is_array($vars) ) {
-                    $vars = array($vars);
+            foreach ( $masks AS $mask ) {
+                //default action if it's not defined mask
+                if ( is_integer($mask) ) {
+                    $uri .= $controller . '/' . $method;
+                } else {
+                    if ( !empty($vars) ) {
+                        //check number of defined variables against mask
+                        if ( count($vars) != preg_match_all("/%[dis]/", $mask) ) {
+                            continue;
+                        }
+
+                        //translate variables in mask
+                        $i = 0;
+                        while ( preg_match("/%[dis]/", $mask, $match) ) {
+                            if ( !isset($vars[$i]) ) {
+                                break;
+                            }
+
+                            switch ( $match[0] ) {
+                                case '%d':
+                                case '%i':
+                                    if ( is_numeric($vars[$i]) ) {
+                                        $mask = preg_replace("/%[id]/", $vars[$i], $mask, 1);
+                                        unset($vars[$i]);
+                                    }
+                                    break;
+
+                                case '%s':
+                                    $mask = preg_replace("/%s/", $vars[$i], $mask, 1);
+                                    unset($vars[$i]);
+                                    break;
+                            }
+
+                            $i++;
+                        }
+
+                        if ( strpos($mask, '%') !== false ) {
+                            continue;
+                        }
+                    }
+                    
+                    $uri .= $mask;
                 }
                 
-                foreach ( $vars AS $var ) {
-                    if ( strpos($uri, '%') !== false ) {
-                        if ( is_numeric($var) ) {
-                            $uri = preg_replace("/%[id]/", $var, $uri);
-                        } else {
-                            $uri = preg_replace("/%s/", $var, $uri);
-                        }
-                    } else {
-                        $uri .= '/' . $var;
-                    }
+                //append variables which it's not setted
+                if ( !empty($vars) ) {
+                    $uri .= '/' . implode('/', $vars);
                 }
-            }
-            
-            if ( is_array($query) && !empty($query) ) {
-                $uri .= '?' . http_build_query($query);
+                
+                //append query url part
+                if ( is_array($query) && !empty($query) ) {
+                    $uri .= '?' . http_build_query($query);
+                }
+                
+                break;
             }
         }
         
@@ -178,7 +212,7 @@ final class Router
      * @param string $uri
      * @param string $message
      */
-    public function redirect($uri, $message = '')
+    public function redirect($uri, $message = '', $code = 302)
     {
         if ( ! empty($uri))
         {
@@ -187,7 +221,17 @@ final class Router
                 setcookie('message', $message, time() + 60, '/');
             }
             
-            header('Location: '. $uri);
+            if ( IS_WORKSPACE && $this->config->get('debug') ) {
+                View::renderElement('debug/backtrace', array(
+                    'bt' => debug_backtrace(),
+                    'url' => $uri,
+                    'code' => $code,
+                    'message' => $message
+                ));
+            } else {
+                header('Location: '. $uri, true, $code);
+            }
+            
             exit;
         }
     }
@@ -225,14 +269,25 @@ final class Router
         
         foreach ( $this->routes AS $mask => $route ) {
             $res = preg_match("/^" . str_replace('/', '\/', 
-                        is_integer($mask) ? ($route . '.*') : str_replace(array('%i', '%s', '%d'), array('(\d+)', '([\w\-]+)', '([\d\.]+)'), $mask)
-                    ) . "$/", $path, $vars);
+                        is_integer($mask) ? ($route . '(.*)') : str_replace(array('%i', '%s', '%d'), array('(\d+)', '([\w\-]+)', '([\d\.]+)'), $mask)
+                    ) . "$/i", $path, $vars);
+            
             if ( $res ) {
                 $uri = preg_split("[\\/]", $route, -1, PREG_SPLIT_NO_EMPTY);
-                $output['method'] = array_pop($uri);
-                $output['controller'] = $uri;
-                array_shift($vars);
-                $output['vars'] = array_values($vars);
+                $output = array(
+                    'method' => array_pop($uri),
+                    'controller' => $uri,
+                    'vars' => array()
+                );
+                
+                if ( is_integer($mask) ) {
+                    if ( !empty($vars[1]) ) {
+                        $output['vars'] = preg_split("[\\/]", $vars[1], -1, PREG_SPLIT_NO_EMPTY);
+                    }
+                } else {
+                    array_shift($vars);
+                    $output['vars'] = array_values($vars);
+                }
                 break;
             }
         }

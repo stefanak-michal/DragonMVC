@@ -25,17 +25,80 @@ final class Config
     private $lookUpTables = array();
     
     /**
+     * Lookuptable file affix
+     *
+     * @var string
+     */
+    private $ltAffix = '.lt.php';
+    /**
+     * Config file affix
+     *
+     * @var string
+     */
+    private $cfgAffix = '.cfg.php';
+    /**
+     * JSON config affix
+     *
+     * @var string
+     */
+    private $jsonAffix = '.json';
+    
+    /**
      * Construct
      */
     public function __construct()
     {
-        //read all config files
-        $this->loadFiles('*.cfg.php', 'aConfig', 'configVars');
-        $this->loadFiles((IS_WORKSPACE ? 'development' : 'production') . DS . '*.cfg.php', 'aConfig', 'configVars');
+        //read main config files
+        $this->loadLookuptable('main');
+        $this->loadConfig('assets');
+        $this->loadConfig('main');
+        $this->loadConfig('routes');
+    }
+    
+    /**
+     * Load lookuptable file
+     * 
+     * @param string $name
+     */
+    public function loadLookuptable($name)
+    {
+        $this->loadFiles($name . $this->ltAffix, 'lookUpTable', 'lookUpTables');
+        $this->loadFiles((IS_WORKSPACE ? 'development' : 'production') . DS . $name . $this->ltAffix, 'lookUpTable', 'lookUpTables');
+    }
+    
+    /**
+     * Load config file
+     * 
+     * @param string $name
+     */
+    public function loadConfig($name)
+    {
+        $this->loadFiles($name . $this->cfgAffix);
+        $this->loadFiles((IS_WORKSPACE ? 'development' : 'production') . DS . $name . $this->cfgAffix);
+    }
+    
+    /**
+     * Nacita json config
+     * 
+     * @param string $file
+     * @param boolean $assoc
+     * @return array
+     */
+    public function getJson($file, $assoc = true)
+    {
+        $json = array();
         
-        //read all lookup table files
-        $this->loadFiles('*.lt.php', 'lookUpTable', 'lookUpTables');
-        $this->loadFiles((IS_WORKSPACE ? 'development' : 'production') . DS . '*.lt.php', 'lookUpTable', 'lookUpTables');
+        $file = BASE_PATH . DS . 'config' . DS . $file . $this->jsonAffix;
+        if ( file_exists($file) ) {
+            $content = file_get_contents($file);
+            $json = json_decode($content, $assoc);
+            
+            if ( json_last_error() != JSON_ERROR_NONE ) {
+                $json = array();
+            }
+        }
+        
+        return $json;
     }
     
     /**
@@ -45,9 +108,10 @@ final class Config
      * @param string $variable
      * @param string $objVar
      */
-    private function loadFiles($path, $variable, $objVar)
+    private function loadFiles($path, $variable = 'aConfig', $objVar = 'configVars')
     {
         $files = glob(BASE_PATH . DS . 'config' . DS . $path);
+        $files = array_filter($files);
         if ( !empty($files) ) {
             foreach ($files AS $file) {
                 include $file;
@@ -128,10 +192,6 @@ final class Config
                     }
                 }
             }
-        }
-        else
-        {
-            $output = $this->lookUpTables;
         }
         
         return $output;
