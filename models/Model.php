@@ -82,4 +82,12 @@ abstract class Model
         }
     }
     
+    /**
+     * Destruktor
+     */
+    public function __destruct()
+    {
+        $this->db->disconnect();
+    }
+    
 }
