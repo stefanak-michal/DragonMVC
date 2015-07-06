@@ -25,6 +25,13 @@ final class Dragon
      */
     public static $method;
     /**
+     * Host name
+     *
+     * @var string 
+     */
+    public static $host;
+    
+    /**
      * Config
      *
      * @var Config
@@ -40,17 +47,58 @@ final class Dragon
     /**
      * Construct
      */
-    public function __construct() { }
+    public function __construct()
+    {
+        $this->config = new Config();
+        $this->router = new Router($this->config);
+    
+        //we need database config ;)
+        \DB::$host = $this->config->get('dbServer');
+        \DB::$user = $this->config->get('dbUser');
+        \DB::$password = $this->config->get('dbPass');
+        \DB::$dbName = $this->config->get('dbDatabase');
+        
+        if ( !IS_WORKSPACE ) {
+            \DB::$error_handler = function($params) {
+                trigger_error(implode(PHP_EOL, $params), E_USER_WARNING);
+            };
+            
+            \DB::$nonsql_error_handler = function($params) {
+                trigger_error(implode(PHP_EOL, $params), E_USER_WARNING);
+                header("HTTP/1.1 500 Internal Server Error");
+                readfile(BASE_PATH . DS . '500.html');
+                exit;
+            };
+        }
+        
+        self::$host = $this->config->get('project_host');
+    }
+    
+    /**
+     * Vrati core Config
+     * 
+     * @return Config
+     */
+    public function getConfig()
+    {
+        return $this->config;
+    }
+    
+    /**
+     * Vrati core Router
+     * 
+     * @return Router
+     */
+    public function getRouter()
+    {
+        return $this->router;
+    }
     
     /**
      * Run a project
      */
     public function run()
     {
-        //default
-        $this->config = new Config();
-        $this->router = new Router($this->config);
-        
         $cmv = array(
             'controller' => $this->config->get('defaultController'),
             'method' => $this->config->get('defaultMethod'),
@@ -128,9 +176,9 @@ final class Dragon
         $cmv['controller'] = "\\" . implode("\\", $cmv['controller']);
         $controller = new $cmv['controller']($this->config, $this->router);
 
-        if (method_exists($controller, 'beforeFilter'))
+        if (method_exists($controller, 'beforeMethod'))
         {
-            $controller->beforeFilter();
+            $controller->beforeMethod();
         }
 
         if ( is_callable(array($controller, $cmv['method']), true) )
@@ -138,45 +186,9 @@ final class Dragon
             call_user_func_array(array($controller, $cmv['method']), $cmv['vars']);
         }
 
-        if (method_exists($controller, 'afterFilter'))
+        if (method_exists($controller, 'afterMethod'))
         {
-            $controller->afterFilter();
-        }
-    }
-    
-    /**
-     * Autoload method
-     * 
-     * @param string $name
-     */
-    public function autoload($name)
-    {
-        $parts = explode("\\", $name);
-        $parts = array_filter($parts);
-
-        if ( count($parts) >= 2 )
-        {
-            $path = BASE_PATH;
-            foreach ( $parts AS $i => $part )
-            {
-                if ( $i == 0 )
-                {
-                    $path .= DS . $part;
-                }
-                elseif ( $i == count($parts) - 1 )
-                {
-                    $path .= DS . ucfirst($part) . '.php';
-                }
-                else
-                {
-                    $path .= DS . $part;
-                }
-            }
-
-            if ( file_exists($path) )
-            {
-                include_once($path);
-            }
+            $controller->afterMethod();
         }
     }
     

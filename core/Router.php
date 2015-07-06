@@ -39,8 +39,8 @@ final class Router
         $this->routes = $this->config->get('routes');
         
         $this->project_host = $this->config->get('project_host');
-        if ( empty($this->project_host) ) {
-            $this->project_host = ( $_SERVER['SERVER_PORT'] == 80 ? 'http://' : 'https://' ) . $_SERVER['HTTP_HOST'];
+        if ( empty($this->project_host) && isset($_SERVER['SERVER_PORT'], $_SERVER['HTTP_HOST']) ) {
+            $this->project_host = ( $_SERVER['SERVER_PORT'] == 443 ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'];
         }
         
         $this->project_host = rtrim($this->project_host, '/') . '/';
@@ -250,7 +250,7 @@ final class Router
         if ( ! empty($name) AND ! empty($assetType) ) {
             $files = (array) $this->config->get($assetType);
             if ( array_key_exists($name, $files) ) {
-                $output = $this->project_host . 'assets/' . $assetType . '/' . $files[$name]['file'] . '?v=' . $files[$name]['version'];
+                $output = '/assets/' . $assetType . '/' . $files[$name]['file'] . '?v=' . $files[$name]['version'];
             }
         }
         

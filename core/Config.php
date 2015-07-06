@@ -190,6 +190,10 @@ final class Config
                     {
                         $output = $output[$key];
                     }
+                    else 
+                    {
+                        $output = false;
+                    }
                 }
             }
         }

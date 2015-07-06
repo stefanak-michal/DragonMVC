@@ -24,7 +24,7 @@ class Admin extends App
      */
     private $mUsers;
     
-    public function beforeFilter()
+    public function beforeMethod()
     {
         $this->mUsers = new mUsers();
         $this->auth = new Auth($this->mUsers, $this->config);
@@ -33,7 +33,7 @@ class Admin extends App
             $this->router->redirect( $this->config->get('project_host') );
         }
         
-        parent::beforeFilter();
+        parent::beforeMethod();
         
         $this->view->setLayout('default');
         $this->assets
