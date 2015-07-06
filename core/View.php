@@ -62,7 +62,7 @@ final class View
      */
     public function setView($view)
     {
-        $this->view = str_replace(array('/', "\\"), DS, $view);
+        $this->view = self::replaceDirectorySeperator($view);
     }
     
     /**
@@ -72,7 +72,7 @@ final class View
      */
     public function setLayout($layout)
     {
-        $this->layout = $layout;
+        $this->layout = self::replaceDirectorySeperator($layout);
     }
     
     /**
@@ -93,7 +93,7 @@ final class View
         {
             if ($projectTitle)
             {
-                $value = $title . ' - ' . $value;
+                $value = $value . ' | ' . $title;
             }
         }
         
@@ -139,7 +139,6 @@ final class View
             if ( ! empty($this->layout))
             {
                 $content = ob_get_clean();
-//                ob_end_clean();
 
                 extract($this->viewVars);
                 include BASE_PATH . DS . self::$views_dir . DS . 'layout' . DS . $this->layout . self::$views_ext;
@@ -168,7 +167,7 @@ final class View
     {
         $content = '';
         
-        $elementFile = BASE_PATH . DS . self::$views_dir . DS . 'elements' . DS . $element . self::$views_ext;
+        $elementFile = BASE_PATH . DS . self::$views_dir . DS . 'elements' . DS . self::replaceDirectorySeperator($element) . self::$views_ext;
         if (file_exists($elementFile))
         {
             if ( $return ) {
@@ -198,8 +197,6 @@ final class View
 
     /**
      * Check if view exists
-     * 
-     * @access private
      */
     private function checkExistsView()
     {
@@ -207,6 +204,17 @@ final class View
         {
             Dragon::show_error(404, $this->view);
         }
+    }
+
+    /**
+     * Pouzije spravny directory separator
+     * 
+     * @param string $str
+     * @return string
+     */
+    private static function replaceDirectorySeperator($str)
+    {
+        return str_replace(array('/', "\\"), DS, $str);
     }
 
 }

@@ -23,9 +23,9 @@ class Api extends App
         parent::__construct($config, $router);
     }
     
-    public function beforeFilter()
+    public function beforeMethod()
     {
-        parent::beforeFilter();
+        parent::beforeMethod();
         
         $this->view->setLayout(false);
         $this->view->setView('api/clear');

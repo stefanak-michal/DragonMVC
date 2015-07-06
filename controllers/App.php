@@ -81,7 +81,7 @@ abstract class App
     /**
      * Some action before method, what is needed ..or do not
      */
-    public function beforeFilter()
+    public function beforeMethod()
     {
         $this->view->setTitle();
         $this->set('project_host', $this->config->get('project_host'));
@@ -91,7 +91,7 @@ abstract class App
     /**
      * Action after method
      */
-    public function afterFilter()
+    public function afterMethod()
     {
         $this->view->render();
     }

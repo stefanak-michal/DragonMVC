@@ -15,9 +15,9 @@ class Homepage extends App
     /**
      * Some action before any method
      */
-    public function beforeFilter()
+    public function beforeMethod()
     {
-        parent::beforeFilter();
+        parent::beforeMethod();
         
         //layout stranky
         $this->view->setLayout('default');
@@ -26,9 +26,9 @@ class Homepage extends App
     /**
      * Some action after any method
      */
-    public function afterFilter()
+    public function afterMethod()
     {
-        parent::afterFilter();
+        parent::afterMethod();
     }
     
     /**
