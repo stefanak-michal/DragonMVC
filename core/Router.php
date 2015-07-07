@@ -43,6 +43,10 @@ final class Router
             $this->project_host = ( $_SERVER['SERVER_PORT'] == 443 ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'];
         }
         
+        if ( empty($this->project_host) ) {
+            trigger_error('Not specified project host', E_USER_WARNING);
+        }
+        
         $this->project_host = rtrim($this->project_host, '/') . '/';
         $this->config->set('project_host', $this->project_host);
     }
@@ -98,11 +102,8 @@ final class Router
      */
     public function getUrl($controller, $method, $vars = array(), $query = array())
     {
-        $uri = $this->current();
-        
+        $uri = $this->project_host;
         if ( ! empty($controller) && ! empty($method) ) {
-            $uri = $this->project_host;
-            
             //find right routes
             $masks = array_keys($this->routes, $controller . '/' . $method);
             if ( empty($masks) ) {
