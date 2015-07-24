@@ -270,7 +270,7 @@ final class Router
         
         foreach ( $this->routes AS $mask => $route ) {
             $res = preg_match("/^" . str_replace('/', '\/', 
-                        is_integer($mask) ? ($route . '(.*)') : str_replace(array('%i', '%s', '%d'), array('(\d+)', '([\w\-]+)', '([\d\.]+)'), $mask)
+                        is_integer($mask) ? ($route . '((?=/)(.*))?') : str_replace(array('%i', '%s', '%d'), array('(\d+)', '([\w\-]+)', '([\d\.]+)'), $mask)
                     ) . "$/i", $path, $vars);
             
             if ( $res ) {
