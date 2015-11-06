@@ -68,16 +68,6 @@ final class Dragon
             $this->setDatabaseErrorHandlers();
         }
 
-        //and ElasticSearch config
-        if ( class_exists("\\ElasticSearch\\Client") ) {
-            $esConfig = $this->config->get('elasticsearch');
-            if ( !empty($esConfig) ) {
-                foreach ( $esConfig AS $key => $value ) {
-                    \ElasticSearch\Client::$_defaults[$key] = $value;
-                }
-            }
-        }
-
         self::$host = $this->config->get('project_host');
     }
 
