@@ -1,5 +1,11 @@
 <?php
 
+namespace core;
+
+use \Exception,
+    \mysqli,
+    \mysqli_result;
+
 /*
   Copyright (C) 2008-2012 Sergey Tsalkov (stsalkov@gmail.com)
 
@@ -19,7 +25,7 @@
   @see http://www.meekro.com/docs.php
  */
 
-class DB
+final class DB
 {
 
     // initial connection
@@ -47,7 +53,7 @@ class DB
     /**
      * Returns MeekroDB class instance
      * 
-     * @return \MeekroDB
+     * @return \core\MeekroDB
      */
     public static function getMDB()
     {
@@ -57,14 +63,11 @@ class DB
             $mdb = DB::$mdb = new MeekroDB();
         }
 
-        static $variables_to_sync = array('param_char', 'named_param_seperator', 'success_handler', 'error_handler', 'throw_exception_on_error',
-            'nonsql_error_handler', 'throw_exception_on_nonsql_error', 'nested_transactions', 'usenull', 'ssl', 'connect_options');
+        $db_class_vars = get_class_vars(__CLASS__);
 
-        $db_class_vars = get_class_vars('DB'); // the DB::$$var syntax only works in 5.3+
-
-        foreach ( $variables_to_sync as $variable ) {
-            if ( $mdb->$variable !== $db_class_vars[$variable] ) {
-                $mdb->$variable = $db_class_vars[$variable];
+        foreach ( $db_class_vars AS $key => $value ) {
+            if ( isset($mdb->$key) && $mdb->$key !== self::$$key ) {
+                $mdb->$key = $value;
             }
         }
 
@@ -87,7 +90,7 @@ class DB
 
 }
 
-class MeekroDB
+final class MeekroDB
 {
 
     // initial connection
@@ -145,7 +148,7 @@ class MeekroDB
     {
         $mysql = $this->internal_mysql;
 
-        if ( !($mysql instanceof MySQLi) ) {
+        if ( !($mysql instanceof mysqli) ) {
             if ( !$this->port )
                 $this->port = ini_get('mysqli.default_port');
             $this->current_db = $this->dbName;
@@ -178,7 +181,7 @@ class MeekroDB
     public function disconnect()
     {
         $mysqli = $this->internal_mysql;
-        if ( $mysqli instanceof MySQLi ) {
+        if ( $mysqli instanceof mysqli ) {
             if ( $thread_id = $mysqli->thread_id )
                 $mysqli->kill($thread_id);
             $mysqli->close();
@@ -193,7 +196,7 @@ class MeekroDB
             throw $e;
         }
 
-        $error_handler = is_callable($this->nonsql_error_handler) ? $this->nonsql_error_handler : 'meekrodb_error_handler';
+        $error_handler = is_callable($this->nonsql_error_handler) ? $this->nonsql_error_handler : array($this, 'meekrodb_error_handler');
 
         call_user_func($error_handler, array(
             'type' => 'nonsql',
@@ -355,7 +358,7 @@ class MeekroDB
         if ( isset($options['update']) && is_array($options['update']) && $options['update'] && strtolower($which) == 'insert' ) {
             if ( array_values($options['update']) !== $options['update'] ) {
                 return $this->query(
-                                str_replace('%', $this->param_char, "INSERT INTO %b %lb VALUES %? ON DUPLICATE KEY UPDATE %?"), $table, $keys, $values, $options['update']);
+                        str_replace('%', $this->param_char, "INSERT INTO %b %lb VALUES %? ON DUPLICATE KEY UPDATE %?"), $table, $keys, $values, $options['update']);
             } else {
                 $update_str = array_shift($options['update']);
                 $query_param = array(
@@ -367,7 +370,7 @@ class MeekroDB
         }
 
         return $this->query(
-                        str_replace('%', $this->param_char, "%l INTO %b %lb VALUES %?"), $which, $table, $keys, $values);
+                str_replace('%', $this->param_char, "%l INTO %b %lb VALUES %?"), $which, $table, $keys, $values);
     }
 
     public function insert($table, $data)
@@ -499,8 +502,9 @@ class MeekroDB
             // handle numbered parameters
             if ( $arg_number_length = strspn($sql, '0123456789', $new_pos_back) ) {
                 $arg_number = substr($sql, $new_pos_back, $arg_number_length);
-                if ( !array_key_exists($arg_number, $args_all) )
+                if ( !array_key_exists($arg_number, $args_all) ) {
                     $this->nonSQLError("Non existent argument reference (arg $arg_number): $sql");
+                }
 
                 $arg = $args_all[$arg_number];
 
@@ -510,7 +514,7 @@ class MeekroDB
 
                 $arg_number = substr($sql, $new_pos_back + $named_seperator_length, $arg_number_length - $named_seperator_length);
                 $named_args = array_slice($args_all, -1)[0];
-                
+
                 if ( count($named_args) == 0 || !is_array($named_args) ) {
                     $this->nonSQLError("If you use named parameters, the second argument must be an array of parameters");
                 }
@@ -524,8 +528,9 @@ class MeekroDB
                 $arg = array_shift($args);
             }
 
-            if ( $new_pos > 0 )
+            if ( $new_pos > 0 ) {
                 $chunkyQuery[] = substr($sql, 0, $new_pos);
+            }
 
             if ( is_object($arg) && ($arg instanceof WhereClause) ) {
                 list($clause_sql, $clause_args) = $arg->textAndArgs();
@@ -753,7 +758,7 @@ class MeekroDB
         // ----- BEGIN ERROR HANDLING
         if ( !$sql || $db->error ) {
             if ( $this->error_handler ) {
-                $error_handler = is_callable($this->error_handler) ? $this->error_handler : 'meekrodb_error_handler';
+                $error_handler = is_callable($this->error_handler) ? $this->error_handler : array($this, 'meekrodb_error_handler');
 
                 call_user_func($error_handler, array(
                     'type' => 'sql',
@@ -769,7 +774,7 @@ class MeekroDB
             }
         } else if ( $this->success_handler ) {
             $runtime = sprintf('%f', $runtime * 1000);
-            $success_handler = is_callable($this->success_handler) ? $this->success_handler : 'meekrodb_debugmode_handler';
+            $success_handler = is_callable($this->success_handler) ? $this->success_handler : array($this, 'meekrodb_debugmode_handler');
 
             call_user_func($success_handler, array(
                 'query' => $sql,
@@ -784,12 +789,12 @@ class MeekroDB
         $this->affected_rows = $db->affected_rows;
 
         // mysqli_result->num_rows won't initially show correct results for unbuffered data
-        if ( $is_buffered && ($result instanceof MySQLi_Result) )
+        if ( $is_buffered && ($result instanceof mysqli_result) )
             $this->num_rows = $result->num_rows;
         else
             $this->num_rows = null;
 
-        if ( $row_type == 'raw' || !($result instanceof MySQLi_Result) )
+        if ( $row_type == 'raw' || !($result instanceof mysqli_result) )
             return $result;
 
         $return = array();
@@ -911,6 +916,33 @@ class MeekroDB
         }
 
         return $row[$column];
+    }
+
+    private function meekrodb_error_handler($params)
+    {
+        if ( isset($params['query']) )
+            $out[] = "QUERY: " . $params['query'];
+        if ( isset($params['error']) )
+            $out[] = "ERROR: " . $params['error'];
+        $out[] = "";
+
+        if ( php_sapi_name() == 'cli' && empty($_SERVER['REMOTE_ADDR']) ) {
+            echo implode("\n", $out);
+        } else {
+            echo implode("<br>\n", $out);
+        }
+
+        die;
+    }
+
+    private function meekrodb_debugmode_handler($params)
+    {
+        echo "QUERY: " . $params['query'] . " [" . $params['runtime'] . " ms]";
+        if ( php_sapi_name() == 'cli' && empty($_SERVER['REMOTE_ADDR']) ) {
+            echo "\n";
+        } else {
+            echo "<br>\n";
+        }
     }
 
 }
@@ -1052,33 +1084,6 @@ class MeekroDBException extends Exception
         return $this->query;
     }
 
-}
-
-function meekrodb_error_handler($params)
-{
-    if ( isset($params['query']) )
-        $out[] = "QUERY: " . $params['query'];
-    if ( isset($params['error']) )
-        $out[] = "ERROR: " . $params['error'];
-    $out[] = "";
-
-    if ( php_sapi_name() == 'cli' && empty($_SERVER['REMOTE_ADDR']) ) {
-        echo implode("\n", $out);
-    } else {
-        echo implode("<br>\n", $out);
-    }
-
-    die;
-}
-
-function meekrodb_debugmode_handler($params)
-{
-    echo "QUERY: " . $params['query'] . " [" . $params['runtime'] . " ms]";
-    if ( php_sapi_name() == 'cli' && empty($_SERVER['REMOTE_ADDR']) ) {
-        echo "\n";
-    } else {
-        echo "<br>\n";
-    }
 }
 
 class MeekroDBEval

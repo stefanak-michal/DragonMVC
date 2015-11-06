@@ -2,9 +2,9 @@
 
 namespace helpers;
 
-class Utils 
+class Utils
 {
-    
+
     /**
      * Better var_dump
      */
@@ -12,8 +12,7 @@ class Utils
     {
         $data = func_get_args();
         echo '<pre>';
-        foreach ($data AS $once)
-        {
+        foreach ( $data AS $once ) {
             var_dump($once);
         }
         echo '</pre>';
@@ -29,33 +28,25 @@ class Utils
     {
         $patt_open = "%((?<!</)(?<=<)[\s]*[^/!>\s]+(?=>|[\s]+[^>]*[^/]>)(?!/>))%";
         $patt_close = "%((?<=</)([^>]+)(?=>))%";
-        if (preg_match_all($patt_open,$text,$matches))
-        {
+        if ( preg_match_all($patt_open, $text, $matches) ) {
             $m_open = $matches[1];
-            if(!empty($m_open))
-            {
-                preg_match_all($patt_close,$text,$matches2);
+            if ( !empty($m_open) ) {
+                preg_match_all($patt_close, $text, $matches2);
                 $m_close = $matches2[1];
-                if (count($m_open) > count($m_close))
-                {
+                if ( count($m_open) > count($m_close) ) {
                     $c_tags = array();
                     $m_open = array_reverse($m_open);
-                    foreach ($m_close as $tag)
-                    {
-                        if ( ! empty($tag))
-                        {
-                            if ( ! isset($c_tags[$tag]))
-                            {
+                    foreach ( $m_close as $tag ) {
+                        if ( !empty($tag) ) {
+                            if ( !isset($c_tags[$tag]) ) {
                                 $c_tags[$tag] = 0;
                             }
 
-                            $c_tags[$tag]++;
+                            $c_tags[$tag] ++;
                         }
                     }
-                    foreach ($m_open as $k => $tag)
-                    {
-                        if (isset($c_tags[$tag]) AND $c_tags[$tag]-- <= 0)
-                        {
+                    foreach ( $m_open as $k => $tag ) {
+                        if ( isset($c_tags[$tag]) AND $c_tags[$tag] -- <= 0 ) {
                             $text .= '</' . $tag . '>';
                         }
                     }
@@ -77,56 +68,56 @@ class Utils
         // also for multi-byte (napr. UTF-8)
         $transform = array(
             'ö' => 'o',
-        'ű' => 'u',
-        'ő' => 'o',
-        'ü' => 'u',
-        'ł' => 'l',
-        'ż' => 'z',
-        'ń' => 'n',
-        'ć' => 'c',
-        'ę' => 'e',
-        'ś' => 's',
-        'ŕ' => 'r',
-        'á' => 'a',
-        'ä' => 'a',
-        'ĺ' => 'l',
-        'č' => 'c',
-        'é' => 'e',
-        'ě' => 'e',
-        'í' => 'i',
-        'ď' => 'd',
-        'ň' => 'n',
-        'ó' => 'o',
-        'ô' => 'o',
-        'ř' => 'r',
-        'ů' => 'u',
-        'ú' => 'u',
-        'š' => 's',
-        'ť' => 't',
-        'ž' => 'z',
-        'ľ' => 'l',
-        'ý' => 'y',
-        'Ŕ' => 'R',
-        'Á' => 'A',
-        'Ä' => 'A',
-        'Ĺ' => 'L',
-        'Č' => 'C',
-        'É' => 'E',
-        'Ě' => 'E',
-        'Í' => 'I',
-        'Ď' => 'D',
-        'Ň' => 'N',
-        'Ó' => 'O',
-        'Ô' => 'O',
-        'Ř' => 'R',
-        'Ů' => 'U',
-        'Ú' => 'U',
-        'Š' => 'S',
-        'Ť' => 'T',
-        'Ž' => 'Z',
-        'Ľ' => 'L',
-        'Ý' => 'Y',
-        'Ä' => 'A'
+            'ű' => 'u',
+            'ő' => 'o',
+            'ü' => 'u',
+            'ł' => 'l',
+            'ż' => 'z',
+            'ń' => 'n',
+            'ć' => 'c',
+            'ę' => 'e',
+            'ś' => 's',
+            'ŕ' => 'r',
+            'á' => 'a',
+            'ä' => 'a',
+            'ĺ' => 'l',
+            'č' => 'c',
+            'é' => 'e',
+            'ě' => 'e',
+            'í' => 'i',
+            'ď' => 'd',
+            'ň' => 'n',
+            'ó' => 'o',
+            'ô' => 'o',
+            'ř' => 'r',
+            'ů' => 'u',
+            'ú' => 'u',
+            'š' => 's',
+            'ť' => 't',
+            'ž' => 'z',
+            'ľ' => 'l',
+            'ý' => 'y',
+            'Ŕ' => 'R',
+            'Á' => 'A',
+            'Ä' => 'A',
+            'Ĺ' => 'L',
+            'Č' => 'C',
+            'É' => 'E',
+            'Ě' => 'E',
+            'Í' => 'I',
+            'Ď' => 'D',
+            'Ň' => 'N',
+            'Ó' => 'O',
+            'Ô' => 'O',
+            'Ř' => 'R',
+            'Ů' => 'U',
+            'Ú' => 'U',
+            'Š' => 'S',
+            'Ť' => 'T',
+            'Ž' => 'Z',
+            'Ľ' => 'L',
+            'Ý' => 'Y',
+            'Ä' => 'A'
         );
 
         $text = strtr($text, $transform);
@@ -139,12 +130,11 @@ class Utils
      * @param string $val
      * @return int
      */
-    public static function return_bytes( $val )
+    public static function return_bytes($val)
     {
-        $val = trim( $val );
-        $last = strtolower( $val[strlen( $val ) - 1] );
-        switch ( $last )
-        {
+        $val = trim($val);
+        $last = strtolower($val[strlen($val) - 1]);
+        switch ( $last ) {
             case 'g':
                 $val *= 1024;
             case 'm':
@@ -155,4 +145,46 @@ class Utils
 
         return $val;
     }
+
+    /**
+     * Vrati client IP
+     * 
+     * @return string
+     */
+    public static function realIp()
+    {
+        $ip = '';
+
+        if ( !empty($_SERVER['HTTP_CLIENT_IP']) ) {   //check ip from share internet
+            $ip = $_SERVER['HTTP_CLIENT_IP'];
+        } elseif ( !empty($_SERVER['HTTP_X_FORWARDED_FOR']) ) {   //to check ip is pass from proxy
+            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        } elseif ( isset($_SERVER['REMOTE_ADDR']) ) {
+            $ip = $_SERVER['REMOTE_ADDR'];
+        }
+
+        return $ip;
+    }
+
+    /**
+     * Ziska request header podla kluca
+     * 
+     * @param string $key
+     * @param boolean $lowercase
+     * @return mixed
+     */
+    public static function requestHeader($key, $lowercase = true)
+    {
+        $headers = apache_request_headers();
+
+        if ( $lowercase ) {
+            $headers = array_flip($headers);
+            $headers = array_map('strtolower', $headers);
+            $headers = array_flip($headers);
+            $key = strtolower($key);
+        }
+
+        return isset($headers[$key]) ? $headers[$key] : false;
+    }
+
 }

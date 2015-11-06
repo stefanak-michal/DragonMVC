@@ -1,18 +1,26 @@
 <?php
+/**
+ * Project initialization script
+ * 
+ */
+
 define('BASE_PATH', dirname(__DIR__));
 define('DS', DIRECTORY_SEPARATOR);
+define('IS_CLI', php_sapi_name() == 'cli');
 
-//autoload fnc
+/**
+ * Autoload fnc
+ */
 spl_autoload_register(function($name) {
     $parts = explode("\\", $name);
     $parts = array_filter($parts);
+    $cnt = count($parts) - 1;
+    $tryVendor = true;
 
     if ( count($parts) >= 2 ) {
         $path = BASE_PATH;
         foreach ( $parts AS $i => $part ) {
-            if ( $i == 0 ) {
-                $path .= DS . $part;
-            } elseif ( $i == count($parts) - 1 ) {
+            if ( $i == $cnt ) {
                 $path .= DS . ucfirst($part) . '.php';
             } else {
                 $path .= DS . $part;
@@ -21,35 +29,53 @@ spl_autoload_register(function($name) {
 
         if ( file_exists($path) ) {
             include_once $path;
+            $tryVendor = false;
         }
     }
 
-    //pripadne pridat nejake nacitanie z noveho priecinka "lib", kde budu bez namespace 3rd kniznice 
-    //kniznica by ale tiez mohla byt samostatny namespace, takze asi upravit hornu cast a pridat druhy pokus na priecinok "lib"
-    //pripadne pridat vynimku na "DB", aby sa nemusel samostatne includovat ..alebo ju skusit prehodit na namespace
-    
+    //v priecinku vendor mame cudzie riesenia
+    if ( $tryVendor ) {
+        $path = BASE_PATH . DS . 'vendor';
+
+        foreach ( $parts AS $i => $part ) {
+            $path .= DS . $part;
+            if ( $i == $cnt ) {
+                $path .= '.php';
+            }
+        }
+
+        if ( file_exists($path) ) {
+            include_once $path;
+        }
+    }
 });
 
-//DB cls is not namespace
-include_once BASE_PATH . DS . 'core' . DS . 'DB.php';
+$workspace = false;
 
-if ( php_sapi_name() == 'cli' ) {
+if ( IS_CLI ) {
     //console
     
     if ( empty($argv[1]) || !in_array($argv[1], array('production', 'development')) ) {
         exit('Wrong environment definition, check shell variable "env"');
     }
     
-    define('IS_WORKSPACE', $argv[1] == 'development');
+    $workspace = $argv[1] == 'development';
+//    $_SERVER['SERVER_PORT'] = 80;
+//    $_SERVER['HTTP_HOST'] = $workspace ? '' : '';
     
-    $app = new core\Dragon();
-    
+    set_time_limit(0);
 } else {
     //website
     
-    define('IS_WORKSPACE', $_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == 'local.zelania.sk' || $_SERVER['HTTP_HOST'] == '127.0.0.1' || strpos($_SERVER['HTTP_HOST'], '192.168') === 0 ?: false);
-    
-    $app = new core\Dragon();
+    if ( isset($_SERVER['HTTP_HOST']) ) {
+        $workspace = strpos($_SERVER['HTTP_HOST'], 'localhost') === 0 || $_SERVER['HTTP_HOST'] == '127.0.0.1' || strpos($_SERVER['HTTP_HOST'], '192.168') === 0 ?: false;
+    }
+}
+
+define('IS_WORKSPACE', $workspace);
+
+//Execute project
+$app = new core\Dragon();
+if ( !IS_CLI ) {
     $app->run();
-    
 }

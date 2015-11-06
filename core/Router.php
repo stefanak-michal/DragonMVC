@@ -9,27 +9,28 @@ namespace core;
  */
 final class Router
 {
+
     /**
      * Base for all URI
      *
      * @var string
      */
     private $project_host;
-    
+
     /**
      * Config
      *
      * @var Config
      */
     private $config;
-    
+
     /**
      * Definition of allowed routes from config file
      *
      * @var array
      */
     private $routes = array();
-    
+
     /**
      * Construct
      */
@@ -37,20 +38,19 @@ final class Router
     {
         $this->config = $config;
         $this->routes = $this->config->get('routes');
-        
+
         $this->project_host = $this->config->get('project_host');
         if ( empty($this->project_host) && isset($_SERVER['SERVER_PORT'], $_SERVER['HTTP_HOST']) ) {
             $this->project_host = ( $_SERVER['SERVER_PORT'] == 443 ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'];
         }
-        
+
         if ( empty($this->project_host) ) {
             trigger_error('Not specified project host', E_USER_WARNING);
         }
-        
         $this->project_host = rtrim($this->project_host, '/') . '/';
         $this->config->set('project_host', $this->project_host);
     }
-    
+
     /**
      * Switch to generate secured URI (https)
      * 
@@ -58,22 +58,17 @@ final class Router
      */
     public function setSecureHost($bool = true)
     {
-        if ($bool)
-        {
-            if (strpos($this->project_host, 'https') === false)
-            {
+        if ( $bool ) {
+            if ( strpos($this->project_host, 'https') === false ) {
                 $this->project_host = str_replace('http', 'https', $this->project_host);
             }
-        }
-        else
-        {
-            if (strpos($this->project_host, 'https') !== false)
-            {
+        } else {
+            if ( strpos($this->project_host, 'https') !== false ) {
                 $this->project_host = str_replace('https', 'http', $this->project_host);
             }
         }
     }
-    
+
     /**
      * Generate homepage URI
      * 
@@ -83,14 +78,14 @@ final class Router
     public function getHomepageUrl($query = array())
     {
         $uri = $this->project_host;
-        
+
         if ( is_array($query) && !empty($query) ) {
             $uri .= '?' . http_build_query($query);
         }
-        
+
         return $uri;
     }
-    
+
     /**
      * Generate URI
      * 
@@ -103,17 +98,17 @@ final class Router
     public function getUrl($controller, $method, $vars = array(), $query = array())
     {
         $uri = $this->project_host;
-        if ( ! empty($controller) && ! empty($method) ) {
+        if ( !empty($controller) && !empty($method) ) {
             //find right routes
             $masks = array_keys($this->routes, $controller . '/' . $method);
             if ( empty($masks) ) {
-                Dragon::show_error(400, 'No defined route ' . $controller . '/' . $method);
+                trigger_error('No defined route for ' . $controller . '/' . $method);
             }
-            
+
             if ( !empty($vars) && !is_array($vars) ) {
                 $vars = array($vars);
             }
-            
+
             foreach ( $masks AS $mask ) {
                 //default action if it's not defined mask
                 if ( is_integer($mask) ) {
@@ -154,27 +149,27 @@ final class Router
                             continue;
                         }
                     }
-                    
+
                     $uri .= $mask;
                 }
-                
+
                 //append variables which it's not setted
                 if ( !empty($vars) ) {
                     $uri .= '/' . implode('/', $vars);
                 }
-                
+
                 //append query url part
                 if ( is_array($query) && !empty($query) ) {
                     $uri .= '?' . http_build_query($query);
                 }
-                
+
                 break;
             }
         }
-        
+
         return $uri;
     }
-    
+
     /**
      * Get actual URI
      * 
@@ -184,29 +179,26 @@ final class Router
     public function current($getParams = false)
     {
         $uri = 'http';
-        if ($_SERVER['SERVER_PORT'] != 80)
-        {
+        if ( $_SERVER['SERVER_PORT'] != 80 ) {
             $uri .= 's';
         }
-        
+
         $uri .= '://';
         $uri .= $_SERVER['SERVER_NAME'];
-        
-        if ($_SERVER['SERVER_PORT'] != 80)
-        {
+
+        if ( !in_array($_SERVER['SERVER_PORT'], array(80, 443)) ) {
             $uri .= ':' . $_SERVER['SERVER_PORT'];
         }
-        
+
         $uri .= $_SERVER['REQUEST_URI'];
-        
-        if ( ! $getParams AND strpos($uri, '?') !== false)
-        {
+
+        if ( !$getParams AND strpos($uri, '?') !== false ) {
             $uri = substr($uri, 0, strpos($uri, '?'));
         }
-        
+
         return $uri;
     }
-    
+
     /**
      * Redirect
      * 
@@ -215,14 +207,12 @@ final class Router
      */
     public function redirect($uri, $message = '', $code = 302)
     {
-        if ( ! empty($uri))
-        {
-            if ( ! empty($message))
-            {
+        if ( !empty($uri) ) {
+            if ( !empty($message) ) {
                 setcookie('message', $message, time() + 60, '/');
             }
-            
-            if ( IS_WORKSPACE && $this->config->get('debug') ) {
+
+            if ( $this->config->get('debug') ) {
                 View::renderElement('debug/backtrace', array(
                     'bt' => debug_backtrace(),
                     'url' => $uri,
@@ -230,13 +220,13 @@ final class Router
                     'message' => $message
                 ));
             } else {
-                header('Location: '. $uri, true, $code);
+                header('Location: ' . $uri, true, $code);
             }
-            
+
             exit;
         }
     }
-    
+
     /**
      * Generate path to asset file
      * 
@@ -247,17 +237,17 @@ final class Router
     public function getAssetUrl($name, $assetType)
     {
         $output = '';
-        
-        if ( ! empty($name) AND ! empty($assetType) ) {
+
+        if ( !empty($name) AND ! empty($assetType) ) {
             $files = (array) $this->config->get($assetType);
             if ( array_key_exists($name, $files) ) {
                 $output = '/assets/' . $assetType . '/' . $files[$name]['file'] . '?v=' . $files[$name]['version'];
             }
         }
-        
+
         return $output;
     }
-    
+
     /**
      * Find route
      * 
@@ -267,12 +257,11 @@ final class Router
     public function findRoute($path)
     {
         $output = array();
-        
+
         foreach ( $this->routes AS $mask => $route ) {
-            $res = preg_match("/^" . str_replace('/', '\/', 
-                        is_integer($mask) ? ($route . '((?=/)(.*))?') : str_replace(array('%i', '%s', '%d'), array('(\d+)', '([\w\-]+)', '([\d\.]+)'), $mask)
-                    ) . "$/i", $path, $vars);
-            
+            $res = preg_match("/^" . str_replace('/', '\/', is_integer($mask) ? ($route . '((?=/)(.*))?') : str_replace(array('%i', '%s', '%d'), array('(\d+)', '([\w\-]+)', '([\d\.]+)'), $mask)
+                ) . "$/i", $path, $vars);
+
             if ( $res ) {
                 $uri = preg_split("[\\/]", $route, -1, PREG_SPLIT_NO_EMPTY);
                 $output = array(
@@ -280,7 +269,7 @@ final class Router
                     'controller' => $uri,
                     'vars' => array()
                 );
-                
+
                 if ( is_integer($mask) ) {
                     if ( !empty($vars[1]) ) {
                         $output['vars'] = preg_split("[\\/]", $vars[1], -1, PREG_SPLIT_NO_EMPTY);
@@ -292,8 +281,8 @@ final class Router
                 break;
             }
         }
-        
+
         return $output;
     }
-    
+
 }

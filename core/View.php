@@ -9,43 +9,49 @@ namespace core;
  */
 final class View
 {
+
     /**
      * Layout for draw
      *
      * @var string
      */
     private $layout;
+
     /**
      * View for draw
      *
      * @var string
      */
     private $view;
+
     /**
      * Config
      *
      * @var Config
      */
     private $config;
+
     /**
      * Folder with views
      *
      * @var string
      */
     private static $views_dir = 'views';
+
     /**
      * Default file extension for views
      *
      * @var string
      */
     private static $views_ext = '.phtml';
+
     /**
      * Variables set up to view
      *
      * @var array
      */
     private $viewVars = array();
-    
+
     /**
      * Construct
      */
@@ -54,7 +60,7 @@ final class View
         $this->config = $config;
         $this->setView(Dragon::$controller . DS . Dragon::$method);
     }
-    
+
     /**
      * Set view to render
      * 
@@ -64,7 +70,7 @@ final class View
     {
         $this->view = self::replaceDirectorySeperator($view);
     }
-    
+
     /**
      * Set layout to render
      * 
@@ -74,7 +80,7 @@ final class View
     {
         $this->layout = self::replaceDirectorySeperator($layout);
     }
-    
+
     /**
      * Set title of page
      * 
@@ -84,22 +90,18 @@ final class View
     public function setTitle($value = '', $projectTitle = true)
     {
         $title = $this->config->get('project_title');
-        
-        if (empty($value))
-        {
+
+        if ( empty($value) ) {
             $value = $title;
-        }
-        else
-        {
-            if ($projectTitle)
-            {
+        } else {
+            if ( $projectTitle ) {
                 $value = $value . ' | ' . $title;
             }
         }
-        
+
         $this->set('title', $value);
     }
-    
+
     /**
      * Set variable to view
      * 
@@ -110,51 +112,45 @@ final class View
     {
         $this->viewVars[$key] = $value;
     }
-    
+
     /**
      * Render view
      */
     public function render()
     {
-        if ( ! empty($this->view))
-        {
+        if ( !empty($this->view) ) {
             $this->checkExistsView();
-            
+
             //if we have some layout
-            if ( ! empty($this->layout))
-            {
+            if ( !empty($this->layout) ) {
                 ob_start();
             }
 
             extract($this->viewVars);
             include BASE_PATH . DS . self::$views_dir . DS . $this->view . self::$views_ext;
-            
+
             //clear memory after render
-            foreach ($this->viewVars as $key => $variable)
-            {
+            foreach ( $this->viewVars as $key => $variable ) {
                 unset(${$key});
             }
 
             //Second part if we have layout
-            if ( ! empty($this->layout))
-            {
+            if ( !empty($this->layout) ) {
                 $content = ob_get_clean();
 
                 extract($this->viewVars);
                 include BASE_PATH . DS . self::$views_dir . DS . 'layout' . DS . $this->layout . self::$views_ext;
-                
+
                 //again release some memory after render
-                foreach ($this->viewVars as $key => $variable)
-                {
+                foreach ( $this->viewVars as $key => $variable ) {
                     unset(${$key});
                 }
             }
-            
+
             $this->viewVars = array();
         }
-        
     }
-    
+
     /**
      * Render element
      * 
@@ -166,32 +162,31 @@ final class View
     public static function renderElement($element, $variables = array(), $return = false)
     {
         $content = '';
-        
+
         $elementFile = BASE_PATH . DS . self::$views_dir . DS . 'elements' . DS . self::replaceDirectorySeperator($element) . self::$views_ext;
-        if (file_exists($elementFile))
-        {
+        if ( file_exists($elementFile) ) {
             if ( $return ) {
                 ob_start();
             }
-            
-            if (is_array($variables) AND ! empty($variables))
-            {
+
+            if ( is_array($variables) AND ! empty($variables) ) {
                 extract($variables);
             }
 
             include $elementFile;
-            
+
             if ( $return ) {
                 $content = ob_get_clean();
             }
 
             //po vykresleni si trochu vyprazdnime pamat
-            foreach ($variables as $key => $variable)
-            {
+            foreach ( $variables as $key => $variable ) {
                 unset(${$key});
             }
+        } else {
+            trigger_error('Missing element view file ' . $elementFile);
         }
-        
+
         return $content;
     }
 
@@ -200,9 +195,9 @@ final class View
      */
     private function checkExistsView()
     {
-        if ( ! file_exists(BASE_PATH . DS . self::$views_dir . DS . $this->view . self::$views_ext))
-        {
-            Dragon::show_error(404, $this->view);
+        $file = BASE_PATH . DS . self::$views_dir . DS . $this->view . self::$views_ext;
+        if ( !file_exists($file) ) {
+            trigger_error('Missing view file ' . $file);
         }
     }
 

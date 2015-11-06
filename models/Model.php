@@ -2,13 +2,13 @@
 
 namespace models;
 
-use \DB,
+use core\DB,
     helpers\ArrayUtil;
 
 /**
  * Model
  * 
- * Base database model for extending
+ * Base database model with CRUD actions for extending
  */
 abstract class Model
 {
@@ -28,7 +28,7 @@ abstract class Model
     /**
      * MeekroDB
      *
-     * @var MeekroDB
+     * @var core\MeekroDB
      */
     protected $db;
     
@@ -41,12 +41,35 @@ abstract class Model
     }
     
     /**
-     * Base reading data from table
+     * Insert new row
      * 
-     * @param array $ids
+     * @param array $data
+     * @return int
+     */
+    public function create($data)
+    {
+        $this->db->insert(static::$table, $data);
+        return $this->db->insertId();
+    }
+    
+    /**
+     * Alias for read
+     * 
+     * @param array|int $ids
      * @return array
      */
     public function get($ids = array())
+    {
+        return $this->read($ids);
+    }
+    
+    /**
+     * Base reading data from table
+     * 
+     * @param array|int $ids
+     * @return array
+     */
+    public function read($ids = array())
     {
         $output = array();
         
@@ -54,20 +77,28 @@ abstract class Model
         {
             $output = $this->db->query('SELECT * FROM ' . $this->table);
         }
-        elseif ( ! is_array($ids))
+        elseif ( is_numeric($ids) || (is_array($ids) && count($ids) == 1) )
         {
-            $output = $this->db->query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', $ids);
+            $output = $this->db->query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', is_numeric($ids) ? $ids : reset($ids));
         }
-        elseif (count($ids) == 1)
-        {
-            $output = $this->db->query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', reset($ids));
-        }
-        else
+        elseif ( is_array($ids) )
         {
             $output = $this->db->query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' IN %li', $ids);
         }
         
         return ArrayUtil::reIndex($output, $this->primary_key);
+    }
+    
+    /**
+     * Update row
+     * 
+     * @param int $id
+     * @param array $data
+     */
+    public function update($id, $data)
+    {
+        $this->db->update(static::$table, $data, static::$primary_key . ' = %i', $id);
+        return $this->db->affectedRows();
     }
     
     /**
