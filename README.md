@@ -1,4 +1,4 @@
-![Dragon MVC](https://bitbucket.org/esoldo/dragonmvc/raw/master/assets/img/title.jpg "Dragon MVC")
+![Dragon MVC](https://raw.githubusercontent.com/stefanak-michal/DragonMVC/master/assets/img/title.jpg "Dragon MVC")
 
 # Dragon MVC PHP Framework
 
