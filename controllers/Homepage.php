@@ -36,6 +36,7 @@ class Homepage extends App
      */
     public function index()
     {
+        \core\Debug::timer('test');
         Assets::add('main', Assets::TYPE_CSS);
         Assets::add('default', Assets::TYPE_JS);
 
@@ -46,12 +47,17 @@ class Homepage extends App
          * Default read:
          */
         $modelSample = new mSample();
-//        $modelSample->get();
+        $modelSample->get();
          
         /*
          * Sample get instance of component
          */
         $componentEmail = new cEmail($this->config, $this->router);
+        
+        \core\Debug::var_dump('test');
+        \core\Debug::var_dump([432, 654]);
+        \core\Debug::timer('test');
+        \core\Debug::generate();
         
         $this->set('variable', 'how to set variable to view');
         $this->set('links', array(

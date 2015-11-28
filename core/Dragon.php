@@ -66,6 +66,8 @@ final class Dragon
         //on production custom database error handler
         if ( !IS_WORKSPACE ) {
             $this->setDatabaseErrorHandlers();
+        } else {
+            DB::$success_handler = array("core\\Debug", 'query');
         }
 
         self::$host = $this->config->get('project_host');
