@@ -2,21 +2,11 @@
 
 namespace helpers;
 
+/**
+ * Different utils helper functions
+ */
 class Utils
 {
-
-    /**
-     * Better var_dump
-     */
-    public static function pre_dump()
-    {
-        $data = func_get_args();
-        echo '<pre>';
-        foreach ( $data AS $once ) {
-            var_dump($once);
-        }
-        echo '</pre>';
-    }
 
     /**
      * Closing tags in html
@@ -24,7 +14,7 @@ class Utils
      * @param string $text
      * @return string
      */
-    public static function close_tags($text)
+    public static function closeTags($text)
     {
         $patt_open = "%((?<!</)(?<=<)[\s]*[^/!>\s]+(?=>|[\s]+[^>]*[^/]>)(?!/>))%";
         $patt_close = "%((?<=</)([^>]+)(?=>))%";
@@ -125,12 +115,12 @@ class Utils
     }
 
     /**
-     * Return size in bytes from upload_max_filesize ( 8M => 
+     * Return size in bytes
      * 
      * @param string $val
      * @return int
      */
-    public static function return_bytes($val)
+    public static function decodeBytes($val)
     {
         $val = trim($val);
         $last = strtolower($val[strlen($val) - 1]);
@@ -145,9 +135,35 @@ class Utils
 
         return $val;
     }
+    
+    /**
+     * Return size in human readable version
+     * 
+     * @param int $size
+     * @return string
+     */
+    public static function encodeBytes($size)
+    {
+        $size = (int) $size;
+        $units = ['kB', 'MB', 'GB'];
+        
+        $outputUnit = 'b';
+        $output = $size;
+        
+        while ( $output > 1024 ) {
+            if ( empty($units) ) {
+                break;
+            }
+            
+            $output = $output / 1024;
+            $outputUnit = array_shift($units);
+        }
+        
+        return round($output, 2) . $outputUnit;
+    }
 
     /**
-     * Vrati client IP
+     * Return client IP
      * 
      * @return string
      */
@@ -167,7 +183,7 @@ class Utils
     }
 
     /**
-     * Ziska request header podla kluca
+     * Get request header by key
      * 
      * @param string $key
      * @param boolean $lowercase
@@ -185,6 +201,23 @@ class Utils
         }
 
         return isset($headers[$key]) ? $headers[$key] : false;
+    }
+    
+    /**
+     * Create sef
+     * 
+     * @param string $val
+     * @return string
+     */
+    public static function makeSefString($val)
+    {
+        $val = self::removeDiacritic($val, true);
+        $val = str_replace(array(' '), array('-'), $val);
+        $val = preg_replace("/-+/", '-', $val);
+        $val = preg_replace("/[^\w\-]/u", '', $val);
+        $val = trim($val, '-');
+        $val = iconv("UTF-8", "UTF-8//IGNORE", $val);
+        return $val;
     }
 
 }

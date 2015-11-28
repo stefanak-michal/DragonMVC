@@ -66,12 +66,12 @@ class ArrayUtil
     }
 
     /**
-     * Vrati odfiltrovane viacurovnove pole podla stlpca a hodnoty v nom
+     * Return filtered multidimensional array by column and value in it
      * 
      * @param array $arr
-     * @param mixed $column Kluc v druhej urovni
-     * @param mixed $value Hodnota pre filtrovanie v danom kluci
-     * @param boolean $equal Ci sa maju rovnat
+     * @param mixed $column Key in second level
+     * @param mixed $value Value for filtering in that key
+     * @param boolean $equal
      * @return array
      */
     public static function filterByColumn($arr, $column, $value, $equal = true)
@@ -117,11 +117,11 @@ class ArrayUtil
     }
 
     /**
-     * Rekurzivna funkcia ktora prechadza multidimensional array a vrati pole vsetkych hodnot nachadzajucich sa pod zadanym klucom
-     * Vhodne na ziskanie idcok z elastic search query result
+     * Recursive fnc walking through multidimensional array
+     * Return all values by key in all array levels
      *
      * @code
-     * Priklad pouzitie: getAllValuesByKey($arr, '_id')
+     * Example: getAllValuesByKey($arr, '_id')
      * $arr =>>     Array
      *              (
      *                  [responses] => Array
@@ -212,7 +212,7 @@ class ArrayUtil
     }
 
     /**
-     * Rekurzivny array_map
+     * Recursive array_map
      * 
      * @param callable $func
      * @param array $arr
@@ -228,7 +228,7 @@ class ArrayUtil
     }
 
     /**
-     * Najde najblizsie cislo v poli cisiel
+     * Find nearest number in array of numbers
      * 
      * @param int $search
      * @param array $arr

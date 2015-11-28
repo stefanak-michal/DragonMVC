@@ -2,8 +2,11 @@
 
 namespace helpers;
 
+use core\Router;
+
 /**
- * 
+ * Assets
+ * Helper for holding assets files to draw in html head
  */
 class Assets
 {
@@ -21,7 +24,7 @@ class Assets
      *
      * @var Router
      */
-    private $router;
+    private static $router;
     
     /**
      * Assets to load on page
@@ -29,21 +32,21 @@ class Assets
      * @var array
      */
     private static $toLoad = array();
-    
+
     /**
-     * Construct
+     * Set Router instance
      * 
      * @param Router $router
      */
-    public function __construct($router)
+    public static function setRouter(Router $router)
     {
-        $this->router = $router;
+        self::$router = $router;
     }
     
     /**
      * Reset list of assets to load
      */
-    public function reset()
+    public static function reset()
     {
         self::$toLoad = array();
     }
@@ -53,24 +56,28 @@ class Assets
      * 
      * @param string|array $name
      * @param string $type
-     * @return Assets
      */
-    public function add($name, $type)
+    public static function add($name, $type)
     {
+        if ( ! self::$router instanceof Router ) {
+            trigger_error('Set a instance of Router', E_USER_ERROR);
+            return;
+        }
+        
         if ( !is_array($name) ) {
             $name = array($name);
         }
         
         foreach ( $name AS $once ) {
             if ( !isset(self::$toLoad[$type][$once]) ) {
-                $assetUrl = $this->router->getAssetUrl($once, $type);
+                $assetUrl = self::$router->getAssetUrl($once, $type);
                 if ( !empty($assetUrl) ) {
                     self::$toLoad[$type][$once] = $assetUrl;
+                } else {
+                    trigger_error('Generate asset url unsuccessful for ' . $once);
                 }
             }
         }
-        
-        return $this;
     }
     
     /**

@@ -36,10 +36,9 @@ class Homepage extends App
      */
     public function index()
     {
-        $this->assets
-                ->add('main', Assets::TYPE_CSS)
-                ->add('default', Assets::TYPE_JS);
-        
+        Assets::add('main', Assets::TYPE_CSS);
+        Assets::add('default', Assets::TYPE_JS);
+
         /*
          * Sample information about access to database data
          * Explanation of command:

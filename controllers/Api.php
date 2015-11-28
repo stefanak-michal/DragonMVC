@@ -7,12 +7,6 @@ namespace controllers;
  */
 class Api extends App
 {
-    /**
-     * Tags
-     *
-     * @var Tags
-     */
-    private $tags;
     
     public function __construct($config, $router)
     {

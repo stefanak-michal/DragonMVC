@@ -36,13 +36,6 @@ abstract class App
     protected $config;
     
     /**
-     * helper Assets
-     *
-     * @var Assets
-     */
-    protected $assets;
-    
-    /**
      * Construct
      */
     public function __construct($config, $router)
@@ -51,7 +44,7 @@ abstract class App
         $this->router = $router;
         
         $this->view = new View($this->config);
-        $this->assets = new Assets($this->router);
+        Assets::setRouter($this->router);
     }
     
     /**
