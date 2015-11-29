@@ -161,11 +161,17 @@ final class Dragon
                 $cmv['vars'] = explode('/', $path);
             }
         }
+        
+        //must be defined before view->render, sorry for hardcode
+        if ( DRAGON_DEBUG ) {
+            header('X-Dragon-Debug: ' . Dragon::$host . 'tmp/debug/last.html');
+        }
 
         //finally we have something to show
         $this->loadController($cmv);
-        Debug::generate();
         $this->view->render();
+        
+        Debug::generate();
     }
 
     /**
@@ -197,15 +203,21 @@ final class Dragon
         $controller = new $cmv['controller']($this->config, $this->router, $this->view);
 
         if ( method_exists($controller, 'beforeMethod') ) {
+            Debug::timer('beforeMethod');
             $controller->beforeMethod();
+            Debug::timer('beforeMethod');
         }
 
         if ( is_callable(array($controller, $cmv['method']), true) ) {
+            Debug::timer('Controller logic');
             call_user_func_array(array($controller, $cmv['method']), $cmv['vars']);
+            Debug::timer('Controller logic');
         }
 
         if ( method_exists($controller, 'afterMethod') ) {
+            Debug::timer('afterMethod');
             $controller->afterMethod();
+            Debug::timer('afterMethod');
         }
     }
 

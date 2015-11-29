@@ -28,7 +28,7 @@ final class Debug
      */
     public static function var_dump()
     {
-        if ( !DEBUG_MODE ) {
+        if ( !DRAGON_DEBUG ) {
             return;
         }
         
@@ -54,11 +54,11 @@ final class Debug
      */
     public static function files($file)
     {
-        if ( !DEBUG_MODE ) {
+        if ( !DRAGON_DEBUG ) {
             return;
         }
         
-        self::$tables[__FUNCTION__][] = [$file, filesize($file)];
+        self::$tables[__FUNCTION__][] = ['file' => $file, 'size' => file_exists($file) ? filesize($file) : 0];
     }
     
     /**
@@ -68,7 +68,7 @@ final class Debug
      */
     public static function timer($key)
     {
-        if ( !DEBUG_MODE ) {
+        if ( !DRAGON_DEBUG ) {
             return;
         }
         
@@ -88,7 +88,7 @@ final class Debug
      */
     public static function query($args)
     {
-        if ( !DEBUG_MODE ) {
+        if ( !DRAGON_DEBUG ) {
             return;
         }
         
@@ -100,7 +100,7 @@ final class Debug
      */
     public static function generate()
     {
-        if ( !DEBUG_MODE ) {
+        if ( !DRAGON_DEBUG ) {
             return;
         }
         
@@ -150,7 +150,6 @@ final class Debug
         $filename = microtime(true) . '.html';
         file_put_contents($path . $filename, $html);
         file_put_contents($path . 'last.html', $html);
-        header('X-Dragon-Debug: ' . Dragon::$host . 'tmp/debug/last.html');
         
         self::$tables = [];
     }

@@ -128,6 +128,7 @@ final class View
             }
 
             extract($this->viewVars);
+            Debug::files(BASE_PATH . DS . self::$views_dir . DS . $this->view . self::$views_ext);
             include BASE_PATH . DS . self::$views_dir . DS . $this->view . self::$views_ext;
 
             //clear memory after render
@@ -140,6 +141,7 @@ final class View
                 $content = ob_get_clean();
 
                 extract($this->viewVars);
+                Debug::files(BASE_PATH . DS . self::$views_dir . DS . 'layout' . DS . $this->layout . self::$views_ext);
                 include BASE_PATH . DS . self::$views_dir . DS . 'layout' . DS . $this->layout . self::$views_ext;
 
                 //again release some memory after render
@@ -174,6 +176,7 @@ final class View
                 extract($variables);
             }
 
+            Debug::files($elementFile);
             include $elementFile;
 
             if ( $return ) {
