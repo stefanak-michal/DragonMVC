@@ -48,6 +48,13 @@ final class Dragon
      * @var Router
      */
     private $router;
+    
+    /**
+     * View
+     *
+     * @var View
+     */
+    private $view;
 
     /**
      * Construct
@@ -56,18 +63,18 @@ final class Dragon
     {
         $this->config = new Config();
         $this->router = new Router($this->config);
+        $this->view = new View($this->config);
 
         //we need database config
         DB::$host = $this->config->get('dbServer');
         DB::$user = $this->config->get('dbUser');
         DB::$password = $this->config->get('dbPass');
         DB::$dbName = $this->config->get('dbDatabase');
+        DB::$success_handler = array("core\\Debug", 'query');
 
         //on production custom database error handler
         if ( !IS_WORKSPACE ) {
             $this->setDatabaseErrorHandlers();
-        } else {
-            DB::$success_handler = array("core\\Debug", 'query');
         }
 
         self::$host = $this->config->get('project_host');
@@ -157,6 +164,8 @@ final class Dragon
 
         //finally we have something to show
         $this->loadController($cmv);
+        Debug::generate();
+        $this->view->render();
     }
 
     /**
@@ -178,13 +187,14 @@ final class Dragon
 
         self::$controller = implode("\\", $cmv['controller']);
         self::$method = $cmv['method'];
+        $this->view->setView(self::$controller . DS . self::$method);
 
         //add controllers folder to begin and uppercase first letter class name
         array_unshift($cmv['controller'], 'controllers');
         end($cmv['controller']);
         $cmv['controller'][key($cmv['controller'])] = ucfirst($cmv['controller'][key($cmv['controller'])]);
         $cmv['controller'] = "\\" . implode("\\", $cmv['controller']);
-        $controller = new $cmv['controller']($this->config, $this->router);
+        $controller = new $cmv['controller']($this->config, $this->router, $this->view);
 
         if ( method_exists($controller, 'beforeMethod') ) {
             $controller->beforeMethod();

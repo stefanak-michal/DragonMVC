@@ -73,6 +73,7 @@ if ( IS_CLI ) {
 }
 
 define('IS_WORKSPACE', $workspace);
+define('DEBUG_MODE', IS_WORKSPACE || (isset($_GET['debug']) && $_GET['debug'] == 4));
 
 //Execute project
 $app = new core\Dragon();

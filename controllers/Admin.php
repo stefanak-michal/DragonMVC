@@ -4,6 +4,7 @@ namespace controllers;
 
 use components\Auth,
     models\Users AS mUsers,
+    helpers\Assets,
     core\Dragon;
 
 /**
@@ -36,9 +37,8 @@ class Admin extends App
         parent::beforeMethod();
         
         $this->view->setLayout('default');
-        $this->assets
-                ->add('main', Assets::TYPE_CSS)
-                ->add('default', Assets::TYPE_JS);
+        Assets::add('main', Assets::TYPE_CSS);
+        Assets::add('default', Assets::TYPE_JS);
     }
     
     /**

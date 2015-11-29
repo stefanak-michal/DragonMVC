@@ -23,9 +23,15 @@ final class Debug
 
     /**
      * Dump data
+     * 
+     * @todo add backtrace
      */
     public static function var_dump()
     {
+        if ( !DEBUG_MODE ) {
+            return;
+        }
+        
         $args = func_get_args();
 
         if ( !empty($args) ) {
@@ -48,6 +54,10 @@ final class Debug
      */
     public static function files($file)
     {
+        if ( !DEBUG_MODE ) {
+            return;
+        }
+        
         self::$tables[__FUNCTION__][] = [$file, filesize($file)];
     }
     
@@ -58,10 +68,14 @@ final class Debug
      */
     public static function timer($key)
     {
+        if ( !DEBUG_MODE ) {
+            return;
+        }
+        
         if ( !isset(self::$timers[$key]) ) {
             self::$timers[$key] = microtime(true);
         } else {
-            self::$tables[__FUNCTION__][] = [$key, round(microtime(true) - self::$timers[$key], 6)];
+            self::$tables[__FUNCTION__][] = ['key' => $key, 'time (sec)' => round(microtime(true) - self::$timers[$key], 6)];
             unset(self::$timers[$key]);
         }
     }
@@ -69,10 +83,15 @@ final class Debug
     /**
      * Database queries
      * 
+     * @todo add query explain
      * @param array $args
      */
     public static function query($args)
     {
+        if ( !DEBUG_MODE ) {
+            return;
+        }
+        
         self::$tables[__FUNCTION__][] = $args;
     }
 
@@ -81,9 +100,26 @@ final class Debug
      */
     public static function generate()
     {
+        if ( !DEBUG_MODE ) {
+            return;
+        }
+        
         $path = BASE_PATH . DS . 'tmp' . DS . 'debug' . DS;
         if ( !file_exists($path) ) {
             mkdir($path, 0777, true);
+        }
+        
+        //clear old files
+        if ( file_exists($path . 'last.html') ) {
+            unlink($path . 'last.html');
+        }
+        $files = glob($path . '*.html');
+        if ( count($files) >= 10 ) {
+            rsort($files);
+            for ( $i = count($files) - 1; $i >= 10; $i-- ) {
+                unlink($files[$i]);
+                unset($files[$i]);
+            }
         }
         
         ob_start();
@@ -92,40 +128,46 @@ final class Debug
         self::htmlStyles();
         self::htmlScripts();
         echo implode(PHP_EOL, ['</head>', '<body>']), PHP_EOL;
+        if ( !empty($_SERVER['REQUEST_URI']) ) {
+            echo 'URI: <b>' . $_SERVER['REQUEST_URI'] . '</b><br><br>', PHP_EOL;
+        }
         
         //tabs switches
         $tabs = [];
         $class = 'active';
         foreach ( array_keys(self::$tables) AS $key ) {
-            $tabs[] = '<li class="' . $class . '">' . $key . '</li>';
+            $tabs[] = '<li class="' . $class . '" data-tab="' . $key . '">' . $key . ' (' . count(self::$tables[$key]) . ')</li>';
             $class = '';
         }
         echo '<ul>' . implode('', $tabs) . '</ul>', PHP_EOL;
         
         self::htmlTables();
+        self::htmlDebugHistory($files);
         
         echo implode(PHP_EOL, ['</body>', '</html>']), PHP_EOL;
         $html = ob_get_clean();
 
-        //clear old files
-        $files = glob($path . '*.html');
-        if ( count($files) >= 10 ) {
-            rsort($files);
-            for ( $i = count($files) - 1; $i >= 10; $i-- ) {
-                unlink($path . $files[$i]);
-                unset($files[$i]);
-            }
-        }
-        
-        //@todo append anchors to older debug/html files
-        
-        //$filename = microtime(true) . '.html';
-        $filename = 'test.html';
+        $filename = microtime(true) . '.html';
         file_put_contents($path . $filename, $html);
-        
-        //@todo header url
+        file_put_contents($path . 'last.html', $html);
+        header('X-Dragon-Debug: ' . Dragon::$host . 'tmp/debug/last.html');
         
         self::$tables = [];
+    }
+    
+    /**
+     * @param array $files
+     */
+    private static function htmlDebugHistory($files)
+    {
+        echo '<div class="history">';
+        echo '<b>History:</b><br>';
+        foreach ( $files AS $file ) {
+            $file = substr($file, strrpos($file, DS) + 1);
+            $url = Dragon::$host . 'tmp/debug/' . $file;
+            echo '<a href="' . $url . '">' . $url . '</a>';
+        }
+        echo '</div>';
     }
     
     private static function htmlStyles()
@@ -133,13 +175,16 @@ final class Debug
         echo '<style type="text/css">
             ul { margin: 0; padding: 0 0 10px; } 
             ul li { display: inline-block; border-bottom: 1px solid silver; padding: 4px 10px; cursor: pointer; } 
+            ul li:hover { background-color: #eee; }
             ul li.active { border: 1px solid silver; border-bottom: 0; }
-            table { display: none; } 
+            table { display: none; width: 100%; } 
             table.active { display: table; } 
             table tr > * { border-bottom: 1px solid silver; border-left: 1px solid silver; } 
             table tr *:first-child { border-left: 0; } 
-            table tr td {border-bottom: 1px solid silver; padding: 2px 6px; }
+            table tr td {border-bottom: 1px solid silver; padding: 4px 6px; }
             table tfoot tr td { border: 0; margin-top: 4px; color: gray; }
+            .history { margin-top: 50px; }
+            .history a { display: block; }
         </style>', PHP_EOL;
     }
     
@@ -151,7 +196,7 @@ final class Debug
                 $("ul li").on("click", function() {
                     $("ul li, table").removeClass("active");
                     $(this).addClass("active");
-                    $("table#" + $(this).text()).addClass("active");
+                    $("table#" + $(this).data("tab")).addClass("active");
                 });
             });
         </script>', PHP_EOL;
@@ -168,6 +213,7 @@ final class Debug
             //thead - if first table row keys is not numeric
             if ( !is_numeric(key($table[0])) ) {
                 echo '<thead><tr>';
+                echo '<th>N.</th>';
                 foreach ( array_keys($table[0]) AS $columnKey ) {
                     echo '<th>' . $columnKey . '</th>';
                 }
@@ -180,9 +226,11 @@ final class Debug
             }
             
             //tbody rows
+            $i = 1;
             echo '<tbody>';
             foreach ( $table AS $row ) {
                 echo '<tr>';
+                echo '<td>' . $i . '</td>';
                 foreach ( $row AS $cellKey => $cell ) {
                     echo '<td>' . $cell . '</td>';
                     
@@ -191,12 +239,14 @@ final class Debug
                     }
                 }
                 echo '</tr>';
+                $i++;
             }
             echo '</tbody>';
             
             //footer
             if ( $doFooter ) {
                 echo '<tfoot><tr>';
+                echo '<td></td>';
                 foreach ( $footer AS $vals ) {
                     echo '<td>';
                     $tmp = array_filter($vals, 'is_numeric');

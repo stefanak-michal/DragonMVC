@@ -54,11 +54,12 @@ final class View
 
     /**
      * Construct
+     * 
+     * @param Config $config
      */
-    public function __construct($config)
+    public function __construct(Config $config)
     {
         $this->config = $config;
-        $this->setView(Dragon::$controller . DS . Dragon::$method);
     }
 
     /**
