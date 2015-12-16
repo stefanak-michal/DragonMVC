@@ -247,7 +247,7 @@ final class Router
 
         return $output;
     }
-
+    
     /**
      * Find route
      * 
@@ -257,31 +257,58 @@ final class Router
     public function findRoute($path)
     {
         $output = array();
-
+        
         foreach ( $this->routes AS $mask => $route ) {
-            $res = preg_match("/^" . str_replace('/', '\/', is_integer($mask) ? ($route . '((?=/)(.*))?') : str_replace(array('%i', '%s', '%d'), array('(\d+)', '([\w\-]+)', '([\d\.]+)'), $mask)
-                ) . "$/i", $path, $vars);
-
-            if ( $res ) {
-                $uri = preg_split("[\\/]", $route, -1, PREG_SPLIT_NO_EMPTY);
-                $output = array(
-                    'method' => array_pop($uri),
-                    'controller' => $uri,
-                    'vars' => array()
-                );
-
-                if ( is_integer($mask) ) {
-                    if ( !empty($vars[1]) ) {
-                        $output['vars'] = preg_split("[\\/]", $vars[1], -1, PREG_SPLIT_NO_EMPTY);
+            if ( is_array($route) ) {
+                foreach ( $route AS $controller => $subroute ) {
+                    $output = $this->match($path, $controller, trim($mask, '/') . '/' . $subroute);
+                    if ( $output !== false ) {
+                        break 2;
                     }
-                } else {
-                    array_shift($vars);
-                    $output['vars'] = array_values($vars);
                 }
-                break;
+            } else {
+                $output = $this->match($path, $mask, $route);
+                if ( $output !== false ) {
+                    break;
+                }
             }
         }
+        
+        return $output;
+    }
+    
+    /**
+     * Match specific route
+     * 
+     * @param string $path
+     * @param string|int $mask
+     * @param string $route
+     * @return array|boolean
+     */
+    private function match($path, $mask, $route)
+    {
+        $output = false;
+        
+        $res = preg_match("/^" . str_replace('/', '\/', is_integer($mask) ? ($route . '((?=/)(.*))?') : str_replace(array('%i', '%s', '%d'), array('(\d+)', '([\w\-]+)', '([\d\.]+)'), $mask)) . "$/i", $path, $vars);
 
+        if ( $res ) {
+            $uri = preg_split("[\\/]", $route, -1, PREG_SPLIT_NO_EMPTY);
+            $output = array(
+                'method' => array_pop($uri),
+                'controller' => $uri,
+                'vars' => array()
+            );
+
+            if ( is_integer($mask) ) {
+                if ( !empty($vars[1]) ) {
+                    $output['vars'] = preg_split("[\\/]", $vars[1], -1, PREG_SPLIT_NO_EMPTY);
+                }
+            } else {
+                array_shift($vars);
+                $output['vars'] = array_values($vars);
+            }
+        }
+        
         return $output;
     }
 
