@@ -128,9 +128,9 @@ final class Debug
             
             $args['query'] = '<div class="collapsable">' . $args['query'] . '</div>';
             $args['query'] .= $html;
-            unset($args['explain']);
         }
         
+        unset($args['explain']);
         self::$tables[__FUNCTION__][] = $args;
     }
 

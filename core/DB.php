@@ -755,6 +755,9 @@ final class MeekroDB
             while ( $row = $result->fetch_array(MYSQLI_ASSOC) ) {
                 $explain[] = $row;
             }
+            
+            $result->free();
+            unset($result);
         }
         
         if ( $this->success_handler ) {
@@ -790,7 +793,7 @@ final class MeekroDB
 
             call_user_func($success_handler, array(
                 'query' => $sql,
-                'explain' => $explain,
+                'explain' => $explain ?: null,
                 'runtime' => $runtime,
                 'affected' => $db->affected_rows
             ));
