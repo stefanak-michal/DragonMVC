@@ -107,7 +107,7 @@ final class Debug
             return;
         }
         
-        if ( isset($args['query'], $args['explain']) && is_array($args['explain']) ) {
+        if ( isset($args['query'], $args['explain'][0]) && is_array($args['explain']) ) {
             $html = '<div><table cellspacing="0"><thead><tr>';
             
             foreach ( array_keys($args['explain'][0]) AS $key ) {
