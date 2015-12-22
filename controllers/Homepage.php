@@ -43,14 +43,12 @@ class Homepage extends App
 
         /*
          * Sample information about access to database data
-         * Explanation of command:
-         * $this->(class variable)->(model name)->(method from model);
          * Default read:
          */
-        $modelSample = new mSample();
-        $rows = $modelSample->get();
-        Debug::var_dump($rows);
-        $modelSample->get(2);
+//        $modelSample = new mSample();
+//        $rows = $modelSample->get();
+//        Debug::var_dump($rows);
+//        $modelSample->get(2);
         
         /*
          * Sample get instance of component

@@ -4,7 +4,7 @@ $aConfig = array(
     
     //connection DB
     'dbUser' => 'root',
-    'dbPass' => 'vertrigo',
+    'dbPass' => 'test',
     'dbDatabase' => 'test',
     'dbServer' => 'localhost',
     'dbCharset' => 'UTF-8',
