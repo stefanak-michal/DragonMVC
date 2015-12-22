@@ -33,8 +33,10 @@ final class Router
 
     /**
      * Construct
+     * 
+     * @param Config $config
      */
-    public function __construct($config)
+    public function __construct(Config $config)
     {
         $this->config = $config;
         $this->routes = $this->config->get('routes');

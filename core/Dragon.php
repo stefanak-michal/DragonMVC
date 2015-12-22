@@ -2,7 +2,8 @@
 
 namespace core;
 
-use \Exception;
+use \Exception,
+    core\debug\Generator AS DebugGenerator;
 
 /**
  * Framework
@@ -48,6 +49,13 @@ final class Dragon
      * @var Router
      */
     private $router;
+    
+    /**
+     * View
+     *
+     * @var View
+     */
+    private $view;
 
     /**
      * Construct
@@ -56,12 +64,14 @@ final class Dragon
     {
         $this->config = new Config();
         $this->router = new Router($this->config);
+        $this->view = new View($this->config);
 
         //we need database config
         DB::$host = $this->config->get('dbServer');
         DB::$user = $this->config->get('dbUser');
         DB::$password = $this->config->get('dbPass');
         DB::$dbName = $this->config->get('dbDatabase');
+        DB::$success_handler = array("core\\Debug", 'query');
 
         //on production custom database error handler
         if ( !IS_WORKSPACE ) {
@@ -152,9 +162,17 @@ final class Dragon
                 $cmv['vars'] = explode('/', $path);
             }
         }
+        
+        //must be defined before view->render, sorry for hardcode
+        if ( DRAGON_DEBUG ) {
+            header('X-Dragon-Debug: ' . Dragon::$host . 'tmp/debug/last.html');
+        }
 
         //finally we have something to show
         $this->loadController($cmv);
+        $this->view->render();
+        
+        DebugGenerator::generate();
     }
 
     /**
@@ -176,24 +194,31 @@ final class Dragon
 
         self::$controller = implode("\\", $cmv['controller']);
         self::$method = $cmv['method'];
+        $this->view->setView(self::$controller . DS . self::$method);
 
         //add controllers folder to begin and uppercase first letter class name
         array_unshift($cmv['controller'], 'controllers');
         end($cmv['controller']);
         $cmv['controller'][key($cmv['controller'])] = ucfirst($cmv['controller'][key($cmv['controller'])]);
         $cmv['controller'] = "\\" . implode("\\", $cmv['controller']);
-        $controller = new $cmv['controller']($this->config, $this->router);
+        $controller = new $cmv['controller']($this->config, $this->router, $this->view);
 
         if ( method_exists($controller, 'beforeMethod') ) {
+            Debug::timer('beforeMethod');
             $controller->beforeMethod();
+            Debug::timer('beforeMethod');
         }
 
         if ( is_callable(array($controller, $cmv['method']), true) ) {
+            Debug::timer('Controller logic');
             call_user_func_array(array($controller, $cmv['method']), $cmv['vars']);
+            Debug::timer('Controller logic');
         }
 
         if ( method_exists($controller, 'afterMethod') ) {
+            Debug::timer('afterMethod');
             $controller->afterMethod();
+            Debug::timer('afterMethod');
         }
     }
 

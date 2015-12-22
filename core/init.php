@@ -48,6 +48,10 @@ spl_autoload_register(function($name) {
             include_once $path;
         }
     }
+    
+    if ( class_exists("\\core\\Debug") ) {
+        \core\Debug::files($path);
+    }
 });
 
 $workspace = false;
@@ -73,6 +77,7 @@ if ( IS_CLI ) {
 }
 
 define('IS_WORKSPACE', $workspace);
+define('DRAGON_DEBUG', IS_WORKSPACE);
 
 //Execute project
 $app = new core\Dragon();

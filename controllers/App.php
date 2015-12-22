@@ -37,13 +37,17 @@ abstract class App
     
     /**
      * Construct
+     * 
+     * @param Config $config
+     * @param Router $router
+     * @param View $view
      */
-    public function __construct($config, $router)
+    public function __construct(Config $config, Router $router, View $view)
     {
         $this->config = $config;
         $this->router = $router;
+        $this->view = $view;
         
-        $this->view = new View($this->config);
         Assets::setRouter($this->router);
     }
     
@@ -89,7 +93,7 @@ abstract class App
      */
     public function afterMethod()
     {
-        $this->view->render();
+        
     }
     
 }
