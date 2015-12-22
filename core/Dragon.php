@@ -2,7 +2,8 @@
 
 namespace core;
 
-use \Exception;
+use \Exception,
+    core\debug\Generator AS DebugGenerator;
 
 /**
  * Framework
@@ -171,7 +172,7 @@ final class Dragon
         $this->loadController($cmv);
         $this->view->render();
         
-        Debug::generate();
+        DebugGenerator::generate();
     }
 
     /**

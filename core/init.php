@@ -28,10 +28,6 @@ spl_autoload_register(function($name) {
         }
 
         if ( file_exists($path) ) {
-            if ( class_exists("\\core\\Debug") ) {
-                \core\Debug::files($path);
-            }
-            
             include_once $path;
             $tryVendor = false;
         }
@@ -49,12 +45,12 @@ spl_autoload_register(function($name) {
         }
 
         if ( file_exists($path) ) {
-            if ( class_exists("\\core\\Debug") ) {
-                \core\Debug::files($path);
-            }
-            
             include_once $path;
         }
+    }
+    
+    if ( class_exists("\\core\\Debug") ) {
+        \core\Debug::files($path);
     }
 });
 
@@ -81,7 +77,7 @@ if ( IS_CLI ) {
 }
 
 define('IS_WORKSPACE', $workspace);
-define('DRAGON_DEBUG', IS_WORKSPACE || (isset($_GET['debug']) && $_GET['debug'] == 4));
+define('DRAGON_DEBUG', IS_WORKSPACE);
 
 //Execute project
 $app = new core\Dragon();

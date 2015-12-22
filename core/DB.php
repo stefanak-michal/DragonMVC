@@ -747,13 +747,25 @@ final class MeekroDB
 
         $sql = call_user_func_array(array($this, 'parseQueryParams'), $args);
 
-        if ( $this->success_handler )
+        //get select explain
+        $explain = [];
+        if ( $this->success_handler && stripos($sql, 'select') === 0 ) {
+            $result = $db->query('explain ' . $sql);
+            
+            while ( $row = $result->fetch_array(MYSQLI_ASSOC) ) {
+                $explain[] = $row;
+            }
+        }
+        
+        if ( $this->success_handler ) {
             $starttime = microtime(true);
+        }
         $result = $db->query($sql, $is_buffered ? MYSQLI_STORE_RESULT : MYSQLI_USE_RESULT);
-        if ( $this->success_handler )
+        if ( $this->success_handler ) {
             $runtime = microtime(true) - $starttime;
-        else
+        } else {
             $runtime = 0;
+        }
 
         // ----- BEGIN ERROR HANDLING
         if ( !$sql || $db->error ) {
@@ -778,6 +790,7 @@ final class MeekroDB
 
             call_user_func($success_handler, array(
                 'query' => $sql,
+                'explain' => $explain,
                 'runtime' => $runtime,
                 'affected' => $db->affected_rows
             ));
@@ -789,29 +802,33 @@ final class MeekroDB
         $this->affected_rows = $db->affected_rows;
 
         // mysqli_result->num_rows won't initially show correct results for unbuffered data
-        if ( $is_buffered && ($result instanceof mysqli_result) )
+        if ( $is_buffered && ($result instanceof mysqli_result) ) {
             $this->num_rows = $result->num_rows;
-        else
+        } else {
             $this->num_rows = null;
-
-        if ( $row_type == 'raw' || !($result instanceof mysqli_result) )
+        }
+        
+        if ( $row_type == 'raw' || !($result instanceof mysqli_result) ) {
             return $result;
+        }
 
         $return = array();
 
         if ( $full_names ) {
             $infos = array();
             foreach ( $result->fetch_fields() as $info ) {
-                if ( strlen($info->table) )
+                if ( strlen($info->table) ) {
                     $infos[] = $info->table . '.' . $info->name;
-                else
+                } else {
                     $infos[] = $info->name;
+                }
             }
         }
 
         while ( $row = ($row_type == 'assoc' ? $result->fetch_assoc() : $result->fetch_row()) ) {
-            if ( $full_names )
+            if ( $full_names ) {
                 $row = array_combine($infos, $row);
+            }
             $return[] = $row;
         }
 
@@ -819,8 +836,9 @@ final class MeekroDB
         $result->free();
         while ( $db->more_results() ) {
             $db->next_result();
-            if ( $result = $db->use_result() )
+            if ( $result = $db->use_result() ) {
                 $result->free();
+            }
         }
 
         return $return;

@@ -120,16 +120,22 @@ final class View
     public function render()
     {
         if ( !empty($this->view) ) {
+            $file = BASE_PATH . DS . self::$views_dir . DS . $this->view . self::$views_ext;
+            $layoutFile = BASE_PATH . DS . self::$views_dir . DS . 'layout' . DS . $this->layout . self::$views_ext;
+            
+            Debug::files($file);
+            
             $this->checkExistsView();
 
             //if we have some layout
             if ( !empty($this->layout) ) {
+                Debug::files($layoutFile);
+                
                 ob_start();
             }
 
             extract($this->viewVars);
-            Debug::files(BASE_PATH . DS . self::$views_dir . DS . $this->view . self::$views_ext);
-            include BASE_PATH . DS . self::$views_dir . DS . $this->view . self::$views_ext;
+            include $file;
 
             //clear memory after render
             foreach ( $this->viewVars as $key => $variable ) {
@@ -141,8 +147,7 @@ final class View
                 $content = ob_get_clean();
 
                 extract($this->viewVars);
-                Debug::files(BASE_PATH . DS . self::$views_dir . DS . 'layout' . DS . $this->layout . self::$views_ext);
-                include BASE_PATH . DS . self::$views_dir . DS . 'layout' . DS . $this->layout . self::$views_ext;
+                include $layoutFile;
 
                 //again release some memory after render
                 foreach ( $this->viewVars as $key => $variable ) {
@@ -167,6 +172,8 @@ final class View
         $content = '';
 
         $elementFile = BASE_PATH . DS . self::$views_dir . DS . 'elements' . DS . self::replaceDirectorySeperator($element) . self::$views_ext;
+        Debug::files($elementFile);
+        
         if ( file_exists($elementFile) ) {
             if ( $return ) {
                 ob_start();
@@ -176,7 +183,6 @@ final class View
                 extract($variables);
             }
 
-            Debug::files($elementFile);
             include $elementFile;
 
             if ( $return ) {
