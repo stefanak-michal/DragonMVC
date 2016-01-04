@@ -749,9 +749,24 @@ final class MeekroDB
 
         //get select explain
         $explain = [];
+        $doExplain = false;
         if ( $this->success_handler && stripos($sql, 'select') === 0 ) {
-            $result = $db->query('explain ' . $sql);
+            $doExplain = true;
             
+            //prevent explain in special queries
+            preg_match("/select (\w+)\(\)/i", $sql, $command);
+            if ( !empty($command[1]) ) {
+                $command = strtoupper($command[1]);
+                
+                if ( in_array($command, ['BENCHMARK', 'CHARSET', 'COERCIBILITY', 'COLLATION', 'CONNECTION_ID', 'CURRENT_USER', 'DATABASE', 'FOUND_ROWS', 'LAST_INSERT_ID', 'ROW_COUNT', 'SCHEMA', 'SESSION_USER', 'SYSTEM_USER', 'USER', 'VERSION']) ) {
+                    $doExplain = false;
+                }
+            }
+        }
+        
+        if ( $doExplain ) {
+            $result = $db->query('explain ' . $sql);
+
             while ( $row = $result->fetch_array(MYSQLI_ASSOC) ) {
                 $explain[] = $row;
             }
