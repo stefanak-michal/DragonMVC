@@ -71,11 +71,12 @@ final class Dragon
         DB::$user = $this->config->get('dbUser');
         DB::$password = $this->config->get('dbPass');
         DB::$dbName = $this->config->get('dbDatabase');
-        DB::$success_handler = array("core\\Debug", 'query');
 
         //on production custom database error handler
         if ( !IS_WORKSPACE ) {
             $this->setDatabaseErrorHandlers();
+        } else {
+            DB::$success_handler = array("core\\Debug", 'query');
         }
 
         self::$host = $this->config->get('project_host');
