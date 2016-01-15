@@ -767,11 +767,13 @@ final class MeekroDB
         if ( $doExplain ) {
             $result = $db->query('explain ' . $sql);
 
-            while ( $row = $result->fetch_array(MYSQLI_ASSOC) ) {
-                $explain[] = $row;
+            if ( $result instanceof mysqli_result ) {
+                while ( $row = $result->fetch_array(MYSQLI_ASSOC) ) {
+                    $explain[] = $row;
+                }
+                $result->free();
             }
             
-            $result->free();
             unset($result);
         }
         
