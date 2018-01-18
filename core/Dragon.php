@@ -68,6 +68,7 @@ final class Dragon
 
         //we need database config
         DB::$host = $this->config->get('dbServer');
+        DB::$port = $this->config->get('dbPort');
         DB::$user = $this->config->get('dbUser');
         DB::$password = $this->config->get('dbPass');
         DB::$dbName = $this->config->get('dbDatabase');
