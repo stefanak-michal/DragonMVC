@@ -8,7 +8,7 @@ namespace controllers;
 class Api extends App
 {
     
-    public function __construct(Config $config, Router $router, View $view)
+    public function __construct(\core\Config $config, \core\Router $router, \core\View $view)
     {
         if ( !IS_WORKSPACE && !isset($_SERVER["HTTP_X_REQUESTED_WITH"]) ) {
             exit;
