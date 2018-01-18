@@ -8,13 +8,13 @@ namespace controllers;
 class Api extends App
 {
     
-    public function __construct($config, $router)
+    public function __construct(Config $config, Router $router, View $view)
     {
         if ( !IS_WORKSPACE && !isset($_SERVER["HTTP_X_REQUESTED_WITH"]) ) {
             exit;
         }
         
-        parent::__construct($config, $router);
+        parent::__construct($config, $router, $view);
     }
     
     public function beforeMethod()
