@@ -234,16 +234,17 @@ final class Router
      * 
      * @param string $name
      * @param string $assetType css, js, img
+     * @param bool $absolute
      * @return string
      */
-    public function getAssetUrl($name, $assetType)
+    public function getAssetUrl($name, $assetType, $absolute = true)
     {
         $output = '';
 
         if ( !empty($name) AND ! empty($assetType) ) {
             $files = (array) $this->config->get($assetType);
             if ( array_key_exists($name, $files) ) {
-                $output = '/assets/' . $assetType . '/' . $files[$name]['file'] . '?v=' . $files[$name]['version'];
+                $output = ($absolute ? rtrim($this->project_host, '/') : '') . '/assets/' . $assetType . '/' . $files[$name]['file'] . '?v=' . $files[$name]['version'];
             }
         }
 
