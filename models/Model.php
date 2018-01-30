@@ -48,7 +48,7 @@ abstract class Model
      */
     public function create($data)
     {
-        $this->db->insert(static::$table, $data);
+        $this->db->insert($this->table, $data);
         return $this->db->insertId();
     }
     
@@ -97,7 +97,7 @@ abstract class Model
      */
     public function update($id, $data)
     {
-        $this->db->update(static::$table, $data, static::$primary_key . ' = %i', $id);
+        $this->db->update($this->table, $data, $this->primary_key . ' = %i', $id);
         return $this->db->affectedRows();
     }
     
