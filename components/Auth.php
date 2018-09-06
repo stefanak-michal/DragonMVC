@@ -19,13 +19,6 @@ class Auth
     private $mUsers;
     
     /**
-     * Core config
-     *
-     * @var Config
-     */
-    private $config;
-    
-    /**
      * Session key
      *
      * @var type 
@@ -34,13 +27,14 @@ class Auth
     
     /**
      * Construct
+     * 
+     * @param Users $mUsers
      */
-    public function __construct($mUsers, $config)
+    public function __construct(Users $mUsers)
     {
         session_start();
         
         $this->mUsers = $mUsers;
-        $this->config = $config;
     }
     
     /**
@@ -73,7 +67,7 @@ class Auth
                 $sessionHash = '';
                 if ($remember)
                 {
-                    $sessionHash = md5($this->config->get('salt') . $_SERVER['REMOTE_ADDR'] . session_id() . $userData['nick']);
+                    $sessionHash = md5(\core\Config::gi()->get('salt') . $_SERVER['REMOTE_ADDR'] . session_id() . $userData['nick']);
                     setcookie('login', $sessionHash, strtotime('+1 month'), '/');
                 }
                 else
@@ -97,7 +91,7 @@ class Auth
      */
     public function generatePasswordHash($password)
     {
-        return md5( $this->config->get('salt') . $password);
+        return md5(\core\Config::gi()->get('salt') . $password);
     }
     
     /**

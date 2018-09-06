@@ -87,7 +87,7 @@ final class Generator
             Debug::$tables[__FUNCTION__][] = [
                 'URI' => $match[1],
                 'date' => date('Y-m-d H:i:s', $time[1]) . substr($time[1], strpos($time[1], '.')),
-                '' => '<a href="' . Dragon::$host . 'tmp/debug/' . $time[1] . '.html">view</a>'
+                '' => '<a href="' . \core\Router::gi()->getHost() . 'tmp/debug/' . $time[1] . '.html">view</a>'
             ];
         }
     }

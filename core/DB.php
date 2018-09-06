@@ -6,7 +6,7 @@ use \Exception,
     \mysqli,
     \mysqli_result;
 
-/*
+/**
   Copyright (C) 2008-2012 Sergey Tsalkov (stsalkov@gmail.com)
 
   This program is free software: you can redistribute it and/or modify
@@ -24,7 +24,6 @@ use \Exception,
 
   @see http://www.meekro.com/docs.php
  */
-
 final class DB
 {
 
@@ -60,6 +59,18 @@ final class DB
         $mdb = DB::$mdb;
 
         if ( $mdb === null ) {
+            DB::$host = Config::gi()->get('dbServer');
+            DB::$port = Config::gi()->get('dbPort');
+            DB::$user = Config::gi()->get('dbUser');
+            DB::$password = Config::gi()->get('dbPass');
+            DB::$dbName = Config::gi()->get('dbDatabase');
+            
+            if ( !IS_WORKSPACE ) {
+                self::setDatabaseErrorHandlers();
+            } else {
+                DB::$success_handler = array("core\\Debug", 'query');
+            }
+        
             $mdb = DB::$mdb = new MeekroDB();
         }
 
@@ -87,7 +98,43 @@ final class DB
     {
         DB::$success_handler = $handler;
     }
+    
+    /**
+     * Custom production database error handlers
+     */
+    private static function setDatabaseErrorHandlers()
+    {
+        DB::$error_handler = function($params) {
+            /* @var $e Exception */
+            $e = new Exception();
+            $backtrace = preg_split("/[\r\n]+/", $e->getTraceAsString());
 
+            //remove core traces
+            foreach ( $backtrace AS $key => $line ) {
+                if ( strpos($line, 'internal function') || strpos($line, 'DB.php') ) {
+                    unset($backtrace[$key]);
+                } else {
+                    break;
+                }
+            }
+
+            //remove trace auto increment
+            foreach ( $backtrace AS &$line ) {
+                $line = preg_replace("/^#\d+ /", '', $line);
+            }
+
+            $backtrace = array_slice($backtrace, 0, -2);
+
+            trigger_error(implode(PHP_EOL, $params) . PHP_EOL . implode(PHP_EOL, $backtrace), E_USER_WARNING);
+        };
+
+        DB::$nonsql_error_handler = function($params) {
+            trigger_error(implode(PHP_EOL, $params), E_USER_WARNING);
+            header("HTTP/1.1 500 Internal Server Error");
+            readfile(BASE_PATH . DS . '500.html');
+            exit;
+        };
+    }
 }
 
 final class MeekroDB

@@ -20,28 +20,11 @@ class Assets
     const TYPE_JS = 'js';
     
     /**
-     * Router
-     *
-     * @var Router
-     */
-    private static $router;
-    
-    /**
      * Assets to load on page
      *
      * @var array
      */
     private static $toLoad = array();
-
-    /**
-     * Set Router instance
-     * 
-     * @param Router $router
-     */
-    public static function setRouter(Router $router)
-    {
-        self::$router = $router;
-    }
     
     /**
      * Reset list of assets to load
@@ -59,18 +42,13 @@ class Assets
      */
     public static function add($name, $type)
     {
-        if ( ! self::$router instanceof Router ) {
-            trigger_error('Set a instance of Router', E_USER_ERROR);
-            return;
-        }
-        
         if ( !is_array($name) ) {
             $name = array($name);
         }
         
         foreach ( $name AS $once ) {
             if ( !isset(self::$toLoad[$type][$once]) ) {
-                $assetUrl = self::$router->getAssetUrl($once, $type);
+                $assetUrl = Router::gi()->getAssetUrl($once, $type);
                 if ( !empty($assetUrl) ) {
                     self::$toLoad[$type][$once] = $assetUrl;
                 } else {

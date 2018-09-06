@@ -2,11 +2,6 @@
 
 namespace controllers;
 
-use core\Config,
-    core\View,
-    core\Router,
-    helpers\Assets;
-
 /**
  * controllerApp
  * 
@@ -15,51 +10,14 @@ use core\Config,
 abstract class App
 {
     /**
-     * Instance for drawing views
-     *
-     * @var View
-     */
-    protected $view;
-        
-    /**
-     * Instance for work with URI
-     *
-     * @var Router
-     */
-    protected $router;
-    
-    /**
-     * Instance for configuration data
-     *
-     * @var Config
-     */
-    protected $config;
-    
-    /**
-     * Construct
-     * 
-     * @param Config $config
-     * @param Router $router
-     * @param View $view
-     */
-    public function __construct(Config $config, Router $router, View $view)
-    {
-        $this->config = $config;
-        $this->router = $router;
-        $this->view = $view;
-        
-        Assets::setRouter($this->router);
-    }
-    
-    /**
-     * Alias for set variable to view
+     * Alias for set variable to View
      * 
      * @param string $name
      * @param mixed $value
      */
     final protected function set($name, $value)
     {
-        $this->view->set($name, $value);
+        \core\View::gi()->set($name, $value);
     }
     
     /**
@@ -72,6 +30,8 @@ abstract class App
      */
     final protected function param($name, $type = 'GET', $default = null)
     {
+        return \helpers\Utils::param($name, $type, $default);
+        
         $type = '_' . strtoupper($type);
         $output = isset($GLOBALS[$type][$name]) ? $GLOBALS[$type][$name] : $default;
         
@@ -83,9 +43,9 @@ abstract class App
      */
     public function beforeMethod()
     {
-        $this->view->setTitle();
-        $this->set('project_host', $this->config->get('project_host'));
-        $this->set('project_title', $this->config->get('project_title'));
+        \core\View::gi()->setTitle();
+        $this->set('project_host', \core\Config::gi()->get('project_host'));
+        $this->set('project_title', \core\Config::gi()->get('project_title'));
     }
     
     /**

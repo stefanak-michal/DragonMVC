@@ -4,8 +4,7 @@ namespace controllers;
 
 use components\Auth,
     models\Users AS mUsers,
-    helpers\Assets,
-    core\Dragon;
+    helpers\Assets;
 
 /**
  * Administration
@@ -30,13 +29,13 @@ class Admin extends App
         $this->mUsers = new mUsers();
         $this->auth = new Auth($this->mUsers, $this->config);
         
-        if ( Dragon::$method != 'login' && !$this->auth->check() ) {
-            $this->router->redirect( $this->config->get('project_host') );
+        if ( \core\Dragon::$method != 'login' && !$this->auth->check() ) {
+            \core\Router::gi()->redirect( \core\Config::gi()->get('project_host') );
         }
         
         parent::beforeMethod();
         
-        $this->view->setLayout('default');
+        \core\View::gi()->setLayout('default');
         Assets::add('main', Assets::TYPE_CSS);
         Assets::add('default', Assets::TYPE_JS);
     }
@@ -49,10 +48,10 @@ class Admin extends App
         //verify form login
         $data = $this->param('data', 'post');
         if ( !empty($data) && $this->auth->login($data['nick'], $data['pass'], true) ) {
-            $this->router->redirect( $this->router->getUrl('admin', 'confirm') );
+            \core\Router::gi()->redirect( \core\Router::gi()->getUrl('admin', 'confirm') );
         }
         
-        $this->set('formUrl', $this->router->current());
+        $this->set('formUrl', \core\Router::gi()->current());
     }
     
     /**

@@ -3,6 +3,7 @@
 namespace components;
 
 use core\View,
+    core\Config,
     helpers\Validation;
 
 /**
@@ -12,20 +13,12 @@ use core\View,
  * @internal For default magic __call is allowed templates list in lookuptable
  * 
  * <pre>
- * $_email = new Email($this->config);
+ * $_email = new Email();
  * $_email->setTo('john.doe@email.com', 'John Doe')->setTitle('Do not read this')->sample();
  * </pre>
  */
 class Email
 {
-    /**
-     * core\Config
-     *
-     * @access protected
-     * @var core\Config
-     */
-    protected $config;
-    
     /**
      * Where to send email
      *
@@ -49,9 +42,8 @@ class Email
     /**
      * Construct
      */
-    public function __construct($config)
+    public function __construct()
     {
-        $this->config = $config;
         $this->setTitle();
     }
     
@@ -81,7 +73,7 @@ class Email
     {
         $titleParts = array();
         if ( $prefix ) {
-            $titleParts[] = $this->config->get('project_title');
+            $titleParts[] = Config::gi()->get('project_title');
         }
         
         if ( !empty($title) ) {
@@ -113,7 +105,7 @@ class Email
     {
         $output = false;
         
-        $templates = $this->config->lt('allowedTemplates.email');
+        $templates = Config::gi()->lt('allowedTemplates.email');
         if ( in_array($template, $templates) ) {
             if ( !empty($this->title) && !isset($variables['title']) ) {
                 $variables['title'] = $this->title;
@@ -144,8 +136,8 @@ class Email
      */
     private function headers()
     {
-        $prTitle = $this->config->get('project_title');
-        $prEmail = $this->config->get('project_email');
+        $prTitle = Config::gi()->get('project_title');
+        $prEmail = Config::gi()->get('project_email');
         
         return ( 
             'MIME-Version: 1.0' . "\r\n".

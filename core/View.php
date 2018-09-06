@@ -25,13 +25,6 @@ final class View
     private $view;
 
     /**
-     * Config
-     *
-     * @var Config
-     */
-    private $config;
-
-    /**
      * Folder with views
      *
      * @var string
@@ -51,15 +44,23 @@ final class View
      * @var array
      */
     private $viewVars = array();
-
+    
     /**
-     * Construct
-     * 
-     * @param Config $config
+     * @var View
      */
-    public function __construct(Config $config)
+    private static $instance;
+    
+    /**
+     * Singleton
+     * 
+     * @return View
+     */
+    public static function gi()
     {
-        $this->config = $config;
+        if (self::$instance == null)
+            self::$instance = new View();
+        
+        return self::$instance;
     }
 
     /**
@@ -90,7 +91,7 @@ final class View
      */
     public function setTitle($value = '', $projectTitle = true)
     {
-        $title = $this->config->get('project_title');
+        $title = Config::gi()->get('project_title');
 
         if ( empty($value) ) {
             $value = $title;

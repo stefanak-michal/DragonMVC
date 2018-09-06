@@ -21,7 +21,7 @@ class Homepage extends App
         parent::beforeMethod();
         
         //layout stranky
-        $this->view->setLayout('default');
+        \core\View::gi()->setLayout('default');
     }
     
     /**
@@ -40,7 +40,7 @@ class Homepage extends App
         Debug::timer('test');
         Assets::add('main', Assets::TYPE_CSS);
         Assets::add('default', Assets::TYPE_JS);
-
+        
         /*
          * Sample information about access to database data
          * Default read:
@@ -53,7 +53,7 @@ class Homepage extends App
         /*
          * Sample get instance of component
          */
-        $componentEmail = new cEmail($this->config, $this->router);
+        $componentEmail = new cEmail();
         
         Debug::var_dump('test');
         Debug::var_dump([432, 654]);
@@ -61,7 +61,7 @@ class Homepage extends App
         
         $this->set('variable', 'how to set variable to view');
         $this->set('links', array(
-            'produkt' => $this->router->getUrl('products', 'detail', 123, array('list' => 5))
+            'produkt' => \core\Router::gi()->getUrl('products', 'detail', 123, array('list' => 5))
         ));
     }
     
