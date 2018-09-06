@@ -37,7 +37,7 @@ final class Dragon
         $debug = false;
         if (isset($GLOBALS['_GET']['debug'])) {
             $debug = $GLOBALS['_GET']['debug'] == 1;
-        } elseif ($this->config->get('debug') !== null) {
+        } elseif (Config::gi()->get('debug') !== null) {
             $debug = $this->config->get('debug') == 1;
         } else {
             $debug = IS_WORKSPACE;
