@@ -38,6 +38,12 @@ class Email
      * @var string
      */
     private $title = '';
+    /**
+     * Where to reply
+     *
+     * @var array
+     */
+    private $reply = [];
     
     /**
      * If want call reset after send
@@ -66,6 +72,22 @@ class Email
     {
         if ( Validation::isEmail($email) ) {
             empty($name) ? ($this->emails[] = $email) : ($this->emails[$name] = $email);
+        }
+        
+        return $this;
+    }
+    
+    /**
+     * Set reply address
+     * 
+     * @param string $email
+     * @param string $name
+     * @return Email
+     */
+    public function setReply($email, $name = '')
+    {
+        if (Validation::isEmail($email)) {
+            empty($name) ? ($this->reply[] = $email) : ($this->reply[$name] = $email);
         }
         
         return $this;
@@ -113,16 +135,16 @@ class Email
     {
         $output = false;
         
-        $templates = $this->config->lt('allowedTemplates.email');
-        if ( in_array($template, $templates) ) {
-            if ( !empty($this->title) && !isset($variables['title']) ) {
-                $variables['title'] = $this->title;
-            }
+        if (!empty($variables) && count($variables) == 1 && array_key_exists(0, $variables))
+            $variables = $variables[0];
 
-            $content = View::renderElement('email/' . $template, $variables, true);
-            if ( !empty($content) ) {
-                $output = $this->send($content);
-            }
+        if ( !empty($this->title) && !isset($variables['title']) ) {
+            $variables['title'] = $this->title;
+        }
+
+        $content = View::renderElement('email/' . $template, $variables, true);
+        if ( !empty($content) ) {
+            $output = $this->send($content);
         }
         
         return $output;
@@ -134,6 +156,7 @@ class Email
     public function reset()
     {
         $this->emails = array();
+        $this->reply = array();
         $this->setTitle();
     }
         
@@ -147,13 +170,24 @@ class Email
         $prTitle = $this->config->get('project_title');
         $prEmail = $this->config->get('project_email');
         
-        return ( 
-            'MIME-Version: 1.0' . "\r\n".
-            'Content-type: text/html; charset=utf-8' . "\r\n".
-            'From: ' . $prTitle . ' <' . $prEmail . '>' . "\r\n" .
-            'Reply-To: ' . $prTitle . ' <' . $prEmail . '>' . "\r\n" .
-            'X-Mailer: PHP/' . phpversion()
-        );
+        $output = 'MIME-Version: 1.0' . "\r\n";
+        $output .= 'Content-type: text/html; charset=utf-8' . "\r\n";
+        $output .= 'From: ' . $prTitle . ' <' . $prEmail . '>' . "\r\n";
+        
+        $reply = [];
+        if (!empty($this->reply)) {
+            foreach ($this->reply as $k => $r)
+                $reply[] = empty($k) || is_numeric($k) ? $r : ($k . ' <' . $r . '>');
+        }
+        else
+            $reply[] = $prTitle . ' <' . $prEmail . '>';
+        
+        if (!empty($reply))
+            $output .= 'Reply-To: ' . implode(',', $reply) . "\r\n";
+        
+        $output .= 'X-Mailer: PHP/' . phpversion();
+        
+        return $output;
     }
     
     /**
