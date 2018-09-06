@@ -77,7 +77,6 @@ if ( IS_CLI ) {
 }
 
 define('IS_WORKSPACE', $workspace);
-define('DRAGON_DEBUG', IS_WORKSPACE);
 
 //Execute project
 $app = new core\Dragon();

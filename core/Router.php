@@ -234,7 +234,7 @@ final class Router
                 setcookie('message', $message, time() + 60, '/');
             }
 
-            if ( Config::gi()->get('debug') ) {
+            if ( DRAGON_DEBUG ) {
                 View::renderElement('debug/backtrace', array(
                     'bt' => debug_backtrace(),
                     'url' => $uri,
