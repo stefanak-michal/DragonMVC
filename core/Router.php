@@ -250,28 +250,6 @@ final class Router
     }
 
     /**
-     * Generate path to asset file
-     * 
-     * @param string $name
-     * @param string $assetType css, js, img
-     * @param bool $absolute
-     * @return string
-     */
-    public function getAssetUrl($name, $assetType, $absolute = true)
-    {
-        $output = '';
-
-        if ( !empty($name) AND ! empty($assetType) ) {
-            $files = (array) Config::gi()->get($assetType);
-            if ( array_key_exists($name, $files) ) {
-                $output = ($absolute ? rtrim($this->project_host, '/') : '') . '/assets/' . $assetType . '/' . $files[$name]['file'] . '?v=' . $files[$name]['version'];
-            }
-        }
-
-        return $output;
-    }
-    
-    /**
      * Find route
      * 
      * @param string $path

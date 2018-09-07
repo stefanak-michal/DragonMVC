@@ -2,8 +2,6 @@
 
 namespace helpers;
 
-use core\Router;
-
 /**
  * Assets
  * Helper for holding assets files to draw in html head
@@ -48,7 +46,7 @@ class Assets
         
         foreach ( $name AS $once ) {
             if ( !isset(self::$toLoad[$type][$once]) ) {
-                $assetUrl = Router::gi()->getAssetUrl($once, $type);
+                $assetUrl = self::generateUrl($once, $type);
                 if ( !empty($assetUrl) ) {
                     self::$toLoad[$type][$once] = $assetUrl;
                 } else {
@@ -56,6 +54,28 @@ class Assets
                 }
             }
         }
+    }
+    
+    /**
+     * Generate asset url
+     * 
+     * @param string $name
+     * @param string $assetType
+     * @param bool $absolute
+     * @return string
+     */
+    private static function generateUrl($name, $assetType, $absolute = true)
+    {
+        $output = '';
+        
+        if ( !empty($name) AND !empty($assetType) ) {
+            $files = (array) \core\Config::gi()->get($assetType);
+            if ( array_key_exists($name, $files) ) {
+                $output = ($absolute ? rtrim(\core\Router::gi()->getHost(), '/') : '') . '/assets/' . $assetType . '/' . $files[$name]['file'] . '?v=' . $files[$name]['version'];
+            }
+        }
+        
+        return $output;
     }
     
     /**
