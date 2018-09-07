@@ -102,7 +102,7 @@ final class Config
     }
 
     /**
-     * Nacita json config
+     * Load json config
      * 
      * @param string $file
      * @param boolean $assoc

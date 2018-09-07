@@ -33,7 +33,7 @@ spl_autoload_register(function($name) {
         }
     }
 
-    //v priecinku vendor mame cudzie riesenia
+    //in directory vendor we can have 3rd solutions
     if ( $tryVendor ) {
         $path = BASE_PATH . DS . 'vendor';
 

@@ -10,7 +10,6 @@ use core\View,
  * Notification
  * 
  * Sending different service/notification emails
- * @internal For default magic __call is allowed templates list in lookuptable
  * 
  * <pre>
  * $_email = new Email();

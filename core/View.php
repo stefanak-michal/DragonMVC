@@ -5,7 +5,7 @@ namespace core;
 /**
  * View
  * 
- * Praca s vystupom/pohladmi
+ * Work with views
  */
 final class View
 {
@@ -176,6 +176,8 @@ final class View
         Debug::files($elementFile);
         
         if ( file_exists($elementFile) ) {
+            $variables['project_host'] = Router::gi()->getHost();
+            
             if ( $return ) {
                 ob_start();
             }
@@ -190,7 +192,7 @@ final class View
                 $content = ob_get_clean();
             }
 
-            //po vykresleni si trochu vyprazdnime pamat
+            //after render clean up memory
             foreach ( $variables as $key => $variable ) {
                 unset(${$key});
             }
@@ -213,7 +215,7 @@ final class View
     }
 
     /**
-     * Pouzije spravny directory separator
+     * Use the right directory separator
      * 
      * @param string $str
      * @return string
