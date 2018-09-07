@@ -6,23 +6,27 @@ use \Exception,
     \mysqli,
     \mysqli_result;
 
+/*
+ * Copyright (C) 2008-2012 Sergey Tsalkov (stsalkov@gmail.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 /**
-  Copyright (C) 2008-2012 Sergey Tsalkov (stsalkov@gmail.com)
-
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU Lesser General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-  @see http://www.meekro.com/docs.php
+ * MeekroDB static wrapper
+ * 
+ * @see http://www.meekro.com/docs.php
  */
 final class DB
 {
@@ -85,20 +89,6 @@ final class DB
         return $mdb;
     }
 
-    public static function __callStatic($name, $arguments)
-    {
-        if ( method_exists(DB::getMDB(), $name) ) {
-            return call_user_func_array(array(DB::getMDB(), $name), $arguments);
-        } else {
-            exit('No defined DB method');
-        }
-    }
-
-    public static function debugMode($handler = true)
-    {
-        DB::$success_handler = $handler;
-    }
-    
     /**
      * Custom production database error handlers
      */
@@ -137,6 +127,11 @@ final class DB
     }
 }
 
+/**
+ * MeekroDB
+ * 
+ * @see http://www.meekro.com/docs.php
+ */
 final class MeekroDB
 {
 
