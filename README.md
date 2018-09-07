@@ -4,12 +4,12 @@
 
 * Easy deployment and setup
 * Classic MVC structure
-* Available define lookup table in lt.cfg.php
+* Config system with lookup tables
 * Namespaces
 * Simple file names conventions
 * Autoloader for files
 * CLI support and shell script
-* PHP min. version 5.4
+* PHP min. version 7
 
 Database class is MeekroDB http://www.meekro.com/
 
