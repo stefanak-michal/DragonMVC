@@ -51,7 +51,7 @@ class Admin extends App
             $this->router->redirect( $this->router->getUrl('admin', 'confirm') );
         }
         
-        $this->set('formUrl', \core\Router::gi()->current());
+        $this->set('formUrl', $this->router->current());
     }
     
     /**
