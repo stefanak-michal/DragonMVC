@@ -20,22 +20,22 @@ class Admin extends App
     /**
      * Model Users
      *
-     * @var Users
+     * @var mUsers
      */
     private $mUsers;
     
     public function beforeMethod()
     {
         $this->mUsers = new mUsers();
-        $this->auth = new Auth($this->mUsers, $this->config);
+        $this->auth = new Auth($this->mUsers);
         
         if ( \core\Dragon::$method != 'login' && !$this->auth->check() ) {
-            \core\Router::gi()->redirect( \core\Config::gi()->get('project_host') );
+            $this->router->redirect( $this->router->getHomepageUrl() );
         }
         
         parent::beforeMethod();
         
-        \core\View::gi()->setLayout('default');
+        $this->view->setLayout('default');
         Assets::add('main', Assets::TYPE_CSS);
         Assets::add('default', Assets::TYPE_JS);
     }
@@ -48,7 +48,7 @@ class Admin extends App
         //verify form login
         $data = $this->param('data', 'post');
         if ( !empty($data) && $this->auth->login($data['nick'], $data['pass'], true) ) {
-            \core\Router::gi()->redirect( \core\Router::gi()->getUrl('admin', 'confirm') );
+            $this->router->redirect( $this->router->getUrl('admin', 'confirm') );
         }
         
         $this->set('formUrl', \core\Router::gi()->current());

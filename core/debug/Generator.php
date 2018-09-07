@@ -16,7 +16,7 @@ final class Generator
      */
     public static function generate()
     {
-        if ( !DRAGON_DEBUG ) {
+        if ( !defined('DRAGON_DEBUG') || !DRAGON_DEBUG ) {
             return;
         }
         

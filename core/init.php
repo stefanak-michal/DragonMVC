@@ -78,6 +78,15 @@ if ( IS_CLI ) {
 
 define('IS_WORKSPACE', $workspace);
 
+if (isset($GLOBALS['_GET']['debug'])) {
+    $debug = $GLOBALS['_GET']['debug'] == 1;
+} elseif (core\Config::gi()->get('debug') !== null) {
+    $debug = core\Config::gi()->get('debug') == 1;
+} else {
+    $debug = IS_WORKSPACE;
+}
+define('DRAGON_DEBUG', $debug);
+
 //Execute project
 $app = new core\Dragon();
 if ( !IS_CLI ) {

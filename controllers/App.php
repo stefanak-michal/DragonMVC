@@ -10,6 +10,33 @@ namespace controllers;
 abstract class App
 {
     /**
+     * Config - for simple access
+     * 
+     * @var \core\Config
+     */
+    protected $config;
+    /**
+     * View - for simple access
+     * 
+     * @var \core\View
+     */
+    protected $view;
+    /**
+     * Router - for simple access
+     * 
+     * @var \core\Router
+     */
+    protected $router;
+    
+    public function __construct()
+    {
+        $this->config = \core\Config::gi();
+        $this->view = \core\View::gi();
+        $this->router = \core\Router::gi();
+    }
+
+    
+    /**
      * Alias for set variable to View
      * 
      * @param string $name
@@ -17,7 +44,7 @@ abstract class App
      */
     final protected function set($name, $value)
     {
-        \core\View::gi()->set($name, $value);
+        $this->view->set($name, $value);
     }
     
     /**
@@ -31,11 +58,6 @@ abstract class App
     final protected function param($name, $type = 'GET', $default = null)
     {
         return \helpers\Utils::param($name, $type, $default);
-        
-        $type = '_' . strtoupper($type);
-        $output = isset($GLOBALS[$type][$name]) ? $GLOBALS[$type][$name] : $default;
-        
-        return $output;
     }
     
     /**
@@ -43,9 +65,9 @@ abstract class App
      */
     public function beforeMethod()
     {
-        \core\View::gi()->setTitle();
-        $this->set('project_host', \core\Config::gi()->get('project_host'));
-        $this->set('project_title', \core\Config::gi()->get('project_title'));
+        $this->view->setTitle();
+        $this->set('project_host', $this->config->get('project_host'));
+        $this->set('project_title', $this->config->get('project_title'));
     }
     
     /**

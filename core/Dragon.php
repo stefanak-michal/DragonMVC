@@ -34,16 +34,6 @@ final class Dragon
      */
     public function run()
     {
-        $debug = false;
-        if (isset($GLOBALS['_GET']['debug'])) {
-            $debug = $GLOBALS['_GET']['debug'] == 1;
-        } elseif (Config::gi()->get('debug') !== null) {
-            $debug = Config::gi()->get('debug') == 1;
-        } else {
-            $debug = IS_WORKSPACE;
-        }
-        define('DRAGON_DEBUG', $debug);
-        
         $cmv = array(
             'controller' => Config::gi()->get('defaultController'),
             'method' => Config::gi()->get('defaultMethod'),

@@ -13,15 +13,12 @@ use helpers\Assets,
 class Homepage extends App
 {
     
-    /**
-     * Some action before any method
-     */
     public function beforeMethod()
     {
         parent::beforeMethod();
         
-        //layout stranky
-        \core\View::gi()->setLayout('default');
+        //page layout
+        $this->view->setLayout('default');
     }
     
     /**
@@ -61,7 +58,7 @@ class Homepage extends App
         
         $this->set('variable', 'how to set variable to view');
         $this->set('links', array(
-            'produkt' => \core\Router::gi()->getUrl('products', 'detail', 123, array('list' => 5))
+            'produkt' => $this->router->getUrl('products', 'detail', 123, array('list' => 5))
         ));
     }
     
