@@ -7,24 +7,27 @@ use \Exception,
     \mysqli_result;
 
 /*
-  Copyright (C) 2008-2012 Sergey Tsalkov (stsalkov@gmail.com)
-
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU Lesser General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-  @see http://www.meekro.com/docs.php
+ * Copyright (C) 2008-2012 Sergey Tsalkov (stsalkov@gmail.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * MeekroDB static wrapper
+ * 
+ * @see http://www.meekro.com/docs.php
+ */
 final class DB
 {
 
@@ -60,6 +63,18 @@ final class DB
         $mdb = DB::$mdb;
 
         if ( $mdb === null ) {
+            DB::$host = Config::gi()->get('dbServer');
+            DB::$port = Config::gi()->get('dbPort');
+            DB::$user = Config::gi()->get('dbUser');
+            DB::$password = Config::gi()->get('dbPass');
+            DB::$dbName = Config::gi()->get('dbDatabase');
+            
+            if ( !IS_WORKSPACE ) {
+                self::setDatabaseErrorHandlers();
+            } else {
+                DB::$success_handler = array("core\\Debug", 'query');
+            }
+        
             $mdb = DB::$mdb = new MeekroDB();
         }
 
@@ -74,22 +89,49 @@ final class DB
         return $mdb;
     }
 
-    public static function __callStatic($name, $arguments)
+    /**
+     * Custom production database error handlers
+     */
+    private static function setDatabaseErrorHandlers()
     {
-        if ( method_exists(DB::getMDB(), $name) ) {
-            return call_user_func_array(array(DB::getMDB(), $name), $arguments);
-        } else {
-            exit('No defined DB method');
-        }
-    }
+        DB::$error_handler = function($params) {
+            /* @var $e Exception */
+            $e = new Exception();
+            $backtrace = preg_split("/[\r\n]+/", $e->getTraceAsString());
 
-    public static function debugMode($handler = true)
-    {
-        DB::$success_handler = $handler;
-    }
+            //remove core traces
+            foreach ( $backtrace AS $key => $line ) {
+                if ( strpos($line, 'internal function') || strpos($line, 'DB.php') ) {
+                    unset($backtrace[$key]);
+                } else {
+                    break;
+                }
+            }
 
+            //remove trace auto increment
+            foreach ( $backtrace AS &$line ) {
+                $line = preg_replace("/^#\d+ /", '', $line);
+            }
+
+            $backtrace = array_slice($backtrace, 0, -2);
+
+            trigger_error(implode(PHP_EOL, $params) . PHP_EOL . implode(PHP_EOL, $backtrace), E_USER_WARNING);
+        };
+
+        DB::$nonsql_error_handler = function($params) {
+            trigger_error(implode(PHP_EOL, $params), E_USER_WARNING);
+            header("HTTP/1.1 500 Internal Server Error");
+            readfile(BASE_PATH . DS . '500.html');
+            exit;
+        };
+    }
 }
 
+/**
+ * MeekroDB
+ * 
+ * @see http://www.meekro.com/docs.php
+ */
 final class MeekroDB
 {
 

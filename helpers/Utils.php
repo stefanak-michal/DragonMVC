@@ -169,17 +169,7 @@ class Utils
      */
     public static function realIp()
     {
-        $ip = '';
-
-        if ( !empty($_SERVER['HTTP_CLIENT_IP']) ) {   //check ip from share internet
-            $ip = $_SERVER['HTTP_CLIENT_IP'];
-        } elseif ( !empty($_SERVER['HTTP_X_FORWARDED_FOR']) ) {   //to check ip is pass from proxy
-            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-        } elseif ( isset($_SERVER['REMOTE_ADDR']) ) {
-            $ip = $_SERVER['REMOTE_ADDR'];
-        }
-
-        return $ip;
+        return Utils::param('HTTP_CLIENT_IP', 'SERVER') ?? Utils::param('HTTP_X_FORWARDED_FOR', 'SERVER') ?? Utils::param('REMOTE_ADDR', 'SERVER');
     }
 
     /**
@@ -218,6 +208,22 @@ class Utils
         $val = trim($val, '-');
         $val = iconv("UTF-8", "UTF-8//IGNORE", $val);
         return $val;
+    }
+    
+    /**
+     * Return global variable
+     * 
+     * @param string $name
+     * @param string $type
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function param($name, $type = 'GET', $default = null)
+    {
+        $type = '_' . strtoupper($type);
+        $output = isset($GLOBALS[$type][$name]) ? $GLOBALS[$type][$name] : $default;
+        
+        return $output;
     }
 
 }

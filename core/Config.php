@@ -44,7 +44,25 @@ final class Config
      * @var string
      */
     private $jsonAffix = '.json';
-
+    
+    /**
+     * @var Config
+     */
+    private static $instance;
+    
+    /**
+     * Singleton
+     * 
+     * @return Config
+     */
+    public static function gi()
+    {
+        if (self::$instance == null)
+            self::$instance = new Config();
+        
+        return self::$instance;
+    }
+    
     /**
      * Construct
      */

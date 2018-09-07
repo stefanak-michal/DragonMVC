@@ -13,14 +13,11 @@ use helpers\Assets,
 class Homepage extends App
 {
     
-    /**
-     * Some action before any method
-     */
     public function beforeMethod()
     {
         parent::beforeMethod();
         
-        //layout stranky
+        //page layout
         $this->view->setLayout('default');
     }
     
@@ -40,7 +37,7 @@ class Homepage extends App
         Debug::timer('test');
         Assets::add('main', Assets::TYPE_CSS);
         Assets::add('default', Assets::TYPE_JS);
-
+        
         /*
          * Sample information about access to database data
          * Default read:
@@ -53,7 +50,7 @@ class Homepage extends App
         /*
          * Sample get instance of component
          */
-        $componentEmail = new cEmail($this->config, $this->router);
+        $componentEmail = new cEmail();
         
         Debug::var_dump('test');
         Debug::var_dump([432, 654]);

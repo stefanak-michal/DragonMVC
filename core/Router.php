@@ -18,30 +18,40 @@ final class Router
     private $project_host;
 
     /**
-     * Config
-     *
-     * @var Config
-     */
-    private $config;
-
-    /**
      * Definition of allowed routes from config file
      *
      * @var array
      */
     private $routes = array();
+    
+    /**
+     * @var Router
+     */
+    private static $instance;
+    
+    /**
+     * Singleton
+     * 
+     * @return Router
+     */
+    public static function gi()
+    {
+        if (self::$instance == null)
+            self::$instance = new Router();
+        
+        return self::$instance;
+    }
 
     /**
      * Construct
      * 
      * @param Config $config
      */
-    public function __construct(Config $config)
+    public function __construct()
     {
-        $this->config = $config;
-        $this->routes = $this->config->get('routes');
+        $this->routes = Config::gi()->get('routes');
 
-        $this->project_host = $this->config->get('project_host');
+        $this->project_host = Config::gi()->get('project_host');
         if ( empty($this->project_host) && isset($_SERVER['SERVER_PORT'], $_SERVER['HTTP_HOST']) ) {
             $this->project_host = ( $_SERVER['SERVER_PORT'] == 443 ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'];
         }
@@ -50,7 +60,17 @@ final class Router
             trigger_error('Not specified project host', E_USER_WARNING);
         }
         $this->project_host = rtrim($this->project_host, '/') . '/';
-        $this->config->set('project_host', $this->project_host);
+        Config::gi()->set('project_host', $this->project_host);
+    }
+    
+    /**
+     * Get project host
+     * 
+     * @return string
+     */
+    public function getHost()
+    {
+        return $this->project_host;
     }
 
     /**
@@ -242,7 +262,7 @@ final class Router
         $output = '';
 
         if ( !empty($name) AND ! empty($assetType) ) {
-            $files = (array) $this->config->get($assetType);
+            $files = (array) Config::gi()->get($assetType);
             if ( array_key_exists($name, $files) ) {
                 $output = ($absolute ? rtrim($this->project_host, '/') : '') . '/assets/' . $assetType . '/' . $files[$name]['file'] . '?v=' . $files[$name]['version'];
             }

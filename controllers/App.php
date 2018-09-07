@@ -2,11 +2,6 @@
 
 namespace controllers;
 
-use core\Config,
-    core\View,
-    core\Router,
-    helpers\Assets;
-
 /**
  * controllerApp
  * 
@@ -15,44 +10,34 @@ use core\Config,
 abstract class App
 {
     /**
-     * Instance for drawing views
-     *
-     * @var View
+     * Config - for simple access
+     * 
+     * @var \core\Config
+     */
+    protected $config;
+    /**
+     * View - for simple access
+     * 
+     * @var \core\View
      */
     protected $view;
-        
     /**
-     * Instance for work with URI
-     *
-     * @var Router
+     * Router - for simple access
+     * 
+     * @var \core\Router
      */
     protected $router;
     
-    /**
-     * Instance for configuration data
-     *
-     * @var Config
-     */
-    protected $config;
-    
-    /**
-     * Construct
-     * 
-     * @param Config $config
-     * @param Router $router
-     * @param View $view
-     */
-    public function __construct(Config $config, Router $router, View $view)
+    public function __construct()
     {
-        $this->config = $config;
-        $this->router = $router;
-        $this->view = $view;
-        
-        Assets::setRouter($this->router);
+        $this->config = \core\Config::gi();
+        $this->view = \core\View::gi();
+        $this->router = \core\Router::gi();
     }
+
     
     /**
-     * Alias for set variable to view
+     * Alias for set variable to View
      * 
      * @param string $name
      * @param mixed $value
@@ -72,10 +57,7 @@ abstract class App
      */
     final protected function param($name, $type = 'GET', $default = null)
     {
-        $type = '_' . strtoupper($type);
-        $output = isset($GLOBALS[$type][$name]) ? $GLOBALS[$type][$name] : $default;
-        
-        return $output;
+        return \helpers\Utils::param($name, $type, $default);
     }
     
     /**

@@ -4,8 +4,7 @@ namespace controllers;
 
 use components\Auth,
     models\Users AS mUsers,
-    helpers\Assets,
-    core\Dragon;
+    helpers\Assets;
 
 /**
  * Administration
@@ -21,17 +20,17 @@ class Admin extends App
     /**
      * Model Users
      *
-     * @var Users
+     * @var mUsers
      */
     private $mUsers;
     
     public function beforeMethod()
     {
         $this->mUsers = new mUsers();
-        $this->auth = new Auth($this->mUsers, $this->config);
+        $this->auth = new Auth($this->mUsers);
         
-        if ( Dragon::$method != 'login' && !$this->auth->check() ) {
-            $this->router->redirect( $this->config->get('project_host') );
+        if ( \core\Dragon::$method != 'login' && !$this->auth->check() ) {
+            $this->router->redirect( $this->router->getHomepageUrl() );
         }
         
         parent::beforeMethod();

@@ -28,7 +28,7 @@ final class Debug
      */
     public static function var_dump()
     {
-        if ( !DRAGON_DEBUG ) {
+        if ( defined('DRAGON_DEBUG') && !DRAGON_DEBUG ) {
             return;
         }
         
@@ -55,7 +55,7 @@ final class Debug
      */
     public static function files($file)
     {
-        if ( !DRAGON_DEBUG ) {
+        if ( defined('DRAGON_DEBUG') && !DRAGON_DEBUG ) {
             return;
         }
         
@@ -77,7 +77,7 @@ final class Debug
      */
     public static function timer($key)
     {
-        if ( !DRAGON_DEBUG ) {
+        if ( defined('DRAGON_DEBUG') && !DRAGON_DEBUG ) {
             return;
         }
         
@@ -103,7 +103,7 @@ final class Debug
      */
     public static function query($args)
     {
-        if ( !DRAGON_DEBUG ) {
+        if ( defined('DRAGON_DEBUG') && !DRAGON_DEBUG ) {
             return;
         }
         
