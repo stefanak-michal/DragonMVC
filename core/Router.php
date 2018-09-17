@@ -2,6 +2,8 @@
 
 namespace core;
 
+use core\debug\Generator AS DebugGenerator;
+
 /**
  * Router
  * 
@@ -234,6 +236,7 @@ final class Router
                 setcookie('message', $message, time() + 60, '/');
             }
 
+            DebugGenerator::generate();
             if ( DRAGON_DEBUG ) {
                 View::renderElement('debug/backtrace', array(
                     'bt' => debug_backtrace(),
