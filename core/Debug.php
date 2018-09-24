@@ -98,7 +98,6 @@ final class Debug
     /**
      * Database queries
      * 
-     * @todo add query explain
      * @param array $args
      */
     public static function query($args)
