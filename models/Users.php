@@ -61,7 +61,7 @@ class Users extends Model
     {
         if ( ! empty($idUser))
         {
-            $update = array('lastActivityTime' => DB::sqlEval('NOW()'));
+            $update = array('lastActivityTime' => $this->db->sqleval('NOW()'));
             
             if ($sessionHash !== null)
             {
