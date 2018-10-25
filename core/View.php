@@ -172,7 +172,10 @@ final class View
     {
         $content = '';
 
-        $elementFile = BASE_PATH . DS . self::$views_dir . DS . 'elements' . DS . self::replaceDirectorySeperator($element) . self::$views_ext;
+        if (substr($element, 0, 1) == '/')
+            $elementFile = BASE_PATH . DS . self::replaceDirectorySeperator($element) . self::$views_ext;
+        else
+            $elementFile = BASE_PATH . DS . self::$views_dir . DS . 'elements' . DS . self::replaceDirectorySeperator($element) . self::$views_ext;
         Debug::files($elementFile);
         
         if ( file_exists($elementFile) ) {
