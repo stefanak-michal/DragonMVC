@@ -1,61 +1,14 @@
 <?php
 /**
  * Project initialization script
- * 
+ * @author Michal Stefanak
  */
 
-define('BASE_PATH', dirname(__DIR__));
-define('DS', DIRECTORY_SEPARATOR);
-define('IS_CLI', php_sapi_name() == 'cli');
-
-/**
- * Autoload fnc
- */
-spl_autoload_register(function($name) {
-    $parts = explode("\\", $name);
-    $parts = array_filter($parts);
-    $cnt = count($parts) - 1;
-    $tryVendor = true;
-
-    if ( count($parts) >= 2 ) {
-        $path = BASE_PATH;
-        foreach ( $parts AS $i => $part ) {
-            if ( $i == $cnt ) {
-                $path .= DS . ucfirst($part) . '.php';
-            } else {
-                $path .= DS . $part;
-            }
-        }
-
-        if ( file_exists($path) ) {
-            include_once $path;
-            $tryVendor = false;
-        }
-    }
-
-    //in directory vendor we can have 3rd solutions
-    if ( $tryVendor ) {
-        $path = BASE_PATH . DS . 'vendor';
-
-        foreach ( $parts AS $i => $part ) {
-            $path .= DS . $part;
-            if ( $i == $cnt ) {
-                $path .= '.php';
-            }
-        }
-
-        if ( file_exists($path) ) {
-            include_once $path;
-        }
-    }
-    
-    if ( class_exists("\\core\\Debug") ) {
-        \core\Debug::files($path);
-    }
-});
+require_once "autoload.php";
 
 $workspace = false;
 
+define('IS_CLI', php_sapi_name() == 'cli');
 if ( IS_CLI ) {
     //console
     
@@ -80,8 +33,8 @@ define('IS_WORKSPACE', $workspace);
 
 if (isset($GLOBALS['_GET']['debug'])) {
     $debug = $GLOBALS['_GET']['debug'] == 1;
-} elseif (core\Config::gi()->get('debug') !== null) {
-    $debug = core\Config::gi()->get('debug') == 1;
+} elseif (\core\Config::gi()->get('debug') !== null) {
+    $debug = \core\Config::gi()->get('debug') == 1;
 } else {
     $debug = IS_WORKSPACE;
 }
