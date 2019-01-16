@@ -94,6 +94,7 @@ abstract class Model
      * 
      * @param int $id
      * @param array $data
+     * @return int
      */
     public function update($id, $data)
     {
