@@ -258,24 +258,35 @@ final class Router
      * @param string $path
      * @return string
      */
-    public function findRoute($path)
+    public function findRoute(string $path)
     {
         $output = array();
         
         foreach ( $this->routes AS $mask => $route ) {
-            if ( is_array($route) ) {
-                foreach ( $route AS $controller => $subroute ) {
-                    $output = $this->match($path, $controller, trim($mask, '/') . '/' . $subroute);
-                    if ( $output !== false ) {
-                        break 2;
-                    }
-                }
-            } else {
-                $output = $this->match($path, $mask, $route);
-                if ( $output !== false ) {
-                    break;
-                }
-            }
+            $output = is_array($route) ? $this->subroutes($path, $mask, $route) : $this->match($path, $mask, $route);
+            if ( $output !== false )
+                break;
+        }
+        
+        return $output;
+    }
+    
+    /**
+     * Grouped routes
+     * @param string $path
+     * @param string $controller
+     * @param array $routes
+     * @return array
+     */
+    private function subroutes(string $path, string $controller, array $routes)
+    {
+        $output = [];
+        
+        foreach ($routes AS $mask => $route) {
+            $route = $controller . '/' . $route;
+            $output = $this->match($path, $mask, $route);
+            if ($output !== false)
+                break;
         }
         
         return $output;
