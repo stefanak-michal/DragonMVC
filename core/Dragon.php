@@ -41,15 +41,7 @@ final class Dragon
         $_uri->_fetch_uri_string();
         $path = (string) $_uri;
 
-        if ( !empty($path) ) {
-            $founded = Router::gi()->findRoute($path);
-            if ( !empty($founded) ) {
-                $cmv = $founded;
-            } else {
-                //append uri parts as variables for method invocation
-                $cmv['vars'] = explode('/', $path);
-            }
-        }
+        $this->resolveRoute($cmv, $path);
         
         //must be defined before view->render, sorry for hardcode
         if ( DRAGON_DEBUG ) {
@@ -62,11 +54,28 @@ final class Dragon
         
         \core\debug\Generator::generate();
     }
-
+    
     /**
-     * Load controller
-     * 
-     * @param array $cmv array('controller' => '', 'method' => '', 'vars' => array())
+     * @param array $cmv
+     * @param string $path
+     * @return
+     */
+    private function resolveRoute(&$cmv, $path)
+    {
+        if ( empty($path) )
+            return;
+            
+        $founded = Router::gi()->findRoute($path);
+        if ( !empty($founded) ) {
+            $cmv = $founded;
+        } else {
+            //append uri parts as variables for method invocation
+            $cmv['vars'] = explode('/', $path);
+        }
+    }
+    
+    /**
+     * @param array $cmv [controller, method, vars]
      */
     private function loadController($cmv)
     {
@@ -80,16 +89,12 @@ final class Dragon
             $cmv['controller'] = array($cmv['controller']);
         }
 
-        self::$controller = implode("\\", $cmv['controller']);
+        //set view by CM
+        View::gi()->setView(implode("\\", $cmv['controller']) . DS . $cmv['method']);
+        
+        $class = $this->buildControllerName($cmv['controller']);
+        $controller = new $class();
         self::$method = $cmv['method'];
-        View::gi()->setView(self::$controller . DS . self::$method);
-
-        //add controllers folder to begin and uppercase first letter class name
-        array_unshift($cmv['controller'], 'controllers');
-        end($cmv['controller']);
-        $cmv['controller'][key($cmv['controller'])] = ucfirst($cmv['controller'][key($cmv['controller'])]);
-        $cmv['controller'] = "\\" . implode("\\", $cmv['controller']);
-        $controller = new $cmv['controller']();
 
         if ( method_exists($controller, 'beforeMethod') ) {
             Debug::timer('beforeMethod');
@@ -97,9 +102,9 @@ final class Dragon
             Debug::timer('beforeMethod');
         }
 
-        if ( is_callable(array($controller, $cmv['method']), true) ) {
+        if ( method_exists($controller, self::$method) ) {
             Debug::timer('Controller logic');
-            call_user_func_array(array($controller, $cmv['method']), $cmv['vars']);
+            call_user_func_array(array($controller, self::$method), $cmv['vars']);
             Debug::timer('Controller logic');
         }
 
@@ -108,6 +113,20 @@ final class Dragon
             $controller->afterMethod();
             Debug::timer('afterMethod');
         }
+    }
+    
+    /**
+     * @param array $c
+     * @return string
+     */
+    private function buildControllerName(array $c)
+    {
+        $last = ucfirst(array_pop($c));
+        if (count($c) > 0)
+            self::$controller = implode("\\", $c) . "\\";
+        self::$controller .= $last;
+        
+        return "\\" . 'controllers' . "\\" . self::$controller;
     }
 
 }
