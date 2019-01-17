@@ -70,7 +70,6 @@ final class Config
     {
         //read main config files
         $this->loadLookuptable('main');
-        $this->loadConfig('assets');
         $this->loadConfig('main');
         $this->loadConfig('routes');
     }

@@ -4,7 +4,8 @@ namespace helpers;
 
 /**
  * Assets
- * Helper for holding assets files to draw in html head
+ * Helper to manage css/js assets files
+ * It use /config/assets.json
  */
 class Assets
 {
@@ -23,6 +24,16 @@ class Assets
      * @var array
      */
     private static $toLoad = array();
+    
+    /**
+     * @var bool
+     */
+    private static $absoluteUrls = true;
+    
+    /**
+     * @var array
+     */
+    private static $cache = [];
     
     /**
      * Reset list of assets to load
@@ -61,21 +72,41 @@ class Assets
      * 
      * @param string $name
      * @param string $assetType
-     * @param bool $absolute
      * @return string
      */
-    private static function generateUrl($name, $assetType, $absolute = true)
+    private static function generateUrl($name, $assetType)
     {
         $output = '';
         
-        if ( !empty($name) AND !empty($assetType) ) {
-            $files = (array) \core\Config::gi()->get($assetType);
-            if ( array_key_exists($name, $files) ) {
-                $output = ($absolute ? rtrim(\core\Router::gi()->getHost(), '/') : '') . '/assets/' . $assetType . '/' . $files[$name]['file'] . '?v=' . $files[$name]['version'];
+        if (isset(self::cached()[$assetType][$name])) {
+            if (self::$absoluteUrls)
+                $output = \core\Router::gi()->getHost();
+            
+            $file = self::cached()[$assetType][$name];
+            
+            //auto add "min" on production if the file is available
+            if (!IS_WORKSPACE && strpos($file, '.min.') === false) {
+                $file = substr_replace($file, '.min.', strrpos($file, '.'), 1);
+                if (!file_exists(BASE_PATH . DS . 'assets' . DS . $assetType . DS . $file))
+                    $file = self::cached()[$assetType][$name];
             }
+            
+            $output .= 'assets/' . $assetType . '/' . $file . '?v=' 
+                    . filemtime(BASE_PATH . DS . 'assets' . DS . $assetType . DS . $file);
         }
         
         return $output;
+    }
+    
+    /**
+     * @return array
+     */
+    private static function cached()
+    {
+        if (empty(self::$cache))
+            self::$cache = \core\Config::gi()->getJson('assets');
+        
+        return self::$cache;
     }
     
     /**

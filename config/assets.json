@@ -1,0 +1,8 @@
+{
+    "css":{
+        "main": "main.css"
+    },
+    "js":{
+        "default": "default.js"
+    }
+}
