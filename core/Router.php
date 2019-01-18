@@ -45,13 +45,11 @@ final class Router
     }
 
     /**
-     * Construct
-     * 
-     * @param Config $config
+     * Constructor
      */
     public function __construct()
     {
-        $this->routes = Config::gi()->get('routes');
+        $this->loadRoutes();
 
         $this->project_host = Config::gi()->get('project_host');
         if ( empty($this->project_host) && isset($_SERVER['SERVER_PORT'], $_SERVER['HTTP_HOST']) ) {
@@ -63,6 +61,23 @@ final class Router
         }
         $this->project_host = rtrim($this->project_host, '/') . '/';
         Config::gi()->set('project_host', $this->project_host);
+    }
+
+    /**
+     * Load routes from config file and clean up grouping
+     */
+    private function loadRoutes()
+    {
+        $routes = Config::gi()->get('routes');
+        foreach ($routes AS $key => $value) {
+            if (is_array($value)) {
+                foreach ($value AS $mask => $route) {
+                    $this->routes[$mask] = $key . '/' . $route;
+                }
+            } else {
+                $this->routes[$key] = $value;
+            }
+        }
     }
     
     /**
@@ -263,29 +278,8 @@ final class Router
         $output = array();
         
         foreach ( $this->routes AS $mask => $route ) {
-            $output = is_array($route) ? $this->subroutes($path, $mask, $route) : $this->match($path, $mask, $route);
-            if ( $output !== false )
-                break;
-        }
-        
-        return $output;
-    }
-    
-    /**
-     * Grouped routes
-     * @param string $path
-     * @param string $controller
-     * @param array $routes
-     * @return array
-     */
-    private function subroutes(string $path, string $controller, array $routes)
-    {
-        $output = [];
-        
-        foreach ($routes AS $mask => $route) {
-            $route = $controller . '/' . $route;
             $output = $this->match($path, $mask, $route);
-            if ($output !== false)
+            if ( $output !== false )
                 break;
         }
         

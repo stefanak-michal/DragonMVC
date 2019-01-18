@@ -46,5 +46,17 @@ class Validation
         
         return $output;
     }
+
+    /**
+     * Replace all empty strings with null
+     * @param array $data
+     */
+    public static function nullify(array &$data)
+    {
+        foreach ($data as &$value) {
+            if ($value === '')
+                $value = null;
+        }
+    }
     
 }
