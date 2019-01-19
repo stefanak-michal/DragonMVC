@@ -9,24 +9,24 @@ class Validation
 {
     /**
      * Check email
-     * 
+     *
      * @param string $email
      * @return boolean
      */
     public static function isEmail($email)
     {
-        return preg_match("/([\w-\.]+)@((?:[\w]+\.)+)([a-zA-Z]{2,4})/", $email);
+        return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
     }
-    
+
     /**
      * Check url
-     * 
+     *
      * @param string $url
-     * @return boolean 
+     * @return boolean
      */
     public static function isUrl($url)
     {
-        return preg_match("/^(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?$/", $url);
+        return filter_var($url, FILTER_VALIDATE_URL) !== false;
     }
     
     /**
