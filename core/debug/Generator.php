@@ -50,7 +50,7 @@ final class Generator
         if ( !empty($_SERVER['REQUEST_URI']) ) {
             self::echoHtml('URI: <b>' . $_SERVER['REQUEST_URI'] . '</b><br>');
         }
-        self::echoHtml('CM: <b>' . Dragon::$controller . '::' . Dragon::$method . '</b><br>');
+        self::echoHtml('CM: <b>' . get_class(Dragon::$controller) . '::' . Dragon::$method . '</b><br>');
         self::echoHtml('Time: <b>' . date('Y-m-d H:i:s', $time) . substr($time, strpos($time, '.')) . '</b><br>');
         
         //tabs switches
