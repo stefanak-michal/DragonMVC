@@ -27,6 +27,12 @@ final class Dragon
     public static $method;
 
     /**
+     * @static
+     * @var array
+     */
+    public static $vars;
+
+    /**
      * Run a project
      */
     public function run()
@@ -95,6 +101,7 @@ final class Dragon
         $class = $this->buildControllerName($cmv['controller']);
         self::$controller = new $class();
         self::$method = $cmv['method'];
+        self::$vars = $cmv['vars'];
 
         if ( method_exists(self::$controller, 'beforeMethod') ) {
             Debug::timer('beforeMethod');
@@ -104,7 +111,7 @@ final class Dragon
 
         if ( method_exists(self::$controller, self::$method) ) {
             Debug::timer('Controller logic');
-            call_user_func_array(array(self::$controller, self::$method), $cmv['vars']);
+            call_user_func_array(array(self::$controller, self::$method), self::$vars);
             Debug::timer('Controller logic');
         }
 
