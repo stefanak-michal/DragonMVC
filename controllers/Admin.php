@@ -30,7 +30,7 @@ class Admin extends App
         $this->auth = new Auth($this->mUsers);
         
         if ( \core\Dragon::$method != 'login' && !$this->auth->check() ) {
-            $this->router->redirect( $this->router->getHomepageUrl() );
+            $this->router->redirect( $this->router->homepage() );
         }
         
         parent::beforeMethod();
@@ -48,7 +48,7 @@ class Admin extends App
         //verify form login
         $data = $this->param('data', 'post');
         if ( !empty($data) && $this->auth->login($data['nick'], $data['pass'], true) ) {
-            $this->router->redirect( $this->router->getUrl('admin', 'confirm') );
+            $this->router->redirect( $this->router->url(self::class, 'confirm') );
         }
         
         $this->set('formUrl', $this->router->current());
