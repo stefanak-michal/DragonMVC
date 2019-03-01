@@ -3,15 +3,15 @@
 # Dragon MVC PHP Framework
 
 * Easy deployment and setup
-* Classic MVC structure
+* MVC structure
 * Config system with lookup tables
 * Namespaces
 * Simple file names conventions
-* Autoloader for files
+* Autoloader with vendor support
 * CLI support and shell script
-* PHP min. version 7
+* PHP >= 7
 
-Database class is MeekroDB http://www.meekro.com/
+Database class used MeekroDB http://www.meekro.com/
 
 
 If you like this project and you want to support me, buy me a tea :)
