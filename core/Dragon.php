@@ -50,7 +50,7 @@ final class Dragon
 
         //finally we have something to show
         $this->loadController($cmv);
-        View::gi()->render();
+        echo View::gi()->render();
         
         \core\debug\Generator::generate();
     }
@@ -90,7 +90,7 @@ final class Dragon
         }
 
         //set view by CM
-        View::gi()->setView(implode("\\", $cmv['controller']) . DS . $cmv['method']);
+        View::gi()->view(implode("\\", $cmv['controller']) . DS . $cmv['method']);
         
         $class = $this->buildControllerName($cmv['controller']);
         $controller = new $class();

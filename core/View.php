@@ -3,229 +3,179 @@
 namespace core;
 
 /**
- * View
- * 
- * Work with views
+ * Class View
+ * take care of rendering view & layouts
+ * it works two ways:
+ *  Singleton is used as primary renderer for controller->method calls
+ *  Custom instantiation is available for specific view rendering
+ * @package core
  */
 final class View
 {
-
-    /**
-     * Layout for draw
-     *
-     * @var string
-     */
-    private $layout;
-
-    /**
-     * View for draw
-     *
-     * @var string
-     */
+    /** @var string */
     private $view;
+    /** @var string */
+    private $layout;
+    /** @var array */
+    private $vars = [];
 
-    /**
-     * Folder with views
-     *
-     * @var string
-     */
-    private static $views_dir = 'views';
-
-    /**
-     * Default file extension for views
-     *
-     * @var string
-     */
-    private static $views_ext = '.phtml';
-
-    /**
-     * Variables set up to view
-     *
-     * @var array
-     */
-    private $viewVars = array();
-    
-    /**
-     * @var View
-     */
+    /** @var View */
     private static $instance;
-    
+
+    /**
+     * View constructor.
+     * @param string $view
+     * @param array $vars
+     * @param string $layout
+     */
+    public function __construct($view = null, $vars = [], $layout = null)
+    {
+        if (!empty($view))
+            $this->view($view);
+        if (!empty($layout))
+            $this->layout($layout);
+        $this->vars($vars);
+    }
+
     /**
      * Singleton
-     * 
      * @return View
      */
     public static function gi()
     {
-        if (self::$instance == null)
-            self::$instance = new View();
-        
+        if (empty(self::$instance))
+            self::$instance = new self();
+
         return self::$instance;
     }
 
     /**
-     * Set view to render
-     * 
+     * Set view file
      * @param string $view
+     * @return View
      */
-    public function setView($view)
+    public function view($view) : View
     {
-        $this->view = self::replaceDirectorySeperator($view);
+        $this->view = $this->path($view);
+        return $this;
     }
 
     /**
-     * Set layout to render
-     * 
+     * Set layout file
      * @param string $layout
+     * @return View
      */
-    public function setLayout($layout)
+    public function layout($layout) : View
     {
-        $this->layout = self::replaceDirectorySeperator($layout);
+        $this->layout = $this->path($layout);
+        return $this;
     }
 
     /**
-     * Set title of page
-     * 
-     * @param string $value
-     * @param boolean $projectTitle Add prefix with project name
-     */
-    public function setTitle($value = '', $projectTitle = true)
-    {
-        $title = Config::gi()->get('project_title');
-
-        if ( empty($value) ) {
-            $value = $title;
-        } else {
-            if ( $projectTitle ) {
-                $value = $value . ' | ' . $title;
-            }
-        }
-
-        $this->set('title', $value);
-    }
-
-    /**
-     * Set variable to view
-     * 
-     * @param string $key
+     * Set variable
+     * @param mixed $key
      * @param mixed $value
+     * @return View
      */
-    public function set($key, $value)
+    public function set($key, $value) : View
     {
-        $this->viewVars[$key] = $value;
+        $this->vars[$key] = $value;
+        return $this;
     }
 
     /**
-     * Render view
+     * Set variables
+     * @param array $vars
+     * @return View
+     */
+    public function vars(array $vars) : View
+    {
+        $this->vars = array_merge($this->vars, $vars);
+        return $this;
+    }
+
+    /**
+     * Generate
+     * @return string
      */
     public function render()
     {
-        if ( !empty($this->view) ) {
-            $file = BASE_PATH . DS . self::$views_dir . DS . $this->view . self::$views_ext;
-            $layoutFile = BASE_PATH . DS . self::$views_dir . DS . 'layout' . DS . $this->layout . self::$views_ext;
-            
-            Debug::files($file);
-            
-            $this->checkExistsView();
+        if (empty($this->view))
+            return '';
 
-            //if we have some layout
-            if ( !empty($this->layout) ) {
-                Debug::files($layoutFile);
-                
-                ob_start();
-            }
-
-            extract($this->viewVars);
-            include $file;
-
-            //clear memory after render
-            foreach ( $this->viewVars as $key => $variable ) {
-                unset(${$key});
-            }
-
-            //Second part if we have layout
-            if ( !empty($this->layout) ) {
-                $content = ob_get_clean();
-
-                extract($this->viewVars);
-                include $layoutFile;
-
-                //again release some memory after render
-                foreach ( $this->viewVars as $key => $variable ) {
-                    unset(${$key});
-                }
-            }
-
-            $this->viewVars = array();
-        }
-    }
-
-    /**
-     * Render element
-     * 
-     * @param string $element Filename of element, optionally with path, without extension
-     * @param array $variables
-     * @param boolean $return if want return html as string ..default echo
-     * @static
-     */
-    public static function renderElement($element, $variables = array(), $return = false)
-    {
-        $content = '';
-
-        if (substr($element, 0, 1) == '/')
-            $elementFile = BASE_PATH . DS . self::replaceDirectorySeperator($element) . self::$views_ext;
-        else
-            $elementFile = BASE_PATH . DS . self::$views_dir . DS . 'elements' . DS . self::replaceDirectorySeperator($element) . self::$views_ext;
-        Debug::files($elementFile);
+        Debug::files($this->view);
         
-        if ( file_exists($elementFile) ) {
-            $variables['project_host'] = Router::gi()->getHost();
-            
-            if ( $return ) {
-                ob_start();
-            }
+        if (!isset($this->vars['project_host']))
+            $this->vars['project_host'] = Router::gi()->getHost();
 
-            if ( is_array($variables) AND ! empty($variables) ) {
-                extract($variables);
-            }
+        ob_start();
 
-            include $elementFile;
+        if (!empty($this->vars))
+            extract($this->vars);
 
-            if ( $return ) {
-                $content = ob_get_clean();
-            }
+        include $this->view;
 
-            //after render clean up memory
-            foreach ( $variables as $key => $variable ) {
-                unset(${$key});
-            }
-        } else {
-            trigger_error('Missing element view file ' . $elementFile);
-        }
+        $content = ob_get_clean();
+
+        //after render clean up memory
+        foreach ( $this->vars as $key => $variable )
+            unset(${$key});
+
+        if (!empty($this->layout))
+            $content = $this->layouted($content);
 
         return $content;
     }
 
     /**
-     * Check if view exists
+     * @param $content
+     * @return string
      */
-    private function checkExistsView()
+    private function layouted($content)
     {
-        $file = BASE_PATH . DS . self::$views_dir . DS . $this->view . self::$views_ext;
-        if ( !file_exists($file) ) {
-            trigger_error('Missing view file ' . $file);
-        }
+        Debug::files($this->layout);
+
+        ob_start();
+
+        if (!empty($this->vars))
+            extract($this->vars);
+
+        include $this->layout;
+
+        $content = ob_get_clean();
+
+        //after render clean up memory
+        foreach ( $this->vars as $key => $variable )
+            unset(${$key});
+
+        return $content;
     }
 
     /**
-     * Use the right directory separator
-     * 
+     * Generate file path and check if exists
      * @param string $str
      * @return string
      */
-    private static function replaceDirectorySeperator($str)
+    private function path($str)
     {
-        return str_replace(array('/', "\\"), DS, $str);
-    }
+        if (empty($str))
+            return null;
 
+        $str = str_replace(array('/', "\\"), DS, $str);
+        if (substr($str, 0, 1) == DS)
+            $output =  BASE_PATH . $str;
+        else
+            $output = BASE_PATH . DS . trim(str_replace(array('/', "\\"), DS, Config::gi()->get('viewsDirectory', 'views')), DS) . DS . $str;
+
+        $ext = '.' . ltrim(Config::gi()->get('viewsExtension', 'phtml'), '.');
+        if (substr($output, 0, -strlen($ext)) != $ext)
+            $output .= $ext;
+
+        if (!file_exists($output)) {
+            Debug::var_dump('View file "' . $output . '" not found');
+            return null;
+        }
+
+        return $output;
+    }
 }

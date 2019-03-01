@@ -171,11 +171,12 @@ final class Config
      * Read config parameter
      * 
      * @param string $key
+     * @param mixed $default
      * @return mixed
      */
-    public function get($key)
+    public function get($key, $default = null)
     {
-        $output = null;
+        $output = $default;
 
         if ( !empty($key) AND isset($this->configVars[$key]) ) {
             $output = $this->configVars[$key];

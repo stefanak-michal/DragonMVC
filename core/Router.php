@@ -6,7 +6,7 @@ use core\debug\Generator AS DebugGenerator;
 
 /**
  * Router
- * 
+ *
  * Work with URI
  */
 final class Router
@@ -25,22 +25,22 @@ final class Router
      * @var array
      */
     private $routes = array();
-    
+
     /**
      * @var Router
      */
     private static $instance;
-    
+
     /**
      * Singleton
-     * 
+     *
      * @return Router
      */
     public static function gi()
     {
         if (self::$instance == null)
             self::$instance = new Router();
-        
+
         return self::$instance;
     }
 
@@ -72,17 +72,23 @@ final class Router
         foreach ($routes AS $key => $value) {
             if (is_array($value)) {
                 foreach ($value AS $mask => $route) {
-                    $this->routes[$mask] = $key . '/' . $route;
+                    if (is_numeric($mask))
+                        $this->routes[] = $key . '/' . $route;
+                    else
+                        $this->routes[$mask] = $key . '/' . $route;
                 }
             } else {
-                $this->routes[$key] = $value;
+                if (is_numeric($key))
+                    $this->routes[] = $value;
+                else
+                    $this->routes[$key] = $value;
             }
         }
     }
-    
+
     /**
      * Get project host
-     * 
+     *
      * @return string
      */
     public function getHost()
@@ -92,7 +98,7 @@ final class Router
 
     /**
      * Switch to generate secured URI (https)
-     * 
+     *
      * @param boolean $bool
      */
     public function setSecureHost($bool = true)
@@ -110,11 +116,11 @@ final class Router
 
     /**
      * Generate homepage URI
-     * 
+     *
      * @param array $query
      * @return string
      */
-    public function getHomepageUrl($query = array())
+    public function homepage($query = array())
     {
         $uri = $this->project_host;
 
@@ -127,91 +133,94 @@ final class Router
 
     /**
      * Generate URI
-     * 
+     *
      * @param string $controller
      * @param string $method
      * @param array $vars
      * @param array $query
      * @return string
      */
-    public function getUrl($controller, $method, $vars = array(), $query = array())
+    public function url(string $controller, string $method, $vars = array(), $query = array())
     {
-        $uri = $this->project_host;
-        if ( !empty($controller) && !empty($method) ) {
-            //find right routes
-            $masks = array_keys($this->routes, $controller . '/' . $method);
-            if ( empty($masks) ) {
-                trigger_error('No defined route for ' . $controller . '/' . $method);
-            }
+        if (empty($controller) || empty($method))
+            exit;
 
-            if ( !empty($vars) && !is_array($vars) ) {
-                $vars = array($vars);
-            }
+        $uri = '';
+        $controller = preg_replace('/^[\/\\\]?controllers[\/\\\]/', '', $controller);
+        $controller = str_replace('\\', '/', $controller);
 
-            foreach ( $masks AS $mask ) {
-                //default action if it's not defined mask
-                if ( is_integer($mask) ) {
-                    $uri .= $controller . '/' . $method;
-                } else {
-                    if ( !empty($vars) ) {
-                        //check number of defined variables against mask
-                        if ( count($vars) != preg_match_all("/%[dis]/", $mask) ) {
-                            continue;
-                        }
+        $masks = array_filter($this->routes, function ($value) use ($controller, $method) {
+            return strtolower($value) == strtolower($controller . '/' . $method);
+        });
 
-                        //translate variables in mask
-                        $i = 0;
-                        while ( preg_match("/%[dis]/", $mask, $match) ) {
-                            if ( !isset($vars[$i]) ) {
-                                break;
-                            }
+        if (empty($masks))
+            trigger_error('No defined route for ' . $controller . '/' . $method, E_USER_WARNING);
+        $masks = array_keys($masks);
 
-                            switch ( $match[0] ) {
-                                case '%d':
-                                case '%i':
-                                    if ( is_numeric($vars[$i]) ) {
-                                        $mask = preg_replace("/%[id]/", $vars[$i], $mask, 1);
-                                        unset($vars[$i]);
-                                    }
-                                    break;
+        if (!empty($vars) && !is_array($vars))
+            $vars = array($vars);
 
-                                case '%s':
-                                    $mask = preg_replace("/%s/", $vars[$i], $mask, 1);
-                                    unset($vars[$i]);
-                                    break;
-                            }
+        foreach ($masks AS $mask) {
+            if (is_integer($mask))
+                continue;
 
-                            $i++;
-                        }
+            //check number of defined variables against mask
+            if (count($vars) != preg_match_all("/%[dis]/", $mask))
+                continue;
 
-                        if ( strpos($mask, '%') !== false ) {
-                            continue;
-                        }
-                    }
+            $this->replaceMaskVariables($mask, $vars);
+            $uri = $this->project_host . $mask;
+            break;
+        }
 
-                    $uri .= $mask;
-                }
-
-                //append variables which it's not setted
-                if ( !empty($vars) ) {
-                    $uri .= '/' . implode('/', $vars);
-                }
-
-                //append query url part
-                if ( is_array($query) && !empty($query) ) {
-                    $uri .= '?' . http_build_query($query);
-                }
-
-                break;
+        if (empty($uri)) {
+            Debug::var_dump('No mask defined for route with arguments ' . $controller . '/' . $method, E_USER_WARNING);
+            $uri = $this->project_host . $controller . '/' . $method;
+            if (!empty($vars)) {
+                $uri .= '/' . implode('/', array_map(function ($value) {
+                        return filter_var($value, FILTER_SANITIZE_ENCODED);
+                    }, $vars));
             }
         }
+
+        if (is_array($query) && !empty($query))
+            $uri .= '?' . http_build_query($query);
 
         return $uri;
     }
 
     /**
+     * @param string $mask
+     * @param array $vars
+     */
+    private function replaceMaskVariables(string &$mask, array $vars)
+    {
+        if (empty($vars))
+            return;
+
+        $i = 0;
+        while ( preg_match("/%[dis]/", $mask, $match) ) {
+            switch ($match[0]) {
+                case '%d':
+                    $mask = preg_replace("/%d/", (string)floatval($vars[$i]), $mask, 1);
+                    break;
+
+                case '%i':
+                    $mask = preg_replace("/%i/", (string)intval($vars[$i]), $mask, 1);
+                    break;
+
+                case '%s':
+                    $mask = preg_replace("/%s/", filter_var($vars[$i], FILTER_SANITIZE_ENCODED), $mask, 1);
+                    break;
+            }
+
+            $i++;
+        }
+    }
+
+    /**
      * Get actual URI
-     * 
+     *
      * @param boolean $getParams
      * @return string
      */
@@ -240,9 +249,10 @@ final class Router
 
     /**
      * Redirect
-     * 
+     *
      * @param string $uri
      * @param string $message
+     * @param int $code
      */
     public function redirect($uri, $message = '', $code = 302)
     {
@@ -253,12 +263,12 @@ final class Router
 
             DebugGenerator::generate();
             if ( DRAGON_DEBUG ) {
-                View::renderElement('debug/backtrace', array(
+                echo (new View('elements/debug/backtrace', [
                     'bt' => debug_backtrace(),
                     'url' => $uri,
                     'code' => $code,
                     'message' => $message
-                ));
+                ]))->render();
             } else {
                 header('Location: ' . $uri, true, $code);
             }
@@ -269,26 +279,26 @@ final class Router
 
     /**
      * Find route
-     * 
+     *
      * @param string $path
      * @return string
      */
     public function findRoute(string $path)
     {
         $output = array();
-        
+
         foreach ( $this->routes AS $mask => $route ) {
             $output = $this->match($path, $mask, $route);
             if ( $output !== false )
                 break;
         }
-        
+
         return $output;
     }
-    
+
     /**
      * Match specific route
-     * 
+     *
      * @param string $path
      * @param string|int $mask
      * @param string $route
@@ -297,7 +307,7 @@ final class Router
     private function match($path, $mask, $route)
     {
         $output = false;
-        
+
         $res = preg_match("/^" . str_replace('/', '\/', is_integer($mask) ? ($route . '((?=/)(.*))?') : str_replace(array('%i', '%s', '%d'), array('(\d+)', '([\w\-]+)', '([\d\.]+)'), $mask)) . "$/i", $path, $vars);
 
         if ( $res ) {
@@ -317,7 +327,7 @@ final class Router
                 $output['vars'] = array_values($vars);
             }
         }
-        
+
         return $output;
     }
 

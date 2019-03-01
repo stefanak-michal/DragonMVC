@@ -18,7 +18,7 @@ class Homepage extends App
         parent::beforeMethod();
         
         //page layout
-        $this->view->setLayout('default');
+        $this->view->layout('layout/default');
     }
     
     /**
@@ -58,8 +58,19 @@ class Homepage extends App
         
         $this->set('variable', 'how to set variable to view');
         $this->set('links', array(
-            'produkt' => $this->router->getUrl('products', 'detail', 123, array('list' => 5))
+            'product' => $this->router->url(self::class, 'vars', ['foo', 'bar'])
         ));
+    }
+    
+    public function test()
+    {
+        $this->router->redirect($this->router->url(self::class, 'index'));
+    }
+
+    public function vars($a, $b)
+    {
+        $this->view->view(null);
+        var_dump($a, $b);
     }
     
 }
