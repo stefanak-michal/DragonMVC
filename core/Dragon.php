@@ -14,7 +14,7 @@ final class Dragon
      * Called controller
      * 
      * @static
-     * @var string
+     * @var \controllers\App
      */
     public static $controller;
 
@@ -25,6 +25,12 @@ final class Dragon
      * @var string
      */
     public static $method;
+
+    /**
+     * @static
+     * @var array
+     */
+    public static $vars;
 
     /**
      * Run a project
@@ -58,7 +64,7 @@ final class Dragon
     /**
      * @param array $cmv
      * @param string $path
-     * @return
+     * @return void
      */
     private function resolveRoute(&$cmv, $path)
     {
@@ -93,28 +99,29 @@ final class Dragon
         View::gi()->view(implode("\\", $cmv['controller']) . DS . $cmv['method']);
         
         $class = $this->buildControllerName($cmv['controller']);
-        $controller = new $class();
+        self::$controller = new $class();
         self::$method = $cmv['method'];
+        self::$vars = $cmv['vars'];
 
-        if ( method_exists($controller, 'beforeMethod') ) {
+        if ( method_exists(self::$controller, 'beforeMethod') ) {
             Debug::timer('beforeMethod');
-            $controller->beforeMethod();
+            self::$controller->beforeMethod();
             Debug::timer('beforeMethod');
         }
 
-        if ( method_exists($controller, self::$method) ) {
+        if ( method_exists(self::$controller, self::$method) ) {
             Debug::timer('Controller logic');
-            call_user_func_array(array($controller, self::$method), $cmv['vars']);
+            call_user_func_array(array(self::$controller, self::$method), self::$vars);
             Debug::timer('Controller logic');
         }
 
-        if ( method_exists($controller, 'afterMethod') ) {
+        if ( method_exists(self::$controller, 'afterMethod') ) {
             Debug::timer('afterMethod');
-            $controller->afterMethod();
+            self::$controller->afterMethod();
             Debug::timer('afterMethod');
         }
     }
-    
+
     /**
      * @param array $c
      * @return string
@@ -122,11 +129,12 @@ final class Dragon
     private function buildControllerName(array $c)
     {
         $last = ucfirst(array_pop($c));
+        $name = '';
         if (count($c) > 0)
-            self::$controller = implode("\\", $c) . "\\";
-        self::$controller .= $last;
-        
-        return "\\" . 'controllers' . "\\" . self::$controller;
+            $name = implode("\\", $c) . "\\";
+        $name .= $last;
+
+        return "\\" . 'controllers' . "\\" . $name;
     }
 
 }
