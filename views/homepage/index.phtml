@@ -4,7 +4,7 @@
 <p>Print some variable: <?= $variable ?></p>
 <br>
 Render element:<br>
-<? core\View::renderElement('test', array('project_host' => $project_host)) ?>
+<?= (new \core\View('elements/test', ['project_host' => $project_host]))->render() ?>
 <br><br>
 Test generated url by mask:<br>
-<? var_dump($links['produkt']) ?>
+<a href="<?= $links['product'] ?>"><?= $links['product'] ?></a>

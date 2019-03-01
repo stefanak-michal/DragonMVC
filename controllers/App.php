@@ -65,8 +65,6 @@ abstract class App
      */
     public function beforeMethod()
     {
-        $this->view->setTitle();
-        $this->set('project_host', $this->config->get('project_host'));
         $this->set('project_title', $this->config->get('project_title'));
     }
     

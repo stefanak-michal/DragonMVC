@@ -72,10 +72,16 @@ final class Router
         foreach ($routes AS $key => $value) {
             if (is_array($value)) {
                 foreach ($value AS $mask => $route) {
-                    $this->routes[$mask] = $key . '/' . $route;
+                    if (is_numeric($mask))
+                        $this->routes[] = $key . '/' . $route;
+                    else
+                        $this->routes[$mask] = $key . '/' . $route;
                 }
             } else {
-                $this->routes[$key] = $value;
+                if (is_numeric($key))
+                    $this->routes[] = $value;
+                else
+                    $this->routes[$key] = $value;
             }
         }
     }
@@ -257,12 +263,12 @@ final class Router
 
             DebugGenerator::generate();
             if ( DRAGON_DEBUG ) {
-                View::renderElement('debug/backtrace', array(
+                echo (new View('elements/debug/backtrace', [
                     'bt' => debug_backtrace(),
                     'url' => $uri,
                     'code' => $code,
                     'message' => $message
-                ));
+                ]))->render();
             } else {
                 header('Location: ' . $uri, true, $code);
             }

@@ -14,23 +14,9 @@ $aConfig = array(
     'routes' => array(
         'homepage/index',
         
-        
-        /*
-         * Some examples for better understanding
-         */
-        
-        //with mask and integer argument
-        'produkt/%i' => 'products/detail',
-        
-        //grouped by controller "Products"
-        'products' => [
-            'index', //method index
-            'some-mask/%i' => 'detail', //method detail with mask
+        'homepage' => [
+            'test' => 'test',
+            'v/%s/%s' => 'vars'
         ],
-        
-        //grouped by controller "Webview" in directory "mobile" .. <project>/controllers/mobile/Webview
-        'mobile/webview' => [
-            'friends'
-        ]
     )
 );
