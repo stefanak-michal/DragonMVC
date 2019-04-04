@@ -44,7 +44,7 @@ final class Dragon
         );
         
         if (is_string($cmv['controller']))
-            $cmv['controller'] = preg_split("[\\/]", $cmv['controller'], -1, PREG_SPLIT_NO_EMPTY);
+            $cmv['controller'] = preg_split("/[\\/]/", $cmv['controller'], -1, PREG_SPLIT_NO_EMPTY);
 
         $_uri = new URI();
         $_uri->_fetch_uri_string();
