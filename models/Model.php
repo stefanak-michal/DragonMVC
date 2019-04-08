@@ -28,7 +28,7 @@ abstract class Model
     /**
      * MeekroDB
      *
-     * @var core\MeekroDB
+     * @var \core\MeekroDB
      */
     protected $db;
     
