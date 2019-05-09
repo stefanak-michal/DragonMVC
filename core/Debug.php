@@ -28,9 +28,8 @@ final class Debug
      */
     public static function var_dump()
     {
-        if ( defined('DRAGON_DEBUG') && !DRAGON_DEBUG ) {
+        if ( !defined('DRAGON_DEBUG') || !DRAGON_DEBUG )
             return;
-        }
         
         $args = func_get_args();
 
@@ -55,9 +54,8 @@ final class Debug
      */
     public static function files($file)
     {
-        if ( defined('DRAGON_DEBUG') && !DRAGON_DEBUG ) {
+        if ( !defined('DRAGON_DEBUG') || !DRAGON_DEBUG )
             return;
-        }
         
         $e = new Exception();
         $backtrace = preg_split("/[\r\n]+/", $e->getTraceAsString());
@@ -77,9 +75,8 @@ final class Debug
      */
     public static function timer($key)
     {
-        if ( defined('DRAGON_DEBUG') && !DRAGON_DEBUG ) {
+        if ( !defined('DRAGON_DEBUG') || !DRAGON_DEBUG )
             return;
-        }
         
         if ( !isset(self::$timers[$key]) ) {
             self::$timers[$key] = microtime(true);
@@ -102,9 +99,8 @@ final class Debug
      */
     public static function query($args)
     {
-        if ( defined('DRAGON_DEBUG') && !DRAGON_DEBUG ) {
+        if ( !defined('DRAGON_DEBUG') || !DRAGON_DEBUG )
             return;
-        }
         
         if ( isset($args['query'], $args['explain'][0]) && is_array($args['explain']) ) {
             $html = '<div><table cellspacing="0"><thead><tr>';
