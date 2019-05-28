@@ -10,32 +10,19 @@ define('DS', DIRECTORY_SEPARATOR);
 spl_autoload_register(function ($name) {
     $parts = explode("\\", $name);
     $parts = array_filter($parts);
-    $cnt = count($parts) - 1;
-
-    if ($cnt < 0) {
-        trigger_error('Wtf?!', E_USER_ERROR);
-        return;
-    }
 
     /*
      * namespace calls
      */
 
     //compose standart namespaced path to file
-    $path = BASE_PATH;
-    foreach ($parts AS $i => $part) {
-        if ($i == $cnt)
-            $path .= DS . ucfirst($part) . '.php';
-        else
-            $path .= DS . $part;
-    }
-
+    $path = BASE_PATH . DS . implode(DS, $parts) . '.php';
     if (file_exists($path)) {
         include_once $path;
         \core\Debug::files($path);
         return;
     }
-
+    
     //try to load namespaced path from vendor
     $path = BASE_PATH . DS . 'vendor' . DS . implode(DS, $parts) . '.php';
     if (file_exists($path)) {
@@ -67,4 +54,3 @@ spl_autoload_register(function ($name) {
         }
     }
 });
-
