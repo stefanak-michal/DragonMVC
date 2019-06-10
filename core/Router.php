@@ -263,6 +263,7 @@ final class Router
 
             DebugGenerator::generate();
             if ( DRAGON_DEBUG ) {
+                header('Content-Type: text/html');
                 echo (new View('elements/debug/backtrace', [
                     'bt' => debug_backtrace(),
                     'url' => $uri,
