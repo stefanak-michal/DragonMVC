@@ -220,10 +220,7 @@ class Utils
      */
     public static function param($name, $type = 'GET', $default = null)
     {
-        $type = '_' . strtoupper($type);
-        $output = isset($GLOBALS[$type][$name]) ? $GLOBALS[$type][$name] : $default;
-        
-        return $output;
+        return $GLOBALS['_' . strtoupper($type)][$name] ?? $default;
     }
 
 }

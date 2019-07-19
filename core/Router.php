@@ -263,6 +263,7 @@ final class Router
 
             DebugGenerator::generate();
             if ( DRAGON_DEBUG ) {
+                header('Content-Type: text/html');
                 echo (new View('elements/debug/backtrace', [
                     'bt' => debug_backtrace(),
                     'url' => $uri,
@@ -311,7 +312,7 @@ final class Router
         $res = preg_match("/^" . str_replace('/', '\/', is_integer($mask) ? ($route . '((?=/)(.*))?') : str_replace(array('%i', '%s', '%d'), array('(\d+)', '([\w\-]+)', '([\d\.]+)'), $mask)) . "$/i", $path, $vars);
 
         if ( $res ) {
-            $uri = preg_split("[\\/]", $route, -1, PREG_SPLIT_NO_EMPTY);
+            $uri = preg_split("/[\\/]/", $route, -1, PREG_SPLIT_NO_EMPTY);
             $output = array(
                 'method' => array_pop($uri),
                 'controller' => $uri,
@@ -320,7 +321,7 @@ final class Router
 
             if ( is_integer($mask) ) {
                 if ( !empty($vars[1]) ) {
-                    $output['vars'] = preg_split("[\\/]", $vars[1], -1, PREG_SPLIT_NO_EMPTY);
+                    $output['vars'] = preg_split("/[\\/]/", $vars[1], -1, PREG_SPLIT_NO_EMPTY);
                 }
             } else {
                 array_shift($vars);

@@ -133,7 +133,7 @@ class Email
             $variables['title'] = $this->title;
         }
 
-        $content = View::renderElement('email/' . $template, $variables, true);
+        $content = (new View('/templates/email/' . $template, $variables))->render();
         if ( !empty($content) ) {
             $output = $this->send($content);
         }

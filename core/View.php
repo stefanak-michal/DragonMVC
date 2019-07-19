@@ -100,13 +100,13 @@ final class View
      */
     public function render()
     {
-        if (empty($this->view))
-            return '';
-
-        Debug::files($this->view);
-        
         if (!isset($this->vars['project_host']))
             $this->vars['project_host'] = Router::gi()->getHost();
+        
+        if (empty($this->view))
+            return $this->layout ? $this->layouted('') : '';
+
+        Debug::files($this->view);
 
         ob_start();
 

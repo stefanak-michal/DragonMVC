@@ -35,7 +35,7 @@ class Admin extends App
         
         parent::beforeMethod();
         
-        $this->view->setLayout('default');
+        $this->view->layout('default');
         Assets::add('main', Assets::TYPE_CSS);
         Assets::add('default', Assets::TYPE_JS);
     }
