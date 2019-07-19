@@ -261,7 +261,11 @@ final class Router
                 setcookie('message', $message, time() + 60, '/');
             }
 
+            Debug::timer('beforeMethod');
+            Debug::timer('Controller logic');
+            Debug::timer('afterMethod');
             DebugGenerator::generate();
+            
             if ( DRAGON_DEBUG ) {
                 header('Content-Type: text/html');
                 echo (new View('elements/debug/backtrace', [
