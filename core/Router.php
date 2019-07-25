@@ -313,7 +313,7 @@ final class Router
     {
         $output = false;
 
-        $res = preg_match("/^" . str_replace('/', '\/', is_integer($mask) ? ($route . '((?=/)(.*))?') : str_replace(array('%i', '%s', '%d'), array('(\d+)', '([\w\-]+)', '([\d\.]+)'), $mask)) . "$/i", $path, $vars);
+        $res = preg_match("/^" . str_replace('/', '\/', is_integer($mask) ? ($route . '((?=/)(.*))?') : str_replace(array('%i', '%s', '%d'), array('(-?\d+)', '([\w\-]+)', '(-?[\d\.]+)'), $mask)) . "$/i", $path, $vars);
 
         if ( $res ) {
             $uri = preg_split("/[\\/]/", $route, -1, PREG_SPLIT_NO_EMPTY);
