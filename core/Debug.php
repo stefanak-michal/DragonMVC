@@ -6,7 +6,7 @@ use \Exception;
 
 /**
  * Debug
- *
+ * 
  * Developer tools
  */
 final class Debug
@@ -27,64 +27,54 @@ final class Debug
      */
     public static function var_dump()
     {
-        if ( !defined('DRAGON_DEBUG') || !DRAGON_DEBUG )
+        if (!defined('DRAGON_DEBUG') || !DRAGON_DEBUG)
             return;
-        
+
         $args = func_get_args();
 
         if (!empty($args)) {
             foreach ($args as $one) {
-                $e = new Exception();
-                $backtrace = preg_split("/[\r\n]+/", $e->getTraceAsString());
-
                 ob_start();
                 var_dump($one);
                 $content = ob_get_clean();
 
-                self::$tables[__FUNCTION__][] = ['dump' => '<div class="collapsable">' . $content . '</div>' . '<div>' . implode('<br>', $backtrace) . '</div>'];
+                self::$tables[__FUNCTION__][] = ['dump' => '<div class="collapsable">' . $content . '</div>' . '<div>' . self::backtrace() . '</div>'];
             }
         }
     }
 
     /**
      * List of loaded files
-     *
+     * 
      * @param string $file
      */
     public static function files($file)
     {
-        if ( !defined('DRAGON_DEBUG') || !DRAGON_DEBUG )
+        if (!defined('DRAGON_DEBUG') || !DRAGON_DEBUG)
             return;
-        
-        $e = new Exception();
-        $backtrace = preg_split("/[\r\n]+/", $e->getTraceAsString());
 
         $exists = file_exists($file);
-
-        $html = '<div class="collapsable ' . ($exists ? '' : 'red') . '">' . $file . '</div>';
-        $html .= '<div>' . implode('<br>', $backtrace) . '</div>';
-
-        self::$tables[__FUNCTION__][] = ['file' => $html, 'size (bytes)' => $exists ? filesize($file) : 0];
+        self::$tables[__FUNCTION__][] = [
+            'file' => '<div class="collapsable ' . ($exists ? '' : 'red') . '">' . $file . '</div>' . '<div>' . self::backtrace() . '</div>',
+            'size (bytes)' => $exists ? filesize($file) : 0
+        ];
     }
 
     /**
      * Measure time
-     *
+     * 
      * @param string $key
      */
     public static function timer($key)
     {
-        if ( !defined('DRAGON_DEBUG') || !DRAGON_DEBUG )
+        if (!defined('DRAGON_DEBUG') || !DRAGON_DEBUG)
             return;
-        
-        if ( !isset(self::$timers[$key]) ) {
+
+        if (!isset(self::$timers[$key])) {
             self::$timers[$key] = microtime(true);
         } else {
-            $e = new Exception();
-            $backtrace = preg_split("/[\r\n]+/", $e->getTraceAsString());
-
             self::$tables[__FUNCTION__][] = [
-                'key' => '<div class="collapsable">' . $key . '</div>' . '<div>' . implode('<br>', $backtrace) . '</div>',
+                'key' => '<div class="collapsable">' . $key . '</div>' . '<div>' . self::backtrace() . '</div>',
                 'time (msec)' => sprintf('%f', (microtime(true) - self::$timers[$key]) * 1000)
             ];
             unset(self::$timers[$key]);
@@ -93,7 +83,7 @@ final class Debug
 
     /**
      * Database queries
-     *
+     * 
      * @param string $query
      * @param array $hidden
      * @param array $otherColumns
@@ -136,4 +126,21 @@ final class Debug
 
         self::$tables[__FUNCTION__][] = array_merge(['query' => $query], $otherColumns);
     }
+
+    /**
+     * Format Exception backtrace for print
+     * 
+     * @return string
+     */
+    private static function backtrace(): string
+    {
+        $backtrace = (new Exception)->getTraceAsString();
+        $backtrace = preg_split("/[\r\n]+/", strip_tags($backtrace));
+        $backtrace = array_slice($backtrace, 2);
+        for ($i = 0; $i < count($backtrace); $i++) {
+            $backtrace[$i] = preg_replace('/^#\d+/', '#' . $i, $backtrace[$i]);
+        }
+        return implode('<br>', $backtrace);
+    }
+
 }
