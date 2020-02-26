@@ -92,7 +92,7 @@ final class MeekroDB
     /**
      * Drop any existing MySQL connections. If you run a query after this, it will automatically reconnect.
      *
-     * @see https://meekro.com/docs.php#anchor_disconnect
+     * @see https://meekro.com/docs.php/misc-methods
      */
     public function disconnect()
     {
@@ -126,7 +126,7 @@ final class MeekroDB
     }
 
     /**
-     * @see https://meekro.com/docs.php#anchor_debugmode
+     * @see https://meekro.com/docs.php/debug-mode
      * @param bool $handler
      */
     public function debugMode($handler = true)
@@ -148,7 +148,7 @@ final class MeekroDB
     /**
      * Returns the auto incrementing ID for the last insert statement. The insert could have been done through DB::insert() or DB::query().
      *
-     * @see https://meekro.com/docs.php#anchor_insertid
+     * @see https://meekro.com/docs.php/altering-data
      * @return int
      */
     public function insertId()
@@ -159,7 +159,7 @@ final class MeekroDB
     /**
      * Returns the number of rows changed by the last update statement. That statement could have been run through DB::update() or DB::query().
      *
-     * @see https://meekro.com/docs.php#anchor_affectedrows
+     * @see https://meekro.com/docs.php/altering-data
      * @return int
      */
     public function affectedRows()
@@ -170,8 +170,7 @@ final class MeekroDB
     /**
      * Counts the number of rows returned by the last query. Ignores queries done with DB::queryFirstRow() and DB::queryFirstField().
      *
-     * @see https://meekro.com/docs.php#anchor_count
-     * @return mixed
+     * @return int
      */
     public function count()
     {
@@ -187,7 +186,7 @@ final class MeekroDB
     /**
      * Switch to a different database.
      *
-     * @see https://meekro.com/docs.php#anchor_usedb
+     * @see https://meekro.com/docs.php/static-vs-object
      * @return mixed
      */
     public function useDB()
@@ -208,7 +207,7 @@ final class MeekroDB
      * These are merely shortcuts for the three standard transaction commands: START TRANSACTION, COMMIT, and ROLLBACK.
      * When DB::$nested_transactions are enabled, these commands can be used to have multiple layered transactions. Otherwise, running DB::startTransaction() when a transaction is active will auto-commit that transaction and start a new one.
      *
-     * @see https://meekro.com/docs.php#anchor_transaction
+     * @see https://meekro.com/docs.php/transactions
      * @return int|void
      * @throws MeekroDBException
      */
@@ -230,7 +229,7 @@ final class MeekroDB
     }
 
     /**
-     * @see https://meekro.com/docs.php#anchor_transaction
+     * @see https://meekro.com/docs.php/transactions
      * @param bool $all
      * @return int|void
      * @throws MeekroDBException
@@ -255,7 +254,7 @@ final class MeekroDB
     }
 
     /**
-     * @see https://meekro.com/docs.php#anchor_transaction
+     * @see https://meekro.com/docs.php/transactions
      * @param bool $all
      * @return int|void
      * @throws MeekroDBException
@@ -292,7 +291,7 @@ final class MeekroDB
     /**
      * Run an UPDATE command by specifying an array of changes to make, and a WHERE component. The WHERE component can have parameters in the same style as the query() command. As with insert() and replace(), you can use DB::sqleval() to pass a function directly to MySQL for evaluation.
      *
-     * @see https://meekro.com/docs.php#anchor_update
+     * @see https://meekro.com/docs.php/altering-data
      * @return mixed
      */
     public function update()
@@ -363,7 +362,7 @@ final class MeekroDB
      * Either INSERT or REPLACE a row into a table. You can use DB::sqleval() to force something to be passed directly to MySQL and not escaped. DB::sqleval() does nothing on its own, outside of the insert/replace/update/delete commands.
      * You may insert multiple rows at once by passing an array of associative arrays.
      *
-     * @see https://meekro.com/docs.php#anchor_insert
+     * @see https://meekro.com/docs.php/altering-data
      * @param $table
      * @param $data
      * @return mixed
@@ -376,7 +375,7 @@ final class MeekroDB
     /**
      * Works like INSERT, except it does an INSERT IGNORE statement. Won't give a MySQL error if the primary key is already taken.
      *
-     * @see https://meekro.com/docs.php#anchor_insertignore
+     * @see https://meekro.com/docs.php/altering-data
      * @param $table
      * @param $data
      * @return mixed
@@ -400,7 +399,7 @@ final class MeekroDB
     /**
      * Similar to INSERT, except it does an INSERT ... ON DUPLICATE KEY UPDATE. After the usual insert syntax, you can specify one of three things: a query-like string with the update component, a second associative array with the keys and values to update, or nothing, in which case the INSERT associative array gets re-used.
      *
-     * @see https://meekro.com/docs.php#anchor_insertupdate
+     * @see https://meekro.com/docs.php/altering-data
      * @return mixed
      * @throws MeekroDBException
      */
@@ -429,7 +428,7 @@ final class MeekroDB
     /**
      * Run the MySQL DELETE command with the given WHERE conditions.
      *
-     * @see https://meekro.com/docs.php#anchor_delete
+     * @see https://meekro.com/docs.php/altering-data
      * @return mixed
      */
     public function delete()
@@ -456,7 +455,7 @@ final class MeekroDB
     /**
      * Get an array of the columns in the requested table.
      *
-     * @see https://meekro.com/docs.php#anchor_columnlist
+     * @see https://meekro.com/docs.php/misc-methods
      * @param $table
      * @return array
      */
@@ -468,7 +467,7 @@ final class MeekroDB
     /**
      * Get an array of the tables in either the current database, or the requested one.
      *
-     * @see https://meekro.com/docs.php#anchor_tablelist
+     * @see https://meekro.com/docs.php/misc-methods
      * @param null $db
      * @return array
      */
@@ -727,7 +726,7 @@ final class MeekroDB
     /**
      * The first parameter is a query string with placeholders variables. Following that, you must have an additional parameter for every placeholder variable.
      *
-     * @see https://meekro.com/docs.php#anchor_query
+     * @see https://meekro.com/docs.php/retrieving-data
      * @return mixed
      */
     public function query()
@@ -745,7 +744,7 @@ final class MeekroDB
     /**
      * Like DB::query(), except the keys for each associative array will be in the form TableName.ColumnName. Useful if you're joining several tables, and they each have an id field.
      *
-     * @see https://meekro.com/docs.php#anchor_queryfullcolumns
+     * @see https://meekro.com/docs.php/retrieving-data
      * @return mixed
      */
     public function queryFullColumns()
@@ -757,7 +756,7 @@ final class MeekroDB
     /**
      * Like DB::query(), except it returns a standard MySQLi_Result object instead of an array of associative arrays. This is intended for situations where the result set is huge, and PHP's memory is not enough to store the whole thing all at once.
      *
-     * @see https://meekro.com/docs.php#anchor_queryraw
+     * @see https://meekro.com/docs.php/retrieving-data
      * @return mixed
      */
     public function queryRaw()
@@ -931,7 +930,7 @@ final class MeekroDB
     /**
      * Retrieve the first row of results for the query, and return it as an associative array. If the query returned no rows, this returns null.
      *
-     * @see https://meekro.com/docs.php#anchor_queryfirstrow
+     * @see https://meekro.com/docs.php/retrieving-data
      * @return mixed|null
      */
     public function queryFirstRow()
@@ -952,7 +951,7 @@ final class MeekroDB
     /**
      * Retrieve the first row of results for the query, and return it as a numbered index (non-associative) array. If the query returned no rows, this returns null.
      *
-     * @see https://meekro.com/docs.php#anchor_queryfirstlist
+     * @see https://meekro.com/docs.php/retrieving-data
      * @return mixed|null
      */
     public function queryFirstList()
@@ -967,7 +966,7 @@ final class MeekroDB
     /**
      * Retrieve the first column of results for the query, and return it as a regular array. If the query returned no rows, this returns an empty array.
      *
-     * @see https://meekro.com/docs.php#anchor_queryfirstcolumn
+     * @see https://meekro.com/docs.php/retrieving-data
      * @return array
      */
     public function queryFirstColumn()
@@ -989,7 +988,7 @@ final class MeekroDB
     /**
      * Retrieve the requested column of results from the query, and return it as a regular array. If the query returned no rows, or the requested column isn't in the result set, this returns an empty array.
      *
-     * @see https://meekro.com/docs.php#anchor_queryonecolumn
+     * @see https://meekro.com/docs.php/retrieving-data
      * @return array
      */
     public function queryOneColumn()
@@ -1016,7 +1015,7 @@ final class MeekroDB
     /**
      * Get the contents of the first field from the first row of results, and return that. If no rows were returned by the query, this returns null.
      *
-     * @see https://meekro.com/docs.php#anchor_queryfirstfield
+     * @see https://meekro.com/docs.php/retrieving-data
      * @return null
      */
     public function queryFirstField()
@@ -1031,7 +1030,7 @@ final class MeekroDB
     /**
      * Get the contents of the requested field from the first row of results, and return that. If no rows were returned by the query, this returns null.
      *
-     * @see https://meekro.com/docs.php#anchor_queryonefield
+     * @see https://meekro.com/docs.php/retrieving-data
      * @return null
      */
     public function queryOneField()
