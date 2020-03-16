@@ -73,7 +73,7 @@ abstract class App
      */
     public function afterMethod()
     {
-        
+        echo $this->view->render();
     }
     
 }

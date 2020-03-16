@@ -140,7 +140,7 @@ final class Router
      * @param array $query
      * @return string
      */
-    public function url(string $controller, string $method, $vars = array(), $query = array())
+    public function url(string $controller, string $method, array $vars = [], array $query = [])
     {
         if (empty($controller) || empty($method))
             exit;
@@ -155,12 +155,8 @@ final class Router
 
         if (empty($masks))
             trigger_error('No defined route for ' . $controller . '/' . $method, E_USER_WARNING);
-        $masks = array_keys($masks);
 
-        if (!empty($vars) && !is_array($vars))
-            $vars = array($vars);
-
-        foreach ($masks AS $mask) {
+        foreach (array_keys($masks) AS $mask) {
             if (is_integer($mask))
                 continue;
 
@@ -174,7 +170,6 @@ final class Router
         }
 
         if (empty($uri)) {
-            Debug::var_dump('No mask defined for route with arguments ' . $controller . '/' . $method, E_USER_WARNING);
             $uri = $this->project_host . $controller . '/' . $method;
             if (!empty($vars)) {
                 $uri .= '/' . implode('/', array_map(function ($value) {
@@ -183,7 +178,7 @@ final class Router
             }
         }
 
-        if (is_array($query) && !empty($query))
+        if (!empty($query))
             $uri .= '?' . http_build_query($query);
 
         return $uri;

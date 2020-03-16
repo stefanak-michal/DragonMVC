@@ -59,7 +59,6 @@ final class Dragon
 
         //finally we have something to show
         $this->loadController($cmv);
-        echo View::gi()->render();
         
         \core\debug\Generator::generate();
     }
