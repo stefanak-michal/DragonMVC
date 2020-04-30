@@ -31,12 +31,19 @@ abstract class Model
      * @var \MeekroDB\MeekroDB
      */
     protected static $db;
+	
+	/**
+	 * @var int
+	 */
+	private static $instanceCount = 0;
 
     /**
      * Construct
      */
     public function __construct()
     {
+		self::$instanceCount++;
+		
         if (empty(self::$db)) {
             self::$db = new \MeekroDB\MeekroDB(
                 Config::gi()->get('dbServer'),
@@ -176,6 +183,8 @@ abstract class Model
      */
     public function __destruct()
     {
-        self::$db->disconnect();
+        self::$instanceCount--;
+        if (self::$instanceCount == 0)
+            self::$db->disconnect();
     }
 }
