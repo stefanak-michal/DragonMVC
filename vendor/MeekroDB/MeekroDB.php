@@ -1075,4 +1075,9 @@ final class MeekroDB
             echo "<br>\n";
         }
     }
+    
+    public function __destruct()
+    {
+        $this->disconnect();
+    }
 }
