@@ -5,5 +5,5 @@ $aConfig = array(
     'dbPass' => '',
     'dbDatabase' => '',
     'dbServer' => 'localhost',
-    'dbCharset' => 'UTF-8',
+    'dbCharset' => 'utf8',
 );
