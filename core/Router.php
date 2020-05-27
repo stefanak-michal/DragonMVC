@@ -281,15 +281,15 @@ final class Router
      * Find route
      *
      * @param string $path
-     * @return string
+     * @return array
      */
-    public function findRoute(string $path)
+    public function findRoute(string $path): array
     {
         $output = array();
 
         foreach ( $this->routes AS $mask => $route ) {
             $output = $this->match($path, $mask, $route);
-            if ( $output !== false )
+            if (!empty($output))
                 break;
         }
 
@@ -302,11 +302,11 @@ final class Router
      * @param string $path
      * @param string|int $mask
      * @param string $route
-     * @return array|boolean
+     * @return array
      */
-    private function match($path, $mask, $route)
+    private function match(string $path, $mask, string $route): array
     {
-        $output = false;
+        $output = [];
 
         $res = preg_match("/^" . str_replace('/', '\/', is_integer($mask) ? ($route . '((?=/)(.*))?') : str_replace(array('%i', '%s', '%d'), array('(-?\d+)', '([\w\-]+)', '(-?[\d\.]+)'), $mask)) . "$/i", $path, $vars);
 
