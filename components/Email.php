@@ -3,6 +3,7 @@
 namespace components;
 
 use core\View,
+    core\Config,
     helpers\Validation;
 use PHPMailer\PHPMailer;
 
@@ -21,25 +22,16 @@ class Email
     private $emails = array();
     private $title = '';
     private $reply = [];
-    private $cc = [];
     private $resetAfterSend = true;
     private $pictures = [];
     private $attachments = [];
-    private $content;
-    private $titleIndex = 0;
-    private $titleParams = [];
 
-    /**
-     * @var \core\Config
-     */
-    private $config;
-    
     /**
      * Construct
      */
     public function __construct()
     {
-        $this->config = \core\Config::gi();
+        $this->setTitle();
     }
 
     /**
@@ -53,22 +45,6 @@ class Email
     {
         if (Validation::isEmail($email)) {
             empty($name) ? ($this->emails[] = $email) : ($this->emails[$name] = $email);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Set CC
-     *
-     * @param string $email
-     * @param string $name
-     * @return Email
-     */
-    public function setCC(string $email, string $name = ''): Email
-    {
-        if (Validation::isEmail($email)) {
-            empty($name) ? ($this->cc[] = $email) : ($this->cc[$name] = $email);
         }
 
         return $this;
@@ -93,15 +69,12 @@ class Email
     /**
      * Set title
      * 
-     * @uses ..\config\main.lt.php
-     * @param int $i
-     * @param mixed $vars
-     * @return \components\Email
+     * @param string $title
+     * @return Email
      */
-    public function setTitle(int $i, ...$vars): Email
+    public function setTitle(string $title = ''): Email
     {
-        $this->titleIndex = $i;
-        $this->titleParams = $vars;
+        $this->title = $title;
         return $this;
     }
 
@@ -152,55 +125,27 @@ class Email
 
         if (!empty($variables) && count($variables) == 1 && array_key_exists(0, $variables))
             $variables = $variables[0];
-        
-        //set email language by employee
-        $employee = Employee::gi(reset($this->emails));
-        if (!$employee->empty())
-            \helpers\l10n::set($employee->raw()['language'] ?? 'cs');
 
-        $this->composeTitle();
-        
         if (!empty($this->title) && !isset($variables['title'])) {
             $variables['title'] = $this->title;
         }
-        
-        $variables['project_host'] = \core\Router::gi()->getHost();
-        
-        $this->content = (new View('/templates/email/' . $template, $variables))->render();
-        if (!empty($this->content)) {
+
+        $content = (new View('/templates/email/' . $template, $variables))->render();
+        if (!empty($content)) {
             //auto add pictures
-            if (preg_match_all(@"/\"cid:([^\"]+)\"/", $this->content, $matches) > 0) {
-                foreach ($matches[1] as $match) {
-                    if (file_exists(BASE_PATH . DS . 'templates' . DS . 'email' . DS . $template . DS . $match))
-                        $this->addPicture(BASE_PATH . DS . 'templates' . DS . 'email' . DS . $template . DS . $match, $match);
-                }
+            if (preg_match_all(@"/\"cid:([\w\d]+\.\w+)\"/", $content, $matches) > 0) {
+                foreach ($matches[1] as $match)
+                    $this->addPicture(BASE_PATH . DS . 'templates' . DS . 'email' . DS . $template . DS . $match, $match);
             }
 
             try {
-                $output = $this->send();
+                $output = $this->send($content);
             } catch (\PHPMailer\Exception $e) {
                 \core\Debug::var_dump($e->getMessage());
             }
         }
-        
-        \helpers\l10n::reset();
 
         return $output;
-    }
-    
-    /**
-     * Compose email subject
-     */
-    private function composeTitle()
-    {
-        $title = $lt = $this->config->lt('email_titles.' . \helpers\l10n::lang() . '.' . $this->titleIndex);
-        if (!empty($title)) {
-            foreach ($this->titleParams as $key => $param) {
-                $title = str_replace('$' . $key, $param, $title);
-            }
-            
-            $this->title = $title;
-        }
     }
 
     /**
@@ -212,56 +157,46 @@ class Email
         $this->reply = [];
         $this->pictures = [];
         $this->attachments = [];
-        $this->cc = [];
-        $this->title = '';
-        $this->content = null;
-        $this->titleIndex = 0;
-        $this->titleParams = [];
+        $this->setTitle();
     }
 
     /**
      * Send email
+     * @param $content
      * @return bool
      * @throws \PHPMailer\Exception
      */
-    private function send(): bool
+    private function send($content): bool
     {
         $output = false;
 
         if (!empty($this->emails)) {
-            $prTitle = $this->config->get('project_title');
-            $prEmail = $this->config->get('project_email');
+            $prTitle = Config::gi()->get('project_title');
+            $prEmail = Config::gi()->get('project_email');
 
-            $mailer = new PHPMailer(true);
+            $mailer = new PHPMailer(false);
             $mailer->CharSet = PHPMailer::CHARSET_UTF8;
             $mailer->Encoding = PHPMailer::ENCODING_BASE64;
-
-            //autoload config
-            $c = $this->config->get('mailer');
-            if (!empty($c) && is_array($c)) {
-                foreach ($c as $key => $value) {
-                    if (is_int($key) && method_exists($mailer, $value)) {
-                        call_user_func([$mailer, $value]);
-                    } elseif (property_exists($mailer, $key)) {
-                        $mailer->{$key} = $value;
-                    }
-                }
-            }
+            \helpers\Utils::applyConfig($mailer, 'mailer');
 
             $mailer->setFrom($prEmail, $prEmail);
 
-            foreach ($this->emails as $name => $email)
-                $mailer->addAddress($email, is_numeric($name) ? '' : $name);
-            foreach ($this->cc as $name => $email)
-                $mailer->addCC($email, is_numeric($name) ? '' : $name);
-            foreach ($this->reply as $name => $email)
-                $mailer->addReplyTo($email, is_numeric($name) ? '' : $name);
-            if (empty($this->reply))
+            foreach ($this->emails as $name => $email) {
+                if (empty($name) || is_numeric($name))
+                    $mailer->addAddress($email);
+                else
+                    $mailer->addAddress($email, $name);
+            }
+
+            if (!empty($this->reply)) {
+                foreach ($this->reply as $k => $r)
+                    $mailer->addReplyTo($r, empty($k) || is_numeric($k) ? '' : $k);
+            } else
                 $mailer->addReplyTo($prEmail, $prTitle);
 
             $mailer->isHTML(true);
             $mailer->Subject = $this->title;
-            $mailer->Body = $this->content;
+            $mailer->Body = $content;
 
             foreach ($this->attachments as $filename => $path) {
                 $dot = strrpos($filename, '.');
