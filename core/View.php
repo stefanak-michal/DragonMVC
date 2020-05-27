@@ -172,7 +172,7 @@ final class View
             $output .= $ext;
 
         if (!file_exists($output)) {
-            Debug::var_dump('View file "' . $output . '" not found');
+            trigger_error('View file "' . $output . '" not found');
             return null;
         }
 
