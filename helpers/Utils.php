@@ -224,10 +224,12 @@ class Utils
     }
     
     /**
-     * Autoload config
+     * Autoconfig
+     * Every value with integer key is call as method
+     * All others are checked as property and setted up
      *
      * @param object $object Instance of class
-     * @param string $configKey
+     * @param string $configKey Key used to load configuration from config files
      */
     public static function applyConfig($object, string $configKey)
     {
