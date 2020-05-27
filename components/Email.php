@@ -5,6 +5,7 @@ namespace components;
 use core\View,
     core\Config,
     helpers\Validation;
+use PHPMailer\PHPMailer;
 
 /**
  * Notification
@@ -18,32 +19,13 @@ use core\View,
  */
 class Email
 {
-    /**
-     * Where to send email
-     *
-     * @var array
-     */
     private $emails = array();
-    /**
-     * Title of email
-     * 
-     * @var string
-     */
     private $title = '';
-    /**
-     * Where to reply
-     *
-     * @var array
-     */
     private $reply = [];
-    
-    /**
-     * If want call reset after send
-     *
-     * @var boolean
-     */
     private $resetAfterSend = true;
-    
+    private $pictures = [];
+    private $attachments = [];
+
     /**
      * Construct
      */
@@ -51,7 +33,7 @@ class Email
     {
         $this->setTitle();
     }
-    
+
     /**
      * Set to
      * 
@@ -59,15 +41,15 @@ class Email
      * @param string $name
      * @return Email
      */
-    public function setTo($email, $name = '')
+    public function setTo(string $email, string $name = ''): Email
     {
-        if ( Validation::isEmail($email) ) {
+        if (Validation::isEmail($email)) {
             empty($name) ? ($this->emails[] = $email) : ($this->emails[$name] = $email);
         }
-        
+
         return $this;
     }
-    
+
     /**
      * Set reply address
      * 
@@ -75,143 +57,163 @@ class Email
      * @param string $name
      * @return Email
      */
-    public function setReply($email, $name = '')
+    public function setReply(string $email, string $name = ''): Email
     {
         if (Validation::isEmail($email)) {
             empty($name) ? ($this->reply[] = $email) : ($this->reply[$name] = $email);
         }
-        
+
         return $this;
     }
-    
+
     /**
      * Set title
      * 
      * @param string $title
      * @return Email
      */
-    public function setTitle($title = '', $prefix = true)
+    public function setTitle(string $title = ''): Email
     {
-        $titleParts = array();
-        if ( $prefix ) {
-            $titleParts[] = Config::gi()->get('project_title');
-        }
-        
-        if ( !empty($title) ) {
-            $titleParts[] = $title;
-        }
-        
-        $this->title = implode(' - ', $titleParts);
+        $this->title = $title;
         return $this;
     }
-    
+
+    /**
+     * Add picture
+     * @param string $file
+     * @param string $cid
+     * @return Email
+     */
+    public function addPicture(string $file, string $cid): Email
+    {
+        $this->pictures[$cid] = $file;
+        return $this;
+    }
+
+    /**
+     * @param string $filename
+     * @param string $path
+     * @return Email
+     */
+    public function addAttachment(string $filename, string $path): Email
+    {
+        $this->attachments[$filename] = $path;
+        return $this;
+    }
+
     /**
      * Set to call reset after send
      * 
-     * @param boolean $reset
+     * @param bool $reset
      */
-    public function setResetAfterSend($reset = true)
+    public function setResetAfterSend(bool $reset = true): Email
     {
-        $this->resetAfterSend = (boolean) $reset;
+        $this->resetAfterSend = $reset;
+        return $this;
     }
-    
+
     /**
-     * Standart send any email allowed in lookuptable and exists
-     * 
+     * Send any email
+     *
      * @param string $template
      * @param array $variables
      * @return boolean
      */
-    public function __call( $template, $variables = array() )
+    public function __call($template, $variables = array())
     {
         $output = false;
-        
+
         if (!empty($variables) && count($variables) == 1 && array_key_exists(0, $variables))
             $variables = $variables[0];
 
-        if ( !empty($this->title) && !isset($variables['title']) ) {
+        if (!empty($this->title) && !isset($variables['title'])) {
             $variables['title'] = $this->title;
         }
 
         $content = (new View('/templates/email/' . $template, $variables))->render();
-        if ( !empty($content) ) {
-            $output = $this->send($content);
+        if (!empty($content)) {
+            //auto add pictures
+            if (preg_match_all(@"/\"cid:([\w\d]+\.\w+)\"/", $content, $matches) > 0) {
+                foreach ($matches[1] as $match)
+                    $this->addPicture(BASE_PATH . DS . 'templates' . DS . 'email' . DS . $template . DS . $match, $match);
+            }
+
+            try {
+                $output = $this->send($content);
+            } catch (\PHPMailer\Exception $e) {
+                \core\Debug::var_dump($e->getMessage());
+            }
         }
-        
+
         return $output;
     }
-    
+
     /**
      * Reset email settings
      */
     public function reset()
     {
-        $this->emails = array();
-        $this->reply = array();
+        $this->emails = [];
+        $this->reply = [];
+        $this->pictures = [];
+        $this->attachments = [];
         $this->setTitle();
     }
-        
-    /**
-     * Headers for email
-     * 
-     * @return string
-     */
-    private function headers()
-    {
-        $prTitle = Config::gi()->get('project_title');
-        $prEmail = Config::gi()->get('project_email');
-        
-        $output = 'MIME-Version: 1.0' . "\r\n";
-        $output .= 'Content-type: text/html; charset=utf-8' . "\r\n";
-        $output .= 'From: ' . $prTitle . ' <' . $prEmail . '>' . "\r\n";
-        
-        $reply = [];
-        if (!empty($this->reply)) {
-            foreach ($this->reply as $k => $r)
-                $reply[] = empty($k) || is_numeric($k) ? $r : ($k . ' <' . $r . '>');
-        }
-        else
-            $reply[] = $prTitle . ' <' . $prEmail . '>';
-        
-        if (!empty($reply))
-            $output .= 'Reply-To: ' . implode(',', $reply) . "\r\n";
-        
-        $output .= 'X-Mailer: PHP/' . phpversion();
-        
-        return $output;
-    }
-    
+
     /**
      * Send email
-     * 
-     * @param string $content
-     * @param boolean $headers
-     * @return boolean
+     * @param $content
+     * @return bool
+     * @throws \PHPMailer\Exception
      */
-    private function send($content, $headers = true)
+    private function send($content): bool
     {
         $output = false;
-        
-        if ( !empty($this->emails) ) {
-            $headers = $headers ? $this->headers() : '';
-            
-            $emails = array();
-            foreach ( $this->emails AS $name => $email ) {
-                if ( empty($name) || is_numeric($name) ) {
-                    $emails[] = $email;
-                } else {
-                    $emails[] = $name . ' <' . $email . '>';
-                }
+
+        if (!empty($this->emails)) {
+            $prTitle = Config::gi()->get('project_title');
+            $prEmail = Config::gi()->get('project_email');
+
+            $mailer = new PHPMailer(false);
+            $mailer->CharSet = PHPMailer::CHARSET_UTF8;
+            $mailer->Encoding = PHPMailer::ENCODING_BASE64;
+            \helpers\Utils::applyConfig($mailer, 'mailer');
+
+            $mailer->setFrom($prEmail, $prEmail);
+
+            foreach ($this->emails as $name => $email) {
+                if (empty($name) || is_numeric($name))
+                    $mailer->addAddress($email);
+                else
+                    $mailer->addAddress($email, $name);
             }
-            
-            //var_dump(implode(', ', $emails), $this->title, $content, $headers);
-            $output = mail(implode(', ', $emails), $this->title, $content, $headers);
-            if ( $this->resetAfterSend ) {
+
+            if (!empty($this->reply)) {
+                foreach ($this->reply as $k => $r)
+                    $mailer->addReplyTo($r, empty($k) || is_numeric($k) ? '' : $k);
+            } else
+                $mailer->addReplyTo($prEmail, $prTitle);
+
+            $mailer->isHTML(true);
+            $mailer->Subject = $this->title;
+            $mailer->Body = $content;
+
+            foreach ($this->attachments as $filename => $path) {
+                $dot = strrpos($filename, '.');
+                $mailer->addAttachment($path, $filename, PHPMailer::ENCODING_BASE64, PHPMailer::_mime_types(substr($filename, $dot + 1)));
+            }
+
+            foreach ($this->pictures as $cid => $file) {
+                $mailer->addEmbeddedImage($file, $cid, pathinfo($file, PATHINFO_BASENAME));
+            }
+
+            $output = $mailer->send();
+
+            if ($this->resetAfterSend) {
                 $this->reset();
             }
         }
-        
+
         return $output;
     }
-    
 }
