@@ -1,9 +1,13 @@
 <?php
 $aConfig = array(
+    
     //connection DB
-    'dbUser' => '',
-    'dbPass' => '',
-    'dbDatabase' => '',
-    'dbServer' => 'localhost',
-    'dbCharset' => 'UTF-8',
+    'mysql' => [
+        'user' => '',
+        'password' => '',
+        'dbName' => '',
+        'host' => 'localhost',
+        'encoding' => 'utf8'
+    ],
+    
 );

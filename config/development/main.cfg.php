@@ -3,9 +3,12 @@ $aConfig = array(
     'project_host' => 'http://localhost/dragonmvc/',
     
     //connection DB
-    'dbUser' => 'root',
-    'dbPass' => 'test',
-    'dbDatabase' => 'test',
-    'dbServer' => 'localhost',
-    'dbCharset' => 'UTF-8',
+    'mysql' => [
+        'user' => 'root',
+        'password' => '',
+        'dbName' => 'db-name',
+        'host' => 'localhost',
+        'encoding' => 'utf8'
+    ],
+    
 );

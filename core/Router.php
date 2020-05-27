@@ -140,7 +140,7 @@ final class Router
      * @param array $query
      * @return string
      */
-    public function url(string $controller, string $method, $vars = array(), $query = array())
+    public function url(string $controller, string $method, array $vars = [], array $query = [])
     {
         if (empty($controller) || empty($method))
             exit;
@@ -155,12 +155,8 @@ final class Router
 
         if (empty($masks))
             trigger_error('No defined route for ' . $controller . '/' . $method, E_USER_WARNING);
-        $masks = array_keys($masks);
 
-        if (!empty($vars) && !is_array($vars))
-            $vars = array($vars);
-
-        foreach ($masks AS $mask) {
+        foreach (array_keys($masks) AS $mask) {
             if (is_integer($mask))
                 continue;
 
@@ -174,7 +170,6 @@ final class Router
         }
 
         if (empty($uri)) {
-            Debug::var_dump('No mask defined for route with arguments ' . $controller . '/' . $method, E_USER_WARNING);
             $uri = $this->project_host . $controller . '/' . $method;
             if (!empty($vars)) {
                 $uri .= '/' . implode('/', array_map(function ($value) {
@@ -183,7 +178,7 @@ final class Router
             }
         }
 
-        if (is_array($query) && !empty($query))
+        if (!empty($query))
             $uri .= '?' . http_build_query($query);
 
         return $uri;
@@ -286,15 +281,15 @@ final class Router
      * Find route
      *
      * @param string $path
-     * @return string
+     * @return array
      */
-    public function findRoute(string $path)
+    public function findRoute(string $path): array
     {
         $output = array();
 
         foreach ( $this->routes AS $mask => $route ) {
             $output = $this->match($path, $mask, $route);
-            if ( $output !== false )
+            if (!empty($output))
                 break;
         }
 
@@ -307,11 +302,11 @@ final class Router
      * @param string $path
      * @param string|int $mask
      * @param string $route
-     * @return array|boolean
+     * @return array
      */
-    private function match($path, $mask, $route)
+    private function match(string $path, $mask, string $route): array
     {
-        $output = false;
+        $output = [];
 
         $res = preg_match("/^" . str_replace('/', '\/', is_integer($mask) ? ($route . '((?=/)(.*))?') : str_replace(array('%i', '%s', '%d'), array('(-?\d+)', '([\w\-]+)', '(-?[\d\.]+)'), $mask)) . "$/i", $path, $vars);
 

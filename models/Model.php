@@ -2,8 +2,8 @@
 
 namespace models;
 
-use core\Config;
 use helpers\ArrayUtil;
+use MeekroDB\MeekroDBException;
 
 /**
  * Model
@@ -26,6 +26,13 @@ abstract class Model
     protected $primary_key;
 
     /**
+     * List of table columns
+     *
+     * @var array
+     */
+    protected $columns;
+
+    /**
      * MeekroDB
      *
      * @var \MeekroDB\MeekroDB
@@ -38,13 +45,8 @@ abstract class Model
     public function __construct()
     {
         if (empty(self::$db)) {
-            self::$db = new \MeekroDB\MeekroDB(
-                Config::gi()->get('dbServer'),
-                Config::gi()->get('dbUser'),
-                Config::gi()->get('dbPass'),
-                Config::gi()->get('dbDatabase'),
-                Config::gi()->get('dbPort')
-            );
+            self::$db = new \MeekroDB\MeekroDB;
+            \helpers\Utils::applyConfig(self::$db, 'mysql');
 
             if (!IS_WORKSPACE) {
                 self::setDatabaseErrorHandlers();
@@ -52,15 +54,25 @@ abstract class Model
                 self::$db->success_handler = function ($args) {
                     \core\Debug::query($args['query'], $args['explain'] ?? [], array_intersect_key($args, array_flip(['runtime', 'affected'])));
                 };
+                self::$db->error_handler = function ($args) {
+                    var_dump($args);
+                    exit;
+                };
             }
         }
 
         if (empty($this->table)) {
-            $parts = explode("\\", get_class($this));
+            $ns = trim(get_class($this), "\\");
+            $parts = explode("\\", $ns);
+            array_shift($parts);
+            $parts = array_map('ucfirst', $parts);
+
             $this->table = trim(preg_replace_callback("/[A-Z]/", function ($item) {
                 return '_' . strtolower($item[0]);
-            }, end($parts)), '_');
+            }, implode($parts)), '_');
         }
+
+        $this->columns = self::$db->columnList($this->table);
     }
 
     /**
@@ -70,7 +82,7 @@ abstract class Model
     {
         self::$db->error_handler = function ($params) {
             /* @var $e Exception */
-            $e = new Exception();
+            $e = new \Exception();
             $backtrace = preg_split("/[\r\n]+/", $e->getTraceAsString());
 
             //remove core traces
@@ -108,8 +120,21 @@ abstract class Model
      */
     public function create($data)
     {
-        self::$db->insert($this->table, $data);
-        return self::$db->insertId();
+        //auto filter array vs columns of table
+        if (is_array(reset($data))) {
+            foreach ($data as &$entry) {
+                $entry = array_intersect_key($entry, array_flip($this->columns));
+            }
+        } else {
+            $data = array_intersect_key($data, array_flip($this->columns));
+        }
+
+        if (!empty($data)) {
+            self::$db->insert($this->table, $data);
+            return self::$db->insertId();
+        }
+
+        return 0;
     }
 
     /**
@@ -143,7 +168,7 @@ abstract class Model
             return [];
         }
 
-        return (array) self::$db->queryFirstRow('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', $id);
+        return self::$db->queryFirstRow('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', $id) ?? [];
     }
 
     /**
@@ -155,8 +180,14 @@ abstract class Model
      */
     public function update($id, $data)
     {
-        self::$db->update($this->table, $data, $this->primary_key . ' = %i', $id);
-        return self::$db->affectedRows();
+        $data = array_intersect_key($data, array_flip($this->columns));
+
+        if (!empty($data)) {
+            self::$db->update($this->table, $data, $this->primary_key . ' = %i', $id);
+            return self::$db->affectedRows();
+        }
+
+        return 0;
     }
 
     /**
@@ -171,11 +202,33 @@ abstract class Model
         }
     }
 
-    /**
-     * Destruktor
-     */
-    public function __destruct()
+    public function startTransaction(): bool
     {
-        self::$db->disconnect();
+        try {
+            self::$db->startTransaction();
+            return true;
+        } catch (MeekroDBException $e) {
+            return false;
+        }
+    }
+
+    public function commit(): bool
+    {
+        try {
+            self::$db->commit();
+            return true;
+        } catch (MeekroDBException $e) {
+            return false;
+        }
+    }
+
+    public function rollback(): bool
+    {
+        try {
+            self::$db->rollback();
+            return true;
+        } catch (MeekroDBException $e) {
+            return false;
+        }
     }
 }

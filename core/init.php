@@ -6,6 +6,7 @@
 
 require_once "autoload.php";
 
+$autorun = $autorun ?? true;
 $workspace = false;
 
 define('IS_CLI', php_sapi_name() == 'cli');
@@ -31,9 +32,7 @@ if ( IS_CLI ) {
 
 define('IS_WORKSPACE', $workspace);
 
-/*if (isset($GLOBALS['_GET']['debug'])) {
-    $debug = $GLOBALS['_GET']['debug'] == 1;
-} else*/if (\core\Config::gi()->get('debug') !== null) {
+if (\core\Config::gi()->get('debug') !== null) {
     $debug = \core\Config::gi()->get('debug') == 1;
 } else {
     $debug = IS_WORKSPACE;
@@ -42,6 +41,6 @@ define('DRAGON_DEBUG', $debug);
 
 //Execute project
 $app = new core\Dragon();
-if ( !IS_CLI ) {
+if ( !IS_CLI && $autorun ) {
     $app->run();
 }

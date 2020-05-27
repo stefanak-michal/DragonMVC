@@ -222,5 +222,25 @@ class Utils
     {
         return $GLOBALS['_' . strtoupper($type)][$name] ?? $default;
     }
+    
+    /**
+     * Autoload config
+     *
+     * @param object $object Instance of class
+     * @param string $configKey
+     */
+    public static function applyConfig($object, string $configKey)
+    {
+        $c = \core\Config::gi()->get($configKey);
+        if (!empty($c) && is_array($c)) {
+            foreach ($c as $key => $value) {
+                if (is_int($key) && method_exists($object, $value)) {
+                    call_user_func([$object, $value]);
+                } elseif (property_exists($object, $key)) {
+                    $object->{$key} = $value;
+                }
+            }
+        }
+    }
 
 }
