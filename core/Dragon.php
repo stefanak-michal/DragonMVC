@@ -101,9 +101,9 @@ final class Dragon
         View::gi()->view(implode("\\", $cmv['controller']) . DS . $cmv['method']);
         
         $class = $this->buildControllerName($cmv['controller']);
-        self::$controller = new $class();
         self::$method = $cmv['method'];
         self::$vars = $cmv['vars'];
+        self::$controller = new $class();
 
         if ( method_exists(self::$controller, 'beforeMethod') ) {
             Debug::timer('beforeMethod');
