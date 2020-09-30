@@ -48,7 +48,7 @@ abstract class Model
             self::$db = new \MeekroDB\MeekroDB;
             \helpers\Utils::applyConfig(self::$db, 'mysql');
 
-            if (!IS_WORKSPACE) {
+            if (!DRAGON_DEBUG) {
                 self::setDatabaseErrorHandlers();
             } else {
                 self::$db->success_handler = function ($args) {
