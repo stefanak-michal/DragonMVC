@@ -4,8 +4,11 @@ namespace core;
 
 /**
  * Framework
- * 
  * Base class of MVC framework
+ *
+ * @package core
+ * @author Michal Stefanak
+ * @link https://github.com/stefanak-michal/DragonMVC
  */
 final class Dragon
 {
@@ -68,7 +71,7 @@ final class Dragon
      * @param string $path
      * @return void
      */
-    private function resolveRoute(&$cmv, $path)
+    private function resolveRoute(array &$cmv, string $path)
     {
         if ( empty($path) )
             return;
@@ -128,7 +131,7 @@ final class Dragon
      * @param array $c
      * @return string
      */
-    private function buildControllerName(array $c)
+    private function buildControllerName(array $c): string
     {
         $last = ucfirst(array_pop($c));
         $name = '';

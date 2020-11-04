@@ -4,8 +4,11 @@ namespace core;
 
 /**
  * Config
- * 
  * Read config files and hold it
+ *
+ * @package core
+ * @author Michal Stefanak
+ * @link https://github.com/stefanak-michal/DragonMVC
  */
 final class Config
 {
@@ -29,21 +32,21 @@ final class Config
      *
      * @var string
      */
-    private $ltAffix = '.lt.php';
+    public static $ltAffix = '.lt.php';
 
     /**
      * Config file affix
      *
      * @var string
      */
-    private $cfgAffix = '.cfg.php';
+    public static $cfgAffix = '.cfg.php';
 
     /**
      * JSON config affix
      *
      * @var string
      */
-    private $jsonAffix = '.json';
+    public static $jsonAffix = '.json';
     
     /**
      * @var Config
@@ -79,10 +82,10 @@ final class Config
      * 
      * @param string $name
      */
-    public function loadLookuptable($name)
+    public function loadLookuptable(string $name)
     {
-        $this->loadFiles($name . $this->ltAffix, 'lookUpTable', 'lookUpTables');
-        $this->loadFiles((IS_WORKSPACE ? 'development' : 'production') . DS . $name . $this->ltAffix, 'lookUpTable', 'lookUpTables');
+        $this->loadFiles($name . self::$ltAffix, 'lookUpTable', 'lookUpTables');
+        $this->loadFiles((IS_WORKSPACE ? 'development' : 'production') . DS . $name . self::$ltAffix, 'lookUpTable', 'lookUpTables');
     }
 
     /**
@@ -90,13 +93,13 @@ final class Config
      * 
      * @param string $name
      */
-    public function loadConfig($name)
+    public function loadConfig(string $name)
     {
-        $this->loadFiles($name . $this->cfgAffix);
-        $this->loadFiles((IS_WORKSPACE ? 'development' : 'production') . DS . $name . $this->cfgAffix);
+        $this->loadFiles($name . self::$cfgAffix);
+        $this->loadFiles((IS_WORKSPACE ? 'development' : 'production') . DS . $name . self::$cfgAffix);
 
         if ( IS_WORKSPACE ) {
-            $this->loadFiles('.' . $name . $this->cfgAffix);
+            $this->loadFiles('.' . $name . self::$cfgAffix);
         }
     }
 
@@ -107,11 +110,11 @@ final class Config
      * @param boolean $assoc
      * @return array
      */
-    public function getJson($file, $assoc = true)
+    public function getJson(string $file, $assoc = true)
     {
         $json = array();
 
-        $file = BASE_PATH . DS . 'config' . DS . $file . $this->jsonAffix;
+        $file = BASE_PATH . DS . 'config' . DS . $file . self::$jsonAffix;
         if ( file_exists($file) ) {
             $content = file_get_contents($file);
             $json = json_decode($content, $assoc);
@@ -131,7 +134,7 @@ final class Config
      * @param string $variable
      * @param string $objVar
      */
-    private function loadFiles($path, $variable = 'aConfig', $objVar = 'configVars')
+    private function loadFiles(string $path, $variable = 'aConfig', $objVar = 'configVars')
     {
         $files = glob(BASE_PATH . DS . 'config' . DS . $path);
         $files = array_filter($files);
@@ -156,7 +159,7 @@ final class Config
      * @param string $key
      * @param mixed $value
      */
-    public function set($key, $value)
+    public function set(string $key, $value)
     {
         if ( !empty($key) ) {
             if ( !empty($value) ) {
@@ -174,7 +177,7 @@ final class Config
      * @param mixed $default
      * @return mixed
      */
-    public function get($key, $default = null)
+    public function get(string $key, $default = null)
     {
         $output = $default;
 
@@ -189,24 +192,22 @@ final class Config
      * Read lookup table value
      * 
      * @param string $dotSeparatedKeys
-     * @return array
+     * @return mixed
      */
-    public function lt($dotSeparatedKeys)
+    public function lt(string $dotSeparatedKeys)
     {
+        if (empty($dotSeparatedKeys))
+            return false;
+
         $output = array();
 
-        if ( !empty($dotSeparatedKeys) ) {
-            $keys = explode('.', $dotSeparatedKeys);
-            if ( !empty($keys) ) {
-                foreach ( $keys AS $key ) {
-                    if ( empty($output) AND isset($this->lookUpTables[$key]) ) {
-                        $output = $this->lookUpTables[$key];
-                    } elseif ( isset($output[$key]) ) {
-                        $output = $output[$key];
-                    } else {
-                        $output = false;
-                    }
-                }
+        foreach (explode('.', $dotSeparatedKeys) AS $key) {
+            if (empty($output) && array_key_exists($key, $this->lookUpTables)) {
+                $output = $this->lookUpTables[$key];
+            } elseif (is_array($output) && array_key_exists($key, $output)) {
+                $output = $output[$key];
+            } else {
+                return false;
             }
         }
 

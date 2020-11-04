@@ -72,7 +72,7 @@ class URI
 	 *
 	 * @param string $str
 	 */
-	public function _set_uri_string($str)
+	public function _set_uri_string(string $str)
 	{
 		// If the URI contains only a slash we'll kill it
 		$this->uri_string = ($str == '/') ? '' : $str;

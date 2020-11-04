@@ -1,7 +1,9 @@
 <?php
 /**
  * Project initialization script
+ *
  * @author Michal Stefanak
+ * @link https://github.com/stefanak-michal/DragonMVC
  */
 
 require_once "autoload.php";

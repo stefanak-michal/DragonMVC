@@ -6,8 +6,11 @@ use core\debug\Generator AS DebugGenerator;
 
 /**
  * Router
- *
  * Work with URI
+ *
+ * @package core
+ * @author Michal Stefanak
+ * @link https://github.com/stefanak-michal/DragonMVC
  */
 final class Router
 {
@@ -99,11 +102,11 @@ final class Router
     /**
      * Switch to generate secured URI (https)
      *
-     * @param boolean $bool
+     * @param bool $secure
      */
-    public function setSecureHost($bool = true)
+    public function setSecureHost(bool $secure = true)
     {
-        if ( $bool ) {
+        if ( $secure ) {
             if ( strpos($this->project_host, 'https') === false ) {
                 $this->project_host = str_replace('http', 'https', $this->project_host);
             }
@@ -120,7 +123,7 @@ final class Router
      * @param array $query
      * @return string
      */
-    public function homepage($query = array())
+    public function homepage(array $query = array()): string
     {
         $uri = $this->project_host;
 
@@ -140,7 +143,7 @@ final class Router
      * @param array $query
      * @return string
      */
-    public function url(string $controller, string $method, array $vars = [], array $query = [])
+    public function url(string $controller, string $method, array $vars = [], array $query = []): string
     {
         if (empty($controller) || empty($method))
             exit;
@@ -216,10 +219,10 @@ final class Router
     /**
      * Get actual URI
      *
-     * @param boolean $getParams
+     * @param bool $getParams
      * @return string
      */
-    public function current($getParams = false)
+    public function current(bool $getParams = false): string
     {
         $uri = 'http';
         if ( $_SERVER['SERVER_PORT'] != 80 ) {
@@ -249,7 +252,7 @@ final class Router
      * @param string $message
      * @param int $code
      */
-    public function redirect($uri, $message = '', $code = 302)
+    public function redirect(string $uri, string $message = '', int $code = 302)
     {
         if ( !empty($uri) ) {
             if ( !empty($message) ) {

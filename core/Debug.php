@@ -6,8 +6,11 @@ use \Exception;
 
 /**
  * Debug
- * 
  * Developer tools
+ *
+ * @package core
+ * @author Michal Stefanak
+ * @link https://github.com/stefanak-michal/DragonMVC
  */
 final class Debug
 {

@@ -8,7 +8,10 @@ namespace core;
  * it works two ways:
  *  Singleton is used as primary renderer for controller->method calls
  *  Custom instantiation is available for specific view rendering
+ *
  * @package core
+ * @author Michal Stefanak
+ * @link https://github.com/stefanak-michal/DragonMVC
  */
 final class View
 {
@@ -154,9 +157,9 @@ final class View
     /**
      * Generate file path and check if exists
      * @param string $str
-     * @return string
+     * @return string|null
      */
-    private function path($str)
+    private function path(string $str)
     {
         if (empty($str))
             return null;

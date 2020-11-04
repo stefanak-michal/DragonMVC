@@ -1,7 +1,9 @@
 <?php
 /**
  * Autoload function
+ *
  * @author Michal Stefanak
+ * @link https://github.com/stefanak-michal/DragonMVC
  */
 
 define('BASE_PATH', dirname(__DIR__));
