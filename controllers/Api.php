@@ -21,7 +21,7 @@ class Api extends App
     {
         parent::beforeMethod();
         
-        $this->view->layout(false);
+        $this->view->layout();
         $this->view->view('api/clear');
         $this->set('data', '');
     }

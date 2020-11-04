@@ -7,7 +7,7 @@ namespace controllers;
  * 
  * Base controller for extending
  */
-abstract class App
+abstract class App implements \core\IController
 {
     /**
      * Config - for simple access
@@ -42,7 +42,7 @@ abstract class App
      * @param string $name
      * @param mixed $value
      */
-    final protected function set($name, $value)
+    final protected function set(string $name, $value)
     {
         $this->view->set($name, $value);
     }
@@ -55,7 +55,7 @@ abstract class App
      * @param mixed $default
      * @return mixed
      */
-    final protected function param($name, $type = 'GET', $default = null)
+    final protected function param(string $name, string $type = 'GET', $default = null)
     {
         return \helpers\Utils::param($name, $type, $default);
     }
@@ -66,6 +66,7 @@ abstract class App
     public function beforeMethod()
     {
         $this->set('project_title', $this->config->get('project_title'));
+        $this->set('project_host', $this->router->getHost());
     }
     
     /**

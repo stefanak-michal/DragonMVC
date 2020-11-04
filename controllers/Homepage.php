@@ -69,7 +69,7 @@ class Homepage extends App
 
     public function vars($a, $b)
     {
-        $this->view->view(null);
+        $this->view->view();
         var_dump($a, $b);
     }
     

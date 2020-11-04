@@ -15,15 +15,29 @@ namespace core;
  */
 final class View
 {
-    /** @var string */
+    /**
+     * @var string
+     */
     private $view;
-    /** @var string */
+    /**
+     * @var string
+     */
     private $layout;
-    /** @var array */
+    /**
+     * @var array
+     */
     private $vars = [];
 
-    /** @var View */
+    /**
+     * @var View
+     */
     private static $instance;
+
+    /**
+     * Callback after rendering any view or layout. It has to return content, usually modified renderedContent.
+     * @var callable (string renderedFile, string renderedContent): string
+     */
+    public static $afterRender;
 
     /**
      * View constructor.
@@ -31,7 +45,7 @@ final class View
      * @param array $vars
      * @param string $layout
      */
-    public function __construct($view = null, $vars = [], $layout = null)
+    public function __construct(string $view = '', array $vars = [], string $layout = '')
     {
         if (!empty($view))
             $this->view($view);
@@ -44,7 +58,7 @@ final class View
      * Singleton
      * @return View
      */
-    public static function gi()
+    public static function gi(): View
     {
         if (empty(self::$instance))
             self::$instance = new self();
@@ -57,7 +71,7 @@ final class View
      * @param string $view
      * @return View
      */
-    public function view($view) : View
+    public function view(string $view = '') : View
     {
         $this->view = $this->path($view);
         return $this;
@@ -68,7 +82,7 @@ final class View
      * @param string $layout
      * @return View
      */
-    public function layout($layout) : View
+    public function layout(string $layout = '') : View
     {
         $this->layout = $this->path($layout);
         return $this;
@@ -76,11 +90,11 @@ final class View
 
     /**
      * Set variable
-     * @param mixed $key
+     * @param string $key Variable valid name
      * @param mixed $value
      * @return View
      */
-    public function set($key, $value) : View
+    public function set(string $key, $value) : View
     {
         $this->vars[$key] = $value;
         return $this;
@@ -101,13 +115,10 @@ final class View
      * Generate
      * @return string
      */
-    public function render()
+    public function render(): string
     {
-        if (!isset($this->vars['project_host']))
-            $this->vars['project_host'] = Router::gi()->getHost();
-        
         if (empty($this->view))
-            return $this->layout ? $this->layouted('') : '';
+            return !empty($this->layout) ? $this->layouted('') : '';
 
         Debug::files($this->view);
 
@@ -119,6 +130,8 @@ final class View
         include $this->view;
 
         $content = ob_get_clean();
+        if (is_callable(self::$afterRender))
+            $content = call_user_func(self::$afterRender, $this->view, $content);
 
         //after render clean up memory
         foreach ( $this->vars as $key => $variable )
@@ -131,10 +144,10 @@ final class View
     }
 
     /**
-     * @param $content
+     * @param string $content
      * @return string
      */
-    private function layouted($content)
+    private function layouted(string $content): string
     {
         Debug::files($this->layout);
 
@@ -146,6 +159,8 @@ final class View
         include $this->layout;
 
         $content = ob_get_clean();
+        if (is_callable(self::$afterRender))
+            $content = call_user_func(self::$afterRender, $this->layout, $content);
 
         //after render clean up memory
         foreach ( $this->vars as $key => $variable )
@@ -157,12 +172,12 @@ final class View
     /**
      * Generate file path and check if exists
      * @param string $str
-     * @return string|null
+     * @return string
      */
-    private function path(string $str)
+    private function path(string $str): string
     {
         if (empty($str))
-            return null;
+            return '';
 
         $str = str_replace(array('/', "\\"), DS, $str);
         if (substr($str, 0, 1) == DS)
@@ -175,8 +190,8 @@ final class View
             $output .= $ext;
 
         if (!file_exists($output)) {
-            trigger_error('View file "' . $output . '" not found');
-            return null;
+            \core\Debug::var_dump('File "' . $output . '" not found. It is intentional?');
+            return '';
         }
 
         return $output;

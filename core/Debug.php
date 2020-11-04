@@ -27,13 +27,12 @@ final class Debug
 
     /**
      * Dump data
+     * @param mixed ...$args
      */
-    public static function var_dump()
+    public static function var_dump(...$args)
     {
         if (defined('DRAGON_DEBUG') && !DRAGON_DEBUG)
             return;
-
-        $args = func_get_args();
 
         if (!empty($args)) {
             foreach ($args as $one) {
