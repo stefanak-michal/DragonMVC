@@ -30,7 +30,7 @@ final class Debug
      */
     public static function var_dump()
     {
-        if (!defined('DRAGON_DEBUG') || !DRAGON_DEBUG)
+        if (defined('DRAGON_DEBUG') && !DRAGON_DEBUG)
             return;
 
         $args = func_get_args();
@@ -51,9 +51,9 @@ final class Debug
      * 
      * @param string $file
      */
-    public static function files($file)
+    public static function files(string $file)
     {
-        if (!defined('DRAGON_DEBUG') || !DRAGON_DEBUG)
+        if (defined('DRAGON_DEBUG') && !DRAGON_DEBUG)
             return;
 
         $exists = file_exists($file);
@@ -68,9 +68,9 @@ final class Debug
      * 
      * @param string $key
      */
-    public static function timer($key)
+    public static function timer(string $key)
     {
-        if (!defined('DRAGON_DEBUG') || !DRAGON_DEBUG)
+        if (defined('DRAGON_DEBUG') && !DRAGON_DEBUG)
             return;
 
         if (!isset(self::$timers[$key])) {
@@ -93,7 +93,7 @@ final class Debug
      */
     public static function query(string $query, array $hidden = [], array $otherColumns = [])
     {
-        if (!defined('DRAGON_DEBUG') || !DRAGON_DEBUG) {
+        if (defined('DRAGON_DEBUG') && !DRAGON_DEBUG) {
             return;
         }
 

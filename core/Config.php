@@ -28,6 +28,12 @@ final class Config
     private $lookUpTables = array();
 
     /**
+     * Array of loaded json files
+     * @var array
+     */
+    private $jsonFiles = [];
+
+    /**
      * Lookuptable file affix
      *
      * @var string
@@ -85,7 +91,6 @@ final class Config
     public function loadLookuptable(string $name)
     {
         $this->loadFiles($name . self::$ltAffix, 'lookUpTable', 'lookUpTables');
-        $this->loadFiles((IS_WORKSPACE ? 'development' : 'production') . DS . $name . self::$ltAffix, 'lookUpTable', 'lookUpTables');
     }
 
     /**
@@ -96,11 +101,6 @@ final class Config
     public function loadConfig(string $name)
     {
         $this->loadFiles($name . self::$cfgAffix);
-        $this->loadFiles((IS_WORKSPACE ? 'development' : 'production') . DS . $name . self::$cfgAffix);
-
-        if ( IS_WORKSPACE ) {
-            $this->loadFiles('.' . $name . self::$cfgAffix);
-        }
     }
 
     /**
@@ -112,19 +112,22 @@ final class Config
      */
     public function getJson(string $file, $assoc = true)
     {
-        $json = array();
+        if (array_key_exists($file, $this->jsonFiles))
+            return $this->jsonFiles[$file];
 
-        $file = BASE_PATH . DS . 'config' . DS . $file . self::$jsonAffix;
-        if ( file_exists($file) ) {
-            $content = file_get_contents($file);
-            $json = json_decode($content, $assoc);
+        $filename = BASE_PATH . DS . 'config' . DS . $file . self::$jsonAffix;
+        if ( file_exists($filename) ) {
+            $content = file_get_contents($filename);
+            $this->jsonFiles[$file] = json_decode($content, $assoc);
 
             if ( json_last_error() != JSON_ERROR_NONE ) {
-                $json = array();
+                $this->jsonFiles[$file] = [];
+            } else {
+                Debug::files($filename);
             }
         }
 
-        return $json;
+        return $this->jsonFiles[$file];
     }
 
     /**
@@ -136,20 +139,28 @@ final class Config
      */
     private function loadFiles(string $path, $variable = 'aConfig', $objVar = 'configVars')
     {
-        $files = glob(BASE_PATH . DS . 'config' . DS . $path);
-        $files = array_filter($files);
+        $files = [
+            BASE_PATH . DS . 'config' . DS . $path,
+            BASE_PATH . DS . 'config' . DS . (IS_WORKSPACE ? 'development' : 'production') . DS . $path
+        ];
 
-        if ( !empty($files) ) {
-            foreach ( $files AS $file ) {
-                include $file;
-                if ( !empty($$variable) ) {
-                    foreach ( $$variable AS $key => $value ) {
-                        $this->{$objVar}[$key] = $value;
-                        //$this->set($key, $value);
-                    }
+        if (IS_WORKSPACE)
+            $files[] = BASE_PATH . DS . 'config' . DS . '.' . $path;
+
+        foreach ( $files AS $file ) {
+            if (!file_exists($file))
+                continue;
+
+            Debug::files($file);
+            include $file;
+
+            if ( !empty($$variable) ) {
+                foreach ( $$variable AS $key => $value ) {
+                    $this->{$objVar}[$key] = $value;
                 }
-                unset($$variable);
             }
+
+            unset($$variable);
         }
     }
 
