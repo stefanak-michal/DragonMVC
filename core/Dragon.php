@@ -34,6 +34,11 @@ final class Dragon
      * @var array
      */
     public static $vars;
+    
+    public function __construct()
+    {
+        header('X-Powered-By: DragonMVC PHP lightweight framework');
+    }
 
     /**
      * Run a project
