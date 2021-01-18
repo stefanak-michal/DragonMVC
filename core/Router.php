@@ -143,7 +143,7 @@ final class Router
      * @param array $query
      * @return string
      */
-    public function url(string $controller, string $method, array $vars = [], array $query = []): string
+    public function url(string $controller, string $method = 'index', array $vars = [], array $query = []): string
     {
         if (empty($controller) || empty($method))
             exit;
