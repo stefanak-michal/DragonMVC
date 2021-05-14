@@ -82,12 +82,13 @@ final class Generator
         foreach ( $files AS $file ) {
             $data = file_get_contents($file);
             preg_match("/URI: <b>([^<]+)/", $data, $match);
-            preg_match("/(\d+\.\d+)\.html/", $file, $time);
-            
+            preg_match("/(\d+(\.\d+)?)\.html/", $file, $time);
+            $t = explode('.', $time[1]);
+
             Debug::$tables[__FUNCTION__][] = [
                 'URI' => $match[1],
-                'date' => date('Y-m-d H:i:s', $time[1]) . substr($time[1], strpos($time[1], '.')),
-                '' => '<a href="' . \core\Router::gi()->getHost() . 'tmp/debug/' . $time[1] . '.html">view</a>'
+                'date' => date('Y-m-d H:i:s', $t[0]) . ($t[1] ?? ''),
+                '' => '<a href="' . \core\Router::gi()->getHost() . 'tmp/debug/' . pathinfo($file, PATHINFO_BASENAME) . '">view</a>'
             ];
         }
     }
