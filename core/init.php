@@ -6,6 +6,9 @@
  * @link https://github.com/stefanak-michal/DragonMVC
  */
 
+if (!in_array(ini_get('short_open_tag'), [1, '1', 'On']))
+    exit('Framework requires php short_open_tag On');
+
 require_once "autoload.php";
 
 $autorun = $autorun ?? true;
