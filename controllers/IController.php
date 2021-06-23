@@ -1,11 +1,11 @@
 <?php
 
-namespace core;
+namespace controllers;
 
 /**
  * Interface IController
  *
- * @package core
+ * @package controllers
  * @author Michal Stefanak
  * @link https://github.com/stefanak-michal/DragonMVC
  */

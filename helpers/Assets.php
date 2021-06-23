@@ -5,7 +5,6 @@ namespace helpers;
 /**
  * Assets
  * Helper to manage css/js assets files
- * It use /config/assets.json
  */
 class Assets
 {
@@ -17,14 +16,14 @@ class Assets
      * Type js
      */
     const TYPE_JS = 'js';
-    
+
     /**
      * Assets to load on page
      *
      * @var array
      */
     private static $toLoad = array();
-    
+
     /**
      * @var bool
      */
@@ -37,85 +36,79 @@ class Assets
     {
         self::$toLoad = array();
     }
-    
+
     /**
      * Add assets to load
-     * 
-     * @param string|array $name
-     * @param string $type
+     *
+     * @param array $names relative path to css/js asset file in assets directory
      */
-    public static function add($name, string $type)
+    public static function add(...$names)
     {
-        if ( !is_array($name) ) {
-            $name = array($name);
-        }
-        
-        foreach ( $name AS $once ) {
-            if ( !isset(self::$toLoad[$type][$once]) ) {
-                $assetUrl = self::generateUrl($once, $type);
-                if ( !empty($assetUrl) ) {
-                    self::$toLoad[$type][$once] = $assetUrl;
+        foreach ($names as $name) {
+            $type = pathinfo($name, PATHINFO_EXTENSION);
+            if (!in_array($type, ['css', 'js'])) {
+                \core\Debug::var_dump('Unsupported asset type "' . $type . '" for asset file "' . $name . '"');
+                continue;
+            }
+
+            if (!isset(self::$toLoad[$type][$name])) {
+                $assetUrl = self::generateUrl($name);
+                if (!empty($assetUrl)) {
+                    self::$toLoad[$type][$name] = $assetUrl;
                 } else {
-                    trigger_error('Generate asset url unsuccessful for ' . $once);
+                    \core\Debug::var_dump('Asset file "' . $name . '" not found');
                 }
             }
         }
     }
-    
+
     /**
      * Generate asset url
-     * 
+     *
      * @param string $name
-     * @param string $assetType
      * @return string
      */
-    private static function generateUrl(string $name, string $assetType): string
+    private static function generateUrl(string $name): string
     {
-        $output = '';
-        $assets = \core\Config::gi()->getJson('assets');
-
-        if (isset($assets[$assetType][$name])) {
-            if (self::$absoluteUrls)
-                $output = \core\Router::gi()->getHost();
-            
-            $file = $assets[$assetType][$name];
-            
-            //auto add "min" on production if the file is available
-            if (!IS_WORKSPACE && strpos($file, '.min.') === false) {
-                $file = substr_replace($file, '.min.', strrpos($file, '.'), 1);
-                if (!file_exists(BASE_PATH . DS . 'assets' . DS . $assetType . DS . $file))
-                    $file = $assets[$assetType][$name];
-            }
-
-            //auto versioning
-            $output .= 'assets/' . $assetType . '/' . $file . '?v=' 
-                    . filemtime(BASE_PATH . DS . 'assets' . DS . $assetType . DS . $file);
+        //auto add "min" on production if the file is available
+        if (!IS_WORKSPACE && strpos($name, '.min.') === false) {
+            $file = substr_replace($name, '.min.', strrpos($name, '.'), 1);
+            if (file_exists(BASE_PATH . DS . 'assets' . DS . $file))
+                $name = $file;
         }
-        
+
+        if (!file_exists(BASE_PATH . DS . 'assets' . DS . str_replace(['/', '\\'], DS, $name))) {
+            return '';
+        }
+
+        $output = '';
+        if (self::$absoluteUrls)
+            $output = \core\Router::gi()->getHost();
+        $output .= 'assets/' . $name . '?v=' . filemtime(BASE_PATH . DS . 'assets' . DS . $name);
         return $output;
     }
 
     /**
      * Render assets on page
-     * 
+     *
      * @return string
      */
-    public static function draw()
+    public static function draw(): string
     {
         $output = array();
-        
-        if ( !empty(self::$toLoad[self::TYPE_CSS]) ) {
-            foreach ( self::$toLoad[self::TYPE_CSS] AS $file ) {
+
+        if (!empty(self::$toLoad[self::TYPE_CSS])) {
+            foreach (self::$toLoad[self::TYPE_CSS] as $file) {
                 $output[] = '<link rel="stylesheet" type="text/css" href="' . $file . '" />';
             }
         }
-        if ( !empty(self::$toLoad[self::TYPE_JS]) ) {
-            foreach ( self::$toLoad[self::TYPE_JS] AS $file ) {
+        if (!empty(self::$toLoad[self::TYPE_JS])) {
+            foreach (self::$toLoad[self::TYPE_JS] as $file) {
                 $output[] = '<script type="text/javascript" src="' . $file . '" ></script>';
             }
         }
-        
+
         return implode(PHP_EOL, $output);
     }
-    
+
 }

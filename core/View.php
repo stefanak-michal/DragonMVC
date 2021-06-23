@@ -34,12 +34,6 @@ final class View
     private static $instance;
 
     /**
-     * Callback after rendering any view or layout. It has to return content, usually modified renderedContent.
-     * @var callable (string renderedFile, string renderedContent): string
-     */
-    public static $afterRender;
-
-    /**
      * View constructor.
      * @param string $view
      * @param array $vars
@@ -68,24 +62,33 @@ final class View
 
     /**
      * Set view file
-     * @param string $view
-     * @return View
+     * @param ?string $view
+     * @return bool
      */
-    public function view(string $view = '') : View
+    public function view(?string $view = null): bool
     {
-        $this->view = $this->path($view);
-        return $this;
+        $this->view = $this->path((string)$view);
+        return !empty($this->view);
+    }
+
+    /**
+     * Get resolved view filepath
+     * @return string
+     */
+    public function getView(): string
+    {
+        return $this->view;
     }
 
     /**
      * Set layout file
-     * @param string $layout
-     * @return View
+     * @param ?string $layout
+     * @return bool
      */
-    public function layout(string $layout = '') : View
+    public function layout(?string $layout = null): bool
     {
-        $this->layout = $this->path($layout);
-        return $this;
+        $this->layout = $this->path((string)$layout);
+        return !empty($this->layout);
     }
 
     /**
@@ -130,8 +133,6 @@ final class View
         include $this->view;
 
         $content = ob_get_clean();
-        if (is_callable(self::$afterRender))
-            $content = call_user_func(self::$afterRender, $this->view, $content);
 
         //after render clean up memory
         foreach ( $this->vars as $key => $variable )
@@ -144,7 +145,7 @@ final class View
     }
 
     /**
-     * @param string $content
+     * @param string $content It's passed to rendered layout
      * @return string
      */
     private function layouted(string $content): string
@@ -158,15 +159,13 @@ final class View
 
         include $this->layout;
 
-        $content = ob_get_clean();
-        if (is_callable(self::$afterRender))
-            $content = call_user_func(self::$afterRender, $this->layout, $content);
+        $html = ob_get_clean();
 
         //after render clean up memory
         foreach ( $this->vars as $key => $variable )
             unset(${$key});
 
-        return $content;
+        return $html;
     }
 
     /**
@@ -180,18 +179,27 @@ final class View
             return '';
 
         $str = str_replace(array('/', "\\"), DS, $str);
+        $ext = '.' . ltrim(Config::gi()->get('viewsExtension', 'phtml'), '.');
+        if (substr($str, 0, -strlen($ext)) != $ext)
+            $str .= $ext;
+
+        $viewDirectory = trim(str_replace(array('/', "\\"), DS, Config::gi()->get('viewsDirectory', 'views')), DS);
+
         if (substr($str, 0, 1) == DS)
             $output =  BASE_PATH . $str;
         else
-            $output = BASE_PATH . DS . trim(str_replace(array('/', "\\"), DS, Config::gi()->get('viewsDirectory', 'views')), DS) . DS . $str;
-
-        $ext = '.' . ltrim(Config::gi()->get('viewsExtension', 'phtml'), '.');
-        if (substr($output, 0, -strlen($ext)) != $ext)
-            $output .= $ext;
+            $output = BASE_PATH . DS . $viewDirectory . DS . $str;
 
         if (!file_exists($output)) {
-            \core\Debug::var_dump('File "' . $output . '" not found. It is intentional?');
-            return '';
+            if (substr($str, 0, 1) == DS)
+                $output =  dirname(__DIR__) . $str;
+            else
+                $output = dirname(__DIR__) . DS . $viewDirectory . DS . $str;
+
+            if (!file_exists($output)) {
+                \core\Debug::var_dump('File "' . $str . '" not found. It is intentional?');
+                $output = '';
+            }
         }
 
         return $output;

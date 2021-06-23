@@ -1,2 +1,5 @@
 /tmp/
+.htaccess
 .idea
+/config/development/
+deploy.php

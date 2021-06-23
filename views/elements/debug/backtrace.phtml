@@ -1,3 +1,12 @@
+<?php
+/**
+ * @var array $bt
+ * @var string $url
+ * @var int $code
+ * @var string $message
+ */
+?>
+
 <h1>Redirect (<?= $code ?>)</h1>
 <a href="<?= $url ?>"><?= $url ?></a>
 <br><br>
@@ -11,7 +20,7 @@
     <tr>
         <td colspan="2" style="border-bottom: 1px solid gray; ">
             <? if ( !empty($row['args']) ) {
-                $row['args'] = helpers\ArrayUtil::arrayMapRecursive(function($item) { return is_object($item) ? false : $item; }, $row['args']);
+                $row['args'] = helpers\ArrayUtils::arrayMapRecursive(function($item) { return is_object($item) ? false : $item; }, $row['args']);
                 if ( !empty($row['args']) ) {
                     echo 'args: ';
                     print_r($row['args']);

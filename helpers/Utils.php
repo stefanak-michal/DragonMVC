@@ -14,7 +14,7 @@ class Utils
      * @param string $text
      * @return string
      */
-    public static function closeTags($text)
+    public static function closeTags(string $text): string
     {
         $patt_open = "%((?<!</)(?<=<)[\s]*[^/!>\s]+(?=>|[\s]+[^>]*[^/]>)(?!/>))%";
         $patt_close = "%((?<=</)([^>]+)(?=>))%";
@@ -53,7 +53,7 @@ class Utils
      * @param boolean $toLowerCase
      * @return string
      */
-    public static function removeDiacritic($text, $toLowerCase = false)
+    public static function removeDiacritic(string $text, bool $toLowerCase = false): string
     {
         // also for multi-byte (napr. UTF-8)
         $transform = array(
@@ -120,7 +120,7 @@ class Utils
      * @param string $val
      * @return int
      */
-    public static function decodeBytes($val)
+    public static function decodeBytes(string $val): int
     {
         $val = trim($val);
         $last = strtolower($val[strlen($val) - 1]);
@@ -142,7 +142,7 @@ class Utils
      * @param int $size
      * @return string
      */
-    public static function encodeBytes($size)
+    public static function encodeBytes(int $size): string
     {
         $size = (int) $size;
         $units = ['kB', 'MB', 'GB'];
@@ -167,7 +167,7 @@ class Utils
      * 
      * @return string
      */
-    public static function realIp()
+    public static function realIp(): string
     {
         return Utils::param('HTTP_CLIENT_IP', 'SERVER') ?? Utils::param('HTTP_X_FORWARDED_FOR', 'SERVER') ?? Utils::param('REMOTE_ADDR', 'SERVER');
     }
@@ -179,7 +179,7 @@ class Utils
      * @param boolean $lowercase
      * @return mixed
      */
-    public static function requestHeader($key, $lowercase = true)
+    public static function requestHeader(string $key, bool $lowercase = true)
     {
         $headers = apache_request_headers();
 
@@ -190,7 +190,7 @@ class Utils
             $key = strtolower($key);
         }
 
-        return isset($headers[$key]) ? $headers[$key] : false;
+        return $headers[$key] ?? false;
     }
     
     /**
@@ -199,15 +199,14 @@ class Utils
      * @param string $val
      * @return string
      */
-    public static function makeSefString($val)
+    public static function makeSefString(string $val): string
     {
         $val = self::removeDiacritic($val, true);
         $val = str_replace(array(' '), array('-'), $val);
         $val = preg_replace("/-+/", '-', $val);
         $val = preg_replace("/[^\w\-]/u", '', $val);
         $val = trim($val, '-');
-        $val = iconv("UTF-8", "UTF-8//IGNORE", $val);
-        return $val;
+        return iconv("UTF-8", "UTF-8//IGNORE", $val);
     }
     
     /**
@@ -218,31 +217,103 @@ class Utils
      * @param mixed $default
      * @return mixed
      */
-    public static function param($name, $type = 'GET', $default = null)
+    public static function param(string $name, string $type = 'GET', $default = null)
     {
         return $GLOBALS['_' . strtoupper($type)][$name] ?? $default;
     }
-    
+
     /**
-     * Autoconfig
-     * Every value with integer key is call as method
-     * All others are checked as property and setted up
+     * Simple cURL GET or POST request
      *
-     * @param object $object Instance of class
-     * @param string $configKey Key used to load configuration from config files
+     * @param string $url
+     * @param array $data
+     * @return mixed Returns false if request was not successful
      */
-    public static function applyConfig($object, string $configKey)
+    public static function cURL(string $url, array $data = [])
     {
-        $c = \core\Config::gi()->get($configKey);
-        if (!empty($c) && is_array($c)) {
-            foreach ($c as $key => $value) {
-                if (is_int($key) && method_exists($object, $value)) {
-                    call_user_func([$object, $value]);
-                } elseif (property_exists($object, $key)) {
-                    $object->{$key} = $value;
-                }
-            }
+        $ch = curl_init();
+
+        $opts = [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_SSL_VERIFYPEER => false
+        ];
+
+        if (!empty($data)) {
+            $opts[CURLOPT_POST] = true;
+            $opts[CURLOPT_POSTFIELDS] = $data;
         }
+
+        curl_setopt_array($ch, $opts);
+
+        $response = curl_exec($ch);
+        if (!(curl_getinfo($ch, CURLINFO_RESPONSE_CODE) == 200 && curl_errno($ch) == 0))
+            $response = false;
+        curl_close($ch);
+
+        return $response;
+    }
+
+    /**
+     * Vrati referer
+     *
+     * @param ?\controllers\IController $controller
+     * @param string $method
+     * @param array $vars
+     */
+    public static function referer(?\controllers\IController &$controller = null, string &$method = '', array &$vars = [])
+    {
+        $ref = apache_request_headers()['Referer'] ?? '';
+        if (empty($ref))
+            return;
+        
+        $ref = str_ireplace(\core\Config::gi()->get('project_host'), '', $ref);
+        $ref = parse_url($ref, PHP_URL_PATH);
+        if (empty($ref))
+            return;
+        
+        $cmv = \core\Router::gi()->findRoute($ref);
+        if (empty($cmv))
+            return;
+
+        $dragon = new \core\Dragon();
+        $reflection = new \ReflectionClass($dragon);
+        $buildControllerName = $reflection->getMethod('buildControllerName');
+        $buildControllerName->setAccessible(true);
+        try {
+            $controllerName = $buildControllerName->invoke($dragon, $cmv['controller']);
+        } catch (\ReflectionException $e) {
+            return;
+        }
+
+        $method = $cmv['method'];
+        $vars = $cmv['vars'];
+        $controller = new $controllerName();
+    }
+
+    /**
+     * Append GET parameters to url
+     * @param string $url
+     * @param array $params
+     * @return string
+     */
+    public static function appendGetParams(string $url, array $params): string
+    {
+        $url = rtrim($url, ' ?&');
+        return $url . (strpos($url, '?') > 0 ? '&' : '?') . http_build_query($params);
+    }
+
+    /**
+     * Change string into snake_case from camelCase or PascalCase
+     * @param string $str
+     * @return string
+     */
+    public static function snake_case(string $str): string
+    {
+        return trim(preg_replace_callback("/[A-Z]/", function ($item) {
+            return '_' . strtolower($item[0]);
+        }, $str), '_');
     }
 
 }

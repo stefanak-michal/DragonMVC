@@ -64,7 +64,7 @@ final class Config
      * 
      * @return Config
      */
-    public static function gi()
+    public static function gi(): Config
     {
         if (self::$instance == null)
             self::$instance = new Config();
@@ -110,7 +110,7 @@ final class Config
      * @param boolean $assoc
      * @return array
      */
-    public function getJson(string $file, $assoc = true)
+    public function getJson(string $file, bool $assoc = true): array
     {
         if (array_key_exists($file, $this->jsonFiles))
             return $this->jsonFiles[$file];
@@ -137,15 +137,14 @@ final class Config
      * @param string $variable
      * @param string $objVar
      */
-    private function loadFiles(string $path, $variable = 'aConfig', $objVar = 'configVars')
+    private function loadFiles(string $path, string $variable = 'aConfig', string $objVar = 'configVars')
     {
         $files = [
+            dirname(__DIR__) . DS . 'config' . DS . $path,
+            dirname(__DIR__) . DS . 'config' . DS . (IS_WORKSPACE ? 'development' : 'production') . DS . $path,
             BASE_PATH . DS . 'config' . DS . $path,
             BASE_PATH . DS . 'config' . DS . (IS_WORKSPACE ? 'development' : 'production') . DS . $path
         ];
-
-        if (IS_WORKSPACE)
-            $files[] = BASE_PATH . DS . 'config' . DS . '.' . $path;
 
         foreach ( $files AS $file ) {
             if (!file_exists($file))
@@ -223,6 +222,28 @@ final class Config
         }
 
         return $output;
+    }
+
+    /**
+     * Apply config settings by key on object
+     * @param string $configKey
+     * @param $object
+     */
+    public static function apply(string $configKey, $object)
+    {
+        $c = \core\Config::gi()->get($configKey);
+        if (!empty($c) && is_array($c)) {
+            foreach ($c as $key => $value) {
+                if (is_int($key) && method_exists($object, $value)) {
+                    call_user_func([$object, $value]);
+                } elseif (property_exists($object, $key)) {
+                    if (is_object($object))
+                        $object->{$key} = $value;
+                    else
+                        $object::$$key = $value;
+                }
+            }
+        }
     }
 
 }

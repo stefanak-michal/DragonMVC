@@ -13,7 +13,7 @@ class Validation
      * @param string $email
      * @return boolean
      */
-    public static function isEmail($email)
+    public static function isEmail(string $email): bool
     {
         return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
     }
@@ -24,27 +24,9 @@ class Validation
      * @param string $url
      * @return boolean
      */
-    public static function isUrl($url)
+    public static function isUrl(string $url): bool
     {
         return filter_var($url, FILTER_VALIDATE_URL) !== false;
-    }
-    
-    /**
-     * Check path
-     * 
-     * @param string $string
-     * @return boolean
-     */
-    public static function isPath($string)
-    {
-        $output = false;
-        
-        $begin = substr($string, 0, 3);
-        if ( strpos($begin, DS) !== false ) {
-            $output = true;
-        }
-        
-        return $output;
     }
 
     /**
@@ -56,7 +38,31 @@ class Validation
         foreach ($data as &$value) {
             if ($value === '')
                 $value = null;
+            elseif ($value === 'true' || $value === 'false')
+                $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
         }
+    }
+
+    /**
+     * Check if all values are not empty
+     * @param array $data
+     * @param array $keys Whitelist, left empty if you want to check all values
+     * @return bool
+     */
+    public static function filled(array &$data, array $keys = []): bool
+    {
+        if (!empty($keys)) {
+            $data = array_intersect_key($data, array_flip($keys));
+            if (count($data) != count($keys))
+                return false;
+        }
+
+        foreach ($data as $value) {
+            if (empty($value))
+                return false;
+        }
+
+        return true;
     }
     
 }

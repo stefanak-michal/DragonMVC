@@ -17,7 +17,7 @@ final class Dragon
      * Called controller
      * 
      * @static
-     * @var \controllers\App
+     * @var \controllers\IController
      */
     public static $controller;
 
@@ -34,11 +34,6 @@ final class Dragon
      * @var array
      */
     public static $vars;
-    
-    public function __construct()
-    {
-        header('X-Powered-By: DragonMVC PHP lightweight framework');
-    }
 
     /**
      * Run a project
@@ -54,11 +49,9 @@ final class Dragon
         if (is_string($cmv['controller']))
             $cmv['controller'] = preg_split("/[\\/]/", $cmv['controller'], -1, PREG_SPLIT_NO_EMPTY);
 
-        $_uri = new URI();
-        $_uri->_fetch_uri_string();
-        $path = (string) $_uri;
-
-        $this->resolveRoute($cmv, $path);
+        $uri = new URI();
+        $uri->fetchUriString();
+        $this->resolveRoute($cmv, (string) $uri);
         
         //must be defined before view->render, sorry for hardcode
         if ( DRAGON_DEBUG ) {
@@ -67,6 +60,24 @@ final class Dragon
 
         //finally we have something to show
         $this->loadController($cmv);
+
+        if ( method_exists(self::$controller, 'beforeMethod') ) {
+            Debug::timer('beforeMethod');
+            self::$controller->beforeMethod();
+            Debug::timer('beforeMethod');
+        }
+
+        if ( method_exists(self::$controller, self::$method) ) {
+            Debug::timer('Controller logic');
+            call_user_func_array(array(self::$controller, self::$method), self::$vars);
+            Debug::timer('Controller logic');
+        }
+
+        if ( method_exists(self::$controller, 'afterMethod') ) {
+            Debug::timer('afterMethod');
+            self::$controller->afterMethod();
+            Debug::timer('afterMethod');
+        }
         
         \core\debug\Generator::generate();
     }
@@ -93,11 +104,11 @@ final class Dragon
     /**
      * @param array $cmv [controller, method, vars]
      */
-    private function loadController($cmv)
+    private function loadController(array $cmv)
     {
         //if we have nothing to do, then quit
         if ( empty($cmv) OR empty($cmv['controller']) OR empty($cmv['method']) ) {
-            trigger_error('Not call controller->method', E_USER_ERROR);
+            trigger_error('Unresolved controller->method action', E_USER_ERROR);
             exit;
         }
 
@@ -105,30 +116,36 @@ final class Dragon
             $cmv['controller'] = array($cmv['controller']);
         }
 
-        //set view by CM
-        View::gi()->view(implode("\\", $cmv['controller']) . DS . $cmv['method']);
-        
+        $this->trySetView($cmv);
+
         $class = $this->buildControllerName($cmv['controller']);
         self::$method = $cmv['method'];
         self::$vars = $cmv['vars'];
         self::$controller = new $class();
+    }
 
-        if ( method_exists(self::$controller, 'beforeMethod') ) {
-            Debug::timer('beforeMethod');
-            self::$controller->beforeMethod();
-            Debug::timer('beforeMethod');
-        }
+    /**
+     * Try to set view file by possible paths
+     * @param array $cmv
+     */
+    private function trySetView(array $cmv)
+    {
+        $possibleViewFile = [
+            implode('/', $cmv['controller']) . '/' . $cmv['method'],
+            strtolower(implode('/', $cmv['controller'])) . '/' . $cmv['method'],
+            strtolower(implode('/', $cmv['controller']) . '/' . $cmv['method']),
+        ];
 
-        if ( method_exists(self::$controller, self::$method) ) {
-            Debug::timer('Controller logic');
-            call_user_func_array(array(self::$controller, self::$method), self::$vars);
-            Debug::timer('Controller logic');
-        }
+        $snake_case = [];
+        foreach ($cmv['controller'] as $part)
+            $snake_case[] = \helpers\Utils::snake_case($part);
+        $possibleViewFile[] = implode('/', $snake_case) . '/' . $cmv['method'];
+        $possibleViewFile[] = implode('/', $snake_case) . '/' . strtolower($cmv['method']);
+        $possibleViewFile[] = implode('/', $snake_case) . '/' . \helpers\Utils::snake_case($cmv['method']);
 
-        if ( method_exists(self::$controller, 'afterMethod') ) {
-            Debug::timer('afterMethod');
-            self::$controller->afterMethod();
-            Debug::timer('afterMethod');
+        foreach ($possibleViewFile as $viewFile) {
+            if (View::gi()->view($viewFile))
+                break;
         }
     }
 
