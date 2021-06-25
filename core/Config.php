@@ -53,25 +53,25 @@ final class Config
      * @var string
      */
     public static $jsonAffix = '.json';
-    
+
     /**
      * @var Config
      */
     private static $instance;
-    
+
     /**
      * Singleton
-     * 
+     *
      * @return Config
      */
     public static function gi(): Config
     {
         if (self::$instance == null)
             self::$instance = new Config();
-        
+
         return self::$instance;
     }
-    
+
     /**
      * Construct
      */
@@ -85,7 +85,7 @@ final class Config
 
     /**
      * Load lookuptable file
-     * 
+     *
      * @param string $name
      */
     public function loadLookuptable(string $name)
@@ -95,7 +95,7 @@ final class Config
 
     /**
      * Load config file
-     * 
+     *
      * @param string $name
      */
     public function loadConfig(string $name)
@@ -105,7 +105,7 @@ final class Config
 
     /**
      * Load json config
-     * 
+     *
      * @param string $file
      * @param boolean $assoc
      * @return array
@@ -116,11 +116,11 @@ final class Config
             return $this->jsonFiles[$file];
 
         $filename = BASE_PATH . DS . 'config' . DS . $file . self::$jsonAffix;
-        if ( file_exists($filename) ) {
+        if (file_exists($filename)) {
             $content = file_get_contents($filename);
             $this->jsonFiles[$file] = json_decode($content, $assoc);
 
-            if ( json_last_error() != JSON_ERROR_NONE ) {
+            if (json_last_error() != JSON_ERROR_NONE) {
                 $this->jsonFiles[$file] = [];
             } else {
                 Debug::files($filename);
@@ -132,7 +132,7 @@ final class Config
 
     /**
      * Load config files
-     * 
+     *
      * @param string $path
      * @param string $variable
      * @param string $objVar
@@ -140,23 +140,21 @@ final class Config
     private function loadFiles(string $path, string $variable = 'aConfig', string $objVar = 'configVars')
     {
         $files = [
-            dirname(__DIR__) . DS . 'config' . DS . $path,
-            dirname(__DIR__) . DS . 'config' . DS . (IS_WORKSPACE ? 'development' : 'production') . DS . $path,
+            DRAGON_PATH . DS . 'config' . DS . $path,
+            DRAGON_PATH . DS . 'config' . DS . (IS_WORKSPACE ? 'development' : 'production') . DS . $path,
             BASE_PATH . DS . 'config' . DS . $path,
             BASE_PATH . DS . 'config' . DS . (IS_WORKSPACE ? 'development' : 'production') . DS . $path
         ];
 
-        foreach ( $files AS $file ) {
+        foreach ($files as $file) {
             if (!file_exists($file))
                 continue;
 
             Debug::files($file);
             include $file;
 
-            if ( !empty($$variable) ) {
-                foreach ( $$variable AS $key => $value ) {
-                    $this->{$objVar}[$key] = $value;
-                }
+            if (!empty($$variable)) {
+                $this->{$objVar} = array_merge_recursive($this->{$objVar}, $$variable);
             }
 
             unset($$variable);
@@ -165,14 +163,14 @@ final class Config
 
     /**
      * Set config parameter
-     * 
+     *
      * @param string $key
      * @param mixed $value
      */
     public function set(string $key, $value)
     {
-        if ( !empty($key) ) {
-            if ( !empty($value) ) {
+        if (!empty($key)) {
+            if (!empty($value)) {
                 $this->configVars[$key] = $value;
             } else {
                 unset($this->configVars[$key]);
@@ -182,7 +180,7 @@ final class Config
 
     /**
      * Read config parameter
-     * 
+     *
      * @param string $key
      * @param mixed $default
      * @return mixed
@@ -191,7 +189,7 @@ final class Config
     {
         $output = $default;
 
-        if ( !empty($key) AND isset($this->configVars[$key]) ) {
+        if (!empty($key) and isset($this->configVars[$key])) {
             $output = $this->configVars[$key];
         }
 
@@ -200,7 +198,7 @@ final class Config
 
     /**
      * Read lookup table value
-     * 
+     *
      * @param string $dotSeparatedKeys
      * @return mixed
      */
@@ -211,7 +209,7 @@ final class Config
 
         $output = array();
 
-        foreach (explode('.', $dotSeparatedKeys) AS $key) {
+        foreach (explode('.', $dotSeparatedKeys) as $key) {
             if (empty($output) && array_key_exists($key, $this->lookUpTables)) {
                 $output = $this->lookUpTables[$key];
             } elseif (is_array($output) && array_key_exists($key, $output)) {

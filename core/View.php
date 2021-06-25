@@ -186,15 +186,15 @@ final class View
         $viewDirectory = trim(str_replace(array('/', "\\"), DS, Config::gi()->get('viewsDirectory', 'views')), DS);
 
         if (substr($str, 0, 1) == DS)
-            $output =  BASE_PATH . $str;
+            $output = BASE_PATH . $str;
         else
             $output = BASE_PATH . DS . $viewDirectory . DS . $str;
 
         if (!file_exists($output)) {
             if (substr($str, 0, 1) == DS)
-                $output =  dirname(__DIR__) . $str;
+                $output = DRAGON_PATH . $str;
             else
-                $output = dirname(__DIR__) . DS . $viewDirectory . DS . $str;
+                $output = DRAGON_PATH . DS . $viewDirectory . DS . $str;
 
             if (!file_exists($output)) {
                 \core\Debug::var_dump('File "' . $str . '" not found. It is intentional?');

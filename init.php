@@ -16,36 +16,23 @@ if (!defined('BASE_PATH')) {
     }
 }
 
+if (!defined('DRAGON_PATH')) {
+    define('DRAGON_PATH', __DIR__);
+}
+
 require_once 'core' . DS . 'autoload.php';
 
 $autorun = $autorun ?? true;
 $workspace = false;
 
-define('IS_CLI', php_sapi_name() == 'cli');
-if ( IS_CLI ) {
-    //console
-    if (empty($argv[1])) {
-        $argv[1] = 'production';
-        echo 'Environment not defined, running as production' . PHP_EOL;
-    }
-
-    $argv[1] = strtolower($argv[1]);
-    if (!in_array($argv[1], array('production', 'development', 'prod', 'dev'))) {
-        exit('Wrong environment definition');
-    }
-    
-    $workspace = in_array($argv[1], ['development', 'dev']);
-    set_time_limit(0);
-} else {
-    //website
-    if ( isset($_SERVER['HTTP_HOST']) ) {
-        $workspace = strpos($_SERVER['HTTP_HOST'], 'localhost') === 0
-            || $_SERVER['HTTP_HOST'] == '127.0.0.1'
-            || in_array(getenv('DRAGON_ENV'), ['dev', 'development', 'workspace'], true);
-    }
-}
-
+if (file_exists(BASE_PATH . DS . 'config' . DS . 'development' . DS) || in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1']))
+    $workspace = true;
 define('IS_WORKSPACE', $workspace);
+
+define('IS_CLI', php_sapi_name() == 'cli');
+if (IS_CLI) {
+    set_time_limit(0);
+}
 
 if (\core\Config::gi()->get('debug') !== null) {
     $debug = \core\Config::gi()->get('debug') == 1;

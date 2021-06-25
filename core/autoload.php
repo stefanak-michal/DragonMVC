@@ -21,7 +21,7 @@ spl_autoload_register(function ($name) {
         return;
     }
 
-    $path = dirname(__DIR__) . DS . implode(DS, $parts) . '.php';
+    $path = DRAGON_PATH . DS . implode(DS, $parts) . '.php';
     if (file_exists($path)) {
         include_once $path;
         \core\Debug::files($path);
@@ -29,7 +29,7 @@ spl_autoload_register(function ($name) {
     }
 
     //try to load namespaced path from vendor
-    foreach ([BASE_PATH . DS . 'vendor', dirname(__DIR__) . DS . 'vendor'] as $dir) {
+    foreach ([BASE_PATH . DS . 'vendor', DRAGON_PATH . DS . 'vendor'] as $dir) {
         $path = $dir . DS . implode(DS, $parts) . '.php';
         if (file_exists($path)) {
             include_once $path;
@@ -50,7 +50,7 @@ spl_autoload_register(function ($name) {
         $dirs[] = substr_replace($backtrace[1]['file'], '', strpos($backtrace[1]['file'], 'vendor') + strlen('vendor'));
 
     $dirs[] = BASE_PATH . DS . 'vendor';
-    $dirs[] = dirname(__DIR__) . DS . 'vendor';
+    $dirs[] = DRAGON_PATH . DS . 'vendor';
 
     foreach ($dirs as $path) {
         if (file_exists($path)) {
