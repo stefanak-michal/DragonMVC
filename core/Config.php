@@ -154,7 +154,7 @@ final class Config
             include $file;
 
             if (!empty($$variable)) {
-                $this->{$objVar} = array_merge_recursive($this->{$objVar}, $$variable);
+                $this->{$objVar} = array_replace_recursive($this->{$objVar}, $$variable);
             }
 
             unset($$variable);
