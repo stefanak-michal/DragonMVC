@@ -37,6 +37,8 @@ abstract class AModel
      */
     private static $db = [];
 
+    private static $cachedColumns = [];
+
     /**
      * @var string
      */
@@ -76,7 +78,12 @@ abstract class AModel
             $this->table = \helpers\Utils::snake_case(implode($parts));
         }
 
-        $this->columns = $this->db()->columnList($this->table);
+        if (empty($this->columns)) {
+            if (empty(self::$cachedColumns[get_class($this)])) {
+                self::$cachedColumns[get_class($this)] = $this->db()->columnList($this->table);
+            }
+            $this->columns = self::$cachedColumns[get_class($this)];
+        }
     }
 
     /**
