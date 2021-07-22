@@ -88,6 +88,9 @@ abstract class AModel
                 self::$cachedColumns[get_class($this)] = $this->db()->columnList($this->table);
             }
             $this->columns = self::$cachedColumns[get_class($this)];
+
+            if (empty($this->primary_key))
+                $this->primary_key = reset($this->columns);
         }
     }
 
