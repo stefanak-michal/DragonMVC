@@ -1,2 +1,4 @@
 /tmp/
+.htaccess
 .idea
+/config/development/

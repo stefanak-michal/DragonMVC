@@ -2,12 +2,18 @@
 $aConfig = array(
     //title of project
     'project_title' => 'Dragon MVC',
-    'project_email' => 'any@email.com',
+    'project_email' => '',
     
     //default controller and method
-    'defaultController' => 'homepage',
-    'defaultMethod' => 'index',
+    'defaultController' => '',
+    'defaultMethod' => '',
 
-    //something unique for generating
-    'salt' => '123',
+    'mysql' => [
+        'user' => '',
+        'password' => '',
+        'dbName' => '',
+        'host' => 'localhost',
+        'encoding' => 'utf8'
+    ],
+
 );

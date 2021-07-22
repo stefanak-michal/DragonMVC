@@ -20,22 +20,20 @@ class URI
 
 	/**
 	 * Get the URI String
-	 *
-	 * @return	string
 	 */
-	public function _fetch_uri_string()
+	public function fetchUriString()
 	{
         // Is the request coming from the command line?
         if (php_sapi_name() == 'cli' or defined('STDIN'))
         {
-            $this->_set_uri_string($this->_parse_cli_args());
+            $this->setUriString($this->parseCliArgs());
             return;
         }
 
         // Let's try the REQUEST_URI first, this will work in most situations
-        if ($uri = $this->_detect_uri())
+        if ($uri = $this->detectUri())
         {
-            $this->_set_uri_string($uri);
+            $this->setUriString($uri);
             return;
         }
 
@@ -44,7 +42,7 @@ class URI
         $path = (isset($_SERVER['PATH_INFO'])) ? $_SERVER['PATH_INFO'] : getenv('PATH_INFO');
         if (trim($path, '/') != '' && $path != "/".SELF)
         {
-            $this->_set_uri_string($path);
+            $this->setUriString($path);
             return;
         }
 
@@ -52,14 +50,14 @@ class URI
         $path =  (isset($_SERVER['QUERY_STRING'])) ? $_SERVER['QUERY_STRING'] : getenv('QUERY_STRING');
         if (trim($path, '/') != '')
         {
-            $this->_set_uri_string($path);
+            $this->setUriString($path);
             return;
         }
 
         // As a last ditch effort lets try using the $_GET array
         if (is_array($_GET) && count($_GET) == 1 && trim(key($_GET), '/') != '')
         {
-            $this->_set_uri_string(key($_GET));
+            $this->setUriString(key($_GET));
             return;
         }
 
@@ -72,7 +70,7 @@ class URI
 	 *
 	 * @param string $str
 	 */
-	public function _set_uri_string(string $str)
+	public function setUriString(string $str)
 	{
 		// If the URI contains only a slash we'll kill it
 		$this->uri_string = ($str == '/') ? '' : $str;
@@ -86,7 +84,7 @@ class URI
 	 *
 	 * @return string
 	 */
-	private function _detect_uri()
+	private function detectUri(): string
 	{
 		if ( ! isset($_SERVER['REQUEST_URI']) OR ! isset($_SERVER['SCRIPT_NAME']))
 		{
@@ -139,7 +137,7 @@ class URI
 	 *
 	 * @return string
 	 */
-	private function _parse_cli_args()
+	private function parseCliArgs(): string
 	{
 		$args = array_slice($_SERVER['argv'], 1);
 
@@ -151,7 +149,7 @@ class URI
 	 *
 	 * @return string
 	 */
-    public function __toString()
+    public function __toString(): string
     {
         return $this->uri_string;
     }

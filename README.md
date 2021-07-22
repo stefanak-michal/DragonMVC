@@ -9,7 +9,7 @@
 * Simple file names conventions
 * Autoloader with vendor support
 * CLI support and shell script
-* PHP >= 7
+* PHP >= 7.1
 
 Database class used MeekroDB http://www.meekro.com/
 

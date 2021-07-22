@@ -20,6 +20,51 @@ final class Generator
             return;
         }
         
+        self::updateHistory();
+
+        $time = microtime(true);
+        
+        //ob_start();
+        $html =
+            self::echoHtml('<!DOCTYPE html>', '<html>', '<head>')
+            . self::echoHtml('<meta http-equiv="Content-Type" content="text/html; charset=utf-8">')
+            . self::htmlStyles()
+            . self::htmlScripts()
+            . self::echoHtml('</head>', '<body>');
+
+        if ( !empty($_SERVER['REQUEST_URI']) ) {
+            $html .= self::echoHtml('URI: <b>' . $_SERVER['REQUEST_URI'] . '</b><br>');
+        }
+        if (Dragon::$controller instanceof \controllers\IController)
+            $html .= self::echoHtml('CM: <b>' . get_class(Dragon::$controller) . '->' . Dragon::$method . '</b><br>');
+        $html .= self::echoHtml('Time: <b>' . date('Y-m-d H:i:s', $time) . substr($time, strpos($time, '.')) . '</b><br>');
+        
+        $last = \core\Router::gi()->getHost() . 'tmp/debug/last.html';
+        $html .= self::echoHtml('Last: <a href="' . $last . '">' . $last . '</a><br>');
+        
+        //tabs switches
+        $tabs = [];
+        $class = 'active';
+        foreach ( array_keys(Debug::$tables) AS $key ) {
+            $tabs[] = '<li class="' . $class . '" data-tab="' . $key . '">' . $key . ' (' . count(Debug::$tables[$key]) . ')</li>';
+            $class = '';
+        }
+        $html .= self::echoHtml('<br><ul>' . implode('', $tabs) . '</ul>');
+        
+        $html .= self::htmlTables();
+        $html .= self::echoHtml('</body>', '</html>');
+        
+        //$html = ob_get_clean();
+
+        $filename = $time . '.html';
+        file_put_contents(BASE_PATH . DS . 'tmp' . DS . 'debug' . DS . $filename, $html);
+        file_put_contents(BASE_PATH . DS . 'tmp' . DS . 'debug' . DS . 'last.html', $html);
+        
+        Debug::$tables = [];
+    }
+
+    private static function updateHistory()
+    {
         $path = BASE_PATH . DS . 'tmp' . DS . 'debug' . DS;
         if ( !file_exists($path) ) {
             mkdir($path, 0777, true);
@@ -29,6 +74,7 @@ final class Generator
         if ( file_exists($path . 'last.html') ) {
             unlink($path . 'last.html');
         }
+
         $files = glob($path . '*.html');
         if ( count($files) >= 10 ) {
             rsort($files);
@@ -37,41 +83,8 @@ final class Generator
                 unset($files[$i]);
             }
         }
-        
-        self::history($files);
-        $time = microtime(true);
-        
-        ob_start();
-        
-        self::echoHtml('<!DOCTYPE html>', '<html>', '<head>');
-        self::htmlStyles();
-        self::htmlScripts();
-        self::echoHtml('</head>', '<body>');
-        if ( !empty($_SERVER['REQUEST_URI']) ) {
-            self::echoHtml('URI: <b>' . $_SERVER['REQUEST_URI'] . '</b><br>');
-        }
-        self::echoHtml('CM: <b>' . get_class(Dragon::$controller) . '::' . Dragon::$method . '</b><br>');
-        self::echoHtml('Time: <b>' . date('Y-m-d H:i:s', $time) . substr($time, strpos($time, '.')) . '</b><br>');
-        
-        //tabs switches
-        $tabs = [];
-        $class = 'active';
-        foreach ( array_keys(Debug::$tables) AS $key ) {
-            $tabs[] = '<li class="' . $class . '" data-tab="' . $key . '">' . $key . ' (' . count(Debug::$tables[$key]) . ')</li>';
-            $class = '';
-        }
-        self::echoHtml('<br><ul>' . implode('', $tabs) . '</ul>');
-        
-        self::htmlTables();
-        self::echoHtml('</body>', '</html>');
-        
-        $html = ob_get_clean();
 
-        $filename = $time . '.html';
-        file_put_contents($path . $filename, $html);
-        file_put_contents($path . 'last.html', $html);
-        
-        Debug::$tables = [];
+        self::history($files);
     }
     
     /**
@@ -79,28 +92,32 @@ final class Generator
      */
     private static function history($files)
     {
+        Debug::$tables[__FUNCTION__] = [];
+
         foreach ( $files AS $file ) {
+            if (strpos($file, 'last.html') > 0)
+                continue;
+
             $data = file_get_contents($file);
             preg_match("/URI: <b>([^<]+)/", $data, $match);
-            preg_match("/(\d+(\.\d+)?)\.html/", $file, $time);
-            $t = explode('.', $time[1]);
-
+            preg_match("/(\d+\.\d+)\.html/", $file, $time);
+            
             Debug::$tables[__FUNCTION__][] = [
                 'URI' => $match[1],
-                'date' => date('Y-m-d H:i:s', $t[0]) . ($t[1] ?? ''),
-                '' => '<a href="' . \core\Router::gi()->getHost() . 'tmp/debug/' . pathinfo($file, PATHINFO_BASENAME) . '">view</a>'
+                'date' => date('Y-m-d H:i:s', $time[1]) . substr($time[1], strpos($time[1], '.')),
+                '' => '<a href="' . \core\Router::gi()->getHost() . 'tmp/debug/' . $time[1] . '.html" target="_blank">view</a>'
             ];
         }
     }
     
-    private static function echoHtml()
+    private static function echoHtml(): string
     {
-        echo implode(PHP_EOL, func_get_args()), PHP_EOL;
+        return implode(PHP_EOL, func_get_args()) . PHP_EOL;
     }
     
-    private static function htmlStyles()
+    private static function htmlStyles(): string
     {
-        echo '<style type="text/css">
+        return '<style type="text/css">
             ul { margin: 0; padding: 0 0 10px; } 
             ul li { display: inline-block; border-bottom: 1px solid silver; padding: 4px 10px; cursor: pointer; } 
             ul li:hover { background-color: #eee; }
@@ -119,12 +136,12 @@ final class Generator
             .collapsable { cursor: pointer; }
             .collapsable + * { display: none; padding-left: 10px; margin-top: 10px; }
             .red { color: red; }
-        </style>', PHP_EOL;
+        </style>' . PHP_EOL;
     }
     
-    private static function htmlScripts()
+    private static function htmlScripts(): string
     {
-        echo '<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+        return '<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
         <script>
             $(document).ready(function() {
                 $("ul li").on("click", function() {
@@ -137,25 +154,29 @@ final class Generator
                     $(this).next().slideToggle();
                 });
             });
-        </script>', PHP_EOL;
+        </script>' . PHP_EOL;
     }
     
-    private static function htmlTables()
+    private static function htmlTables(string $class = 'active'): string
     {
+        $output = '';
+
         //tabs with tables
-        $class = 'active';
         foreach ( Debug::$tables AS $key => $table ) {
-            echo '<table class="' . $class . '" id="' . $key . '" cellspacing="0">';
+            if (empty($table))
+                continue;
+
+            $output .= '<table class="' . $class . '" id="' . $key . '" cellspacing="0">';
             $class = '';
             
             //thead - if first table row keys is not numeric
             if ( !is_numeric(key($table[0])) ) {
-                echo '<thead><tr>';
-                echo '<th>N.</th>';
+                $output .= '<thead><tr>';
+                $output .= '<th>N.</th>';
                 foreach ( array_keys($table[0]) AS $columnKey ) {
-                    echo '<th>' . $columnKey . '</th>';
+                    $output .= '<th>' . $columnKey . '</th>';
                 }
-                echo '</tr></thead>';
+                $output .= '</tr></thead>';
             }
             
             $doFooter = count($table) > 1;
@@ -165,40 +186,129 @@ final class Generator
             
             //tbody rows
             $i = 1;
-            echo '<tbody>';
+            $output .= '<tbody>';
             foreach ( $table AS $row ) {
-                echo '<tr>';
-                echo '<td>' . $i . '</td>';
+                $output .= '<tr>';
+                $output .= '<td>' . $i . '</td>';
                 foreach ( $row AS $cellKey => $cell ) {
-                    echo '<td>' . $cell . '</td>';
+                    $output .= '<td>' . $cell . '</td>';
                     
                     if ( $doFooter ) {
                         $footer[$cellKey][] = $cell;
                     }
                 }
-                echo '</tr>';
+                $output .= '</tr>';
                 $i++;
             }
-            echo '</tbody>';
+            $output .= '</tbody>';
             
             //footer
             if ( $doFooter ) {
-                echo '<tfoot><tr>';
-                echo '<td></td>';
+                $output .= '<tfoot><tr>';
+                $output .= '<td></td>';
                 foreach ( $footer AS $vals ) {
-                    echo '<td>';
+                    $output .= '<td>';
                     $tmp = array_filter($vals, 'is_numeric');
                     if ( count($tmp) == count($vals) ) {
-                        echo array_sum($vals);
+                        $output .= array_sum($vals);
                     }
-                    echo '</td>';
+                    $output .= '</td>';
                 }
-                echo '</tr></tfoot>';
+                $output .= '</tr></tfoot>';
             }
             
-            echo '</table>', PHP_EOL;
+            $output .= '</table>' . PHP_EOL;
         }
+
+        return $output;
     }
     
+    /**
+     * Generate debug attachable to site
+     * @return string
+     */
+    public static function onsite(): string
+    {
+        self::updateHistory();
+
+        $html = '';
+
+        $html .= '<style type="text/css">
+        #dragon-debug { position: absolute; top: 0; left: 50%; z-index: 1000; background-color: white; height: auto; max-height: 50%; max-width: 50%; border: 1px solid black; overflow: auto; resize: both; min-width: 300px; }
+        
+        #dragon-debug > span { padding: 0 5px; cursor: pointer; }
+        #dragon-debug > span:hover { background-color: silver; }
+        #dragon-debug > b { padding-right: 10px; }
+        #dragon-debug-handle { background-color: silver; cursor: move; margin-right: 5px; }
+
+        #dragon-debug > table { display: none; }
+        #dragon-debug > table.active { display: block; }
+        #dragon-debug > table tr > * { border-bottom: 1px solid silver; border-left: 1px solid silver; } 
+        #dragon-debug > table tr *:first-child { border-left: 0; } 
+        #dragon-debug > table tr td {border-bottom: 1px solid silver; padding: 4px 6px; }
+        #dragon-debug > table tbody tr:nth-child(even) { background: #eee; }
+        #dragon-debug > table th { border-bottom: 2px solid black; white-space: nowrap; }
+        #dragon-debug > table tfoot tr td { border: 0; margin-top: 4px; color: gray; }
+
+        #dragon-debug > table td div.collapsable { cursor: pointer; }
+        #dragon-debug > table td div.collapsable + div { display: none; }
+        #dragon-debug > table td div.collapsable + div.active { display: block; }
+        </style>';
+        
+        $html .= '<div id="dragon-debug">';
+        $html .= '<span id="dragon-debug-handle">=</span><span id="dragon-debug-close">X</span>';
+        $html .= '<b>' . str_replace("controllers\\", '', get_class(Dragon::$controller)) . '->' . Dragon::$method . '</b>';
+
+        foreach (Debug::$tables as $key => $values) {
+            $html .= '<span onclick=" dragonDebug.showTable(\'' . $key . '\'); ">' . $key . ' (' . count($values) . ')</span>';
+        }
+
+        $html .= self::htmlTables('');
+
+        $html .= '</div>';
+
+        $html .= '<script type="application/javascript">
+        dragonDebug = {
+            showTable: function (key) {
+                let current = document.getElementById(key);
+                for (e of document.getElementById("dragon-debug").getElementsByClassName("active")) {
+                    if (e != current)
+                        e.className = "";
+                }
+                document.getElementById(key).className = current.className == "active" ? "" : "active";
+            },
+            moving: false,
+            offset: [0, 0]
+        };
+
+        for (e of document.getElementById("dragon-debug").getElementsByClassName("collapsable")) {
+            e.onclick = function () {
+                this.nextSibling.className = this.nextSibling.className == "active" ? "" : "active";
+            }
+        }
+        
+        document.getElementById("dragon-debug-close").onclick = function () {
+            document.getElementById("dragon-debug").remove();
+        }
+
+        document.getElementById("dragon-debug-handle").addEventListener("mousedown", function (e) {
+            dragonDebug.moving = true;
+            dragonDebug.offset = [this.parentElement.offsetLeft - e.clientX, this.parentElement.offsetTop - e.clientY];
+        }, true);
+        document.addEventListener("mousemove", function (e) {
+            if (dragonDebug.moving) {
+                e.preventDefault();
+                document.getElementById("dragon-debug").style.left = e.clientX + dragonDebug.offset[0] + "px";
+                document.getElementById("dragon-debug").style.top = e.clientY + dragonDebug.offset[1] + "px";
+            }
+        }, true);
+        document.addEventListener("mouseup", function (e) {
+            dragonDebug.moving = false;
+        }, true);
+        
+        </script>';
+
+        return $html;
+    }
 
 }

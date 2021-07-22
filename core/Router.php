@@ -39,7 +39,7 @@ final class Router
      *
      * @return Router
      */
-    public static function gi()
+    public static function gi(): Router
     {
         if (self::$instance == null)
             self::$instance = new Router();
@@ -59,6 +59,10 @@ final class Router
             $this->project_host = ( $_SERVER['SERVER_PORT'] == 443 ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'];
         }
 
+        if ( empty($this->project_host) && IS_CLI) {
+            $this->project_host = 'http://' . php_uname('n');
+        }
+
         if ( empty($this->project_host) ) {
             trigger_error('Not specified project host', E_USER_WARNING);
         }
@@ -71,8 +75,7 @@ final class Router
      */
     private function loadRoutes()
     {
-        $routes = Config::gi()->get('routes');
-        foreach ($routes AS $key => $value) {
+        foreach (Config::gi()->get('routes', []) AS $key => $value) {
             if (is_array($value)) {
                 foreach ($value AS $mask => $route) {
                     if (is_numeric($mask))
@@ -94,7 +97,7 @@ final class Router
      *
      * @return string
      */
-    public function getHost()
+    public function getHost(): string
     {
         return $this->project_host;
     }
