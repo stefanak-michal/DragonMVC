@@ -37,7 +37,15 @@ abstract class AModel
      */
     private static $db = [];
 
+    /**
+     * @var array [className => [column]]
+     */
     private static $cachedColumns = [];
+
+    /**
+     * @var array [configKey => [table]]
+     */
+    private static $tables = [];
 
     /**
      * @var string
@@ -69,14 +77,11 @@ abstract class AModel
             }
         }
 
-        if (empty($this->table)) {
-            $ns = trim(get_class($this), "\\");
-            $parts = explode("\\", $ns);
-            array_shift($parts);
-            $parts = array_map('ucfirst', $parts);
-
-            $this->table = \helpers\Utils::snake_case(implode($parts));
+        if (!array_key_exists($configKey, self::$tables)) {
+            self::$tables[$configKey] = $this->db()->tableList();
         }
+
+        $this->setTableName();
 
         if (empty($this->columns)) {
             if (empty(self::$cachedColumns[get_class($this)])) {
@@ -84,6 +89,34 @@ abstract class AModel
             }
             $this->columns = self::$cachedColumns[get_class($this)];
         }
+    }
+
+    /**
+     * Build table name by class name or full namespace name
+     */
+    private function setTableName()
+    {
+        if (!empty($this->table))
+            return;
+
+        $ns = trim(get_class($this), "\\");
+        $parts = explode("\\", $ns);
+        array_shift($parts);
+        $parts = array_map('ucfirst', $parts);
+
+        $table = \helpers\Utils::snake_case(implode($parts));
+        if (in_array($table, self::$tables[$this->configKey])) {
+            $this->table = $table;
+            return;
+        }
+
+        $table = \helpers\Utils::snake_case(array_pop($parts));
+        if (in_array($table, self::$tables[$this->configKey])) {
+            $this->table = $table;
+            return;
+        }
+
+        trigger_error('Missing table name in model class ' . get_class($this), E_USER_WARNING);
     }
 
     /**
