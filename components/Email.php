@@ -2,8 +2,7 @@
 
 namespace components;
 
-use core\View,
-    helpers\Validation;
+use helpers\Validation;
 use PHPMailer\PHPMailer;
 
 /**
@@ -143,20 +142,13 @@ class Email
     /**
      * Send any email
      *
-     * @param string $template It will be rendered with \core\View
-     * @param array $variables Passed to rendered template
+     * @param \core\View $view
      * @return boolean
      */
-    public function send(string $template, array $variables = []): bool
+    public function send(\core\View $view): bool
     {
         $output = false;
 
-        if (!array_key_exists('title', $variables))
-            $variables['title'] = $this->title;
-        if (!array_key_exists('project_host', $variables))
-            $variables['project_host'] = \core\Router::gi()->getHost();
-
-        $view = new View($template, $variables);
         $this->content = $view->render();
         if (!empty($this->content)) {
             //auto add pictures

@@ -46,7 +46,7 @@ class Assets
     {
         foreach ($names as $name) {
             $type = pathinfo($name, PATHINFO_EXTENSION);
-            if (!in_array($type, ['css', 'js'])) {
+            if (!in_array($type, [self::TYPE_CSS, self::TYPE_JS])) {
                 \core\Debug::var_dump('Unsupported asset type "' . $type . '" for asset file "' . $name . '"');
                 continue;
             }
