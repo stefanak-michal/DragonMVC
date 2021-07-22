@@ -8,7 +8,7 @@
 * Namespaces
 * Simple file names conventions
 * Autoloader with vendor support
-* CLI support and shell script
+* CLI support
 * PHP >= 7.1
 
 Database class used MeekroDB http://www.meekro.com/
