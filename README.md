@@ -10,9 +10,8 @@
 * Autoloader with vendor support
 * CLI support
 * PHP >= 7.1
-
-Database class used MeekroDB http://www.meekro.com/
-
+  
+Check wiki for more informations.
   
   
 _Logo designed by Freepik.com_
