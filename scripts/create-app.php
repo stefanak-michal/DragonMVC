@@ -30,20 +30,20 @@ require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'init.php';
 
 $dirs = [
     'assets',
-    'assets/css',
-    'assets/js',
-    'assets/img',
+    'assets' . DS . 'css',
+    'assets' . DS . 'js',
+    'assets' . DS . 'img',
     'components',
     'config',
-    'config/production',
-    'config/development',
+    'config' . DS . 'production',
+    'config' . DS . 'development',
     'controllers',
     'helpers',
     'models',
     'scripts',
     'vendor',
     'views',
-    'views/homepage',
+    'views' . DS . 'homepage',
 ];
 
 foreach ($dirs as $dir) {
