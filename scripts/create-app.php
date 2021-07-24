@@ -1,5 +1,9 @@
 <?php
 
+/*
+ * This scripts allows you to generate base application directory structure with basic files
+ */
+
 if ($argc != 2) {
     echo 'You have to enter target path for your app as argument';
     exit;
