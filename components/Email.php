@@ -6,14 +6,17 @@ use helpers\Validation;
 use PHPMailer\PHPMailer;
 
 /**
- * Notification
- * 
+ * PHPMailer facade
  * Sending different service/notification emails
  * 
  * <pre>
  * $email = new Email();
- * $email->setTo('john.doe@email.com', 'John Doe')->setTitle('Do not read this')->send('/templates/email/sample', []);
+ * $email->setTo('john.doe@email.com', 'John Doe')->setTitle('Do not read this')->send(new \core\View('/templates/email/sample', []));
  * </pre>
+ *
+ * @author Michal Stefanak
+ * @link https://github.com/stefanak-michal/DragonMVC
+ * @package components
  */
 class Email
 {

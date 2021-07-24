@@ -4,6 +4,10 @@ namespace helpers;
 
 /**
  * Different array functions
+ *
+ * @author Michal Stefanak
+ * @link https://github.com/stefanak-michal/DragonMVC
+ * @package helpers
  */
 class ArrayUtils
 {

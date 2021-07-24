@@ -4,6 +4,10 @@ namespace helpers;
 
 /**
  * Validation helper functions
+ *
+ * @author Michal Stefanak
+ * @link https://github.com/stefanak-michal/DragonMVC
+ * @package helpers
  */
 class Validation
 {

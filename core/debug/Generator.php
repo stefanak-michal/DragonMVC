@@ -7,6 +7,9 @@ use core\Dragon,
 
 /**
  * Generator
+ *
+ * @author Michal Stefanak
+ * @link https://github.com/stefanak-michal/DragonMVC
  */
 final class Generator
 {

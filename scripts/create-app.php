@@ -1,7 +1,12 @@
 <?php
 
-/*
+/**
  * This scripts allows you to generate base application directory structure with basic files
+ * Run in through terminal and as a first argument enters path to target directory
+ *
+ * @author Michal Stefanak
+ * @package scripts
+ * @link https://github.com/stefanak-michal/DragonMVC
  */
 
 if ($argc != 2) {
@@ -9,11 +14,16 @@ if ($argc != 2) {
     exit;
 }
 
-if (!(file_exists($argv[1]) && is_dir($argv[1]) && count(scandir($argv[1])) == 2)) {
-    echo 'Target path has to be empty directory';
-    exit;
+if (file_exists($argv[1])) {
+    if (!is_dir($argv[1]) || count(scandir($argv[1])) > 2) {
+        echo 'Target path has to be empty directory';
+        exit;
+    }
 }
 
+//realpath works only on existing path
+if (!file_exists($argv[1]))
+    mkdir($argv[1], 0777, true);
 define('BASE_PATH', realpath($argv[1]));
 
 require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'init.php';

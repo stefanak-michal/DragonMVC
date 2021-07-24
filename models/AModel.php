@@ -7,8 +7,11 @@ use MeekroDB\MeekroDBException;
 
 /**
  * Model
- * 
  * Base database model with CRUD actions for extending
+ *
+ * @author Michal Stefanak
+ * @link https://github.com/stefanak-michal/DragonMVC
+ * @package models
  */
 abstract class AModel
 {

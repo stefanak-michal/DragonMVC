@@ -5,6 +5,10 @@ namespace helpers;
 /**
  * Assets
  * Helper to manage css/js assets files
+ *
+ * @author Michal Stefanak
+ * @link https://github.com/stefanak-michal/DragonMVC
+ * @package helpers
  */
 class Assets
 {
