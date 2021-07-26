@@ -2,89 +2,38 @@
 
 namespace MeekroDB;
 
-use Throwable;
-
-class MeekroDBException implements Throwable
+/**
+ * Class MeekroDBException
+ *
+ * @author Sergey Tsalkov https://github.com/SergeyTsalkov
+ * @package MeekroDB
+ * @see https://github.com/SergeyTsalkov/meekrodb
+ */
+class MeekroDBException extends \Exception
 {
     /**
      * @var string
      */
     protected $query = '';
-    /**
-     * @var integer
-     */
-    protected $code = 0;
-    /**
-     * @var string
-     */
-    protected $message = '';
-    /**
-     * @var Throwable|null
-     */
-    protected $previous;
 
     /**
+     * MeekroDBException constructor.
      * @param string $message
      * @param string $query
-     * @param integer $code
-     * @param Throwable|null $previous
+     * @param int $code
      */
-    function __construct($message = '', $query = '', $code = 0, $previous = null)
+    function __construct(string $message = '', string $query = '', int $code = 0)
     {
-        $this->message = $message;
+        parent::__construct($message);
         $this->query = $query;
         $this->code = $code;
-        $this->previous = $previous;
     }
 
+    /**
+     * @return string
+     */
     public function getQuery(): string
     {
         return $this->query;
-    }
-
-    public function getMessage(): string
-    {
-        return $this->message;
-    }
-
-    public function getCode(): int
-    {
-        return $this->code;
-    }
-
-    public function getFile(): string
-    {
-        trigger_error('not defined');
-        return '';
-    }
-
-    public function getLine(): int
-    {
-        trigger_error('not defined');
-        return 0;
-    }
-
-    public function getTrace(): array
-    {
-        trigger_error('not defined');
-        return [];
-    }
-
-    public function getTraceAsString(): string
-    {
-        trigger_error('not defined');
-        return '';
-    }
-
-    public function getPrevious(): Throwable
-    {
-        trigger_error('not defined');
-        return new \Exception;
-    }
-
-    public function __toString(): string
-    {
-        trigger_error('not defined');
-        return '';
     }
 }
