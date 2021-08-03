@@ -100,6 +100,30 @@ $aConfig = [
 EOD;
 file_put_contents(BASE_PATH . DS . 'config' . DS . 'development' . DS . 'main.cfg.php', $config);
 
+//routes
+$config = <<<'EOD'
+<?php
+/*
+ * Routes specification
+ * 
+ * You can specify path mask by key, if you leave it default integer (array increment), it's used route path
+ * allowed variables in mask:
+ * %i - integer
+ * %d - double (with dot separator)
+ * %s - any string
+ * 
+ * Allowed groups by controller to array
+ */
+$aConfig = [
+    'routes' => [
+        'homepage/index',
+    ]
+];
+
+EOD;
+file_put_contents(BASE_PATH . DS . 'config' . DS . 'routes.cfg.php', $config);
+
+
 //controller
 file_put_contents(BASE_PATH . DS . 'controllers' . DS . 'Homepage.php', '<?php
 
