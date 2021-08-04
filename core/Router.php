@@ -320,7 +320,7 @@ final class Router
         $pattern .= "$/i";
 
         if (preg_match($pattern, $path, $vars)) {
-            $uri = preg_split("/[\\/]/", $route, -1, PREG_SPLIT_NO_EMPTY);
+            $uri = preg_split("/[\/\\\]/", $route, -1, PREG_SPLIT_NO_EMPTY);
             $output = [
                 'method' => array_pop($uri),
                 'controller' => $uri,
