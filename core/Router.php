@@ -2,8 +2,6 @@
 
 namespace core;
 
-use core\debug\Generator as DebugGenerator;
-
 /**
  * Router
  * Work with URI
@@ -259,11 +257,6 @@ final class Router
             if (!empty($message)) {
                 setcookie('message', $message, time() + 60, '/');
             }
-
-            Debug::timer('beforeMethod');
-            Debug::timer('Controller logic');
-            Debug::timer('afterMethod');
-            DebugGenerator::generate();
 
             if (DRAGON_DEBUG) {
                 header('Content-Type: text/html');

@@ -1,0 +1,135 @@
+<style>
+  #dragon-debug {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: 1000;
+    background-color: white;
+    height: auto;
+    max-height: 50%;
+    max-width: 50%;
+    border: 1px solid black;
+    overflow: auto;
+    resize: both;
+    min-width: 300px;
+  }
+
+  #dragon-debug > span {
+    padding: 0 5px;
+    cursor: pointer;
+  }
+
+  #dragon-debug > span:hover {
+    background-color: silver;
+  }
+
+  #dragon-debug > b {
+    padding-right: 10px;
+  }
+
+  #dragon-debug-handle {
+    background-color: silver;
+    cursor: move;
+    margin-right: 5px;
+  }
+
+  #dragon-debug > table {
+    display: none;
+  }
+
+  #dragon-debug > table.active {
+    display: block;
+  }
+
+  #dragon-debug > table tr > * {
+    border-bottom: 1px solid silver;
+    border-left: 1px solid silver;
+  }
+
+  #dragon-debug > table tr *:first-child {
+    border-left: 0;
+  }
+
+  #dragon-debug > table tr td {
+    border-bottom: 1px solid silver;
+    padding: 4px 6px;
+  }
+
+  #dragon-debug > table tbody tr:nth-child(even) {
+    background: #eee;
+  }
+
+  #dragon-debug > table th {
+    border-bottom: 2px solid black;
+    white-space: nowrap;
+  }
+
+  #dragon-debug > table tfoot tr td {
+    border: 0;
+    margin-top: 4px;
+    color: gray;
+  }
+
+  #dragon-debug > table td div.collapsable {
+    cursor: pointer;
+  }
+
+  #dragon-debug > table td div.collapsable + div {
+    display: none;
+  }
+
+  #dragon-debug > table td div.collapsable + div.active {
+    display: block;
+  }
+</style>
+
+<div id="dragon-debug">
+    <span id="dragon-debug-handle">=</span><span id="dragon-debug-close">X</span>
+    <b><?= $cm ?></b>
+    <? foreach ($tabs as $key): ?>
+        <span onclick=" dragonDebug.showTable('<?= $key ?>'); "><?= $key ?> (<?= $counts[$key] ?>)</span>
+    <? endforeach; ?>
+    <?= $tables ?>
+</div>
+
+
+<script type="application/javascript">
+    dragonDebug = {
+        showTable: function (key) {
+            let current = document.getElementById(key);
+            for (e of document.getElementById("dragon-debug").getElementsByClassName("active")) {
+                if (e != current)
+                    e.className = "";
+            }
+            document.getElementById(key).className = current.className == "active" ? "" : "active";
+        },
+        moving: false,
+        offset: [0, 0]
+    };
+
+    for (e of document.getElementById("dragon-debug").getElementsByClassName("collapsable")) {
+        e.onclick = function () {
+            this.nextSibling.className = this.nextSibling.className == "active" ? "" : "active";
+        }
+    }
+
+    document.getElementById("dragon-debug-close").onclick = function () {
+        document.getElementById("dragon-debug").remove();
+    }
+
+    document.getElementById("dragon-debug-handle").addEventListener("mousedown", function (e) {
+        dragonDebug.moving = true;
+        dragonDebug.offset = [this.parentElement.offsetLeft - e.clientX, this.parentElement.offsetTop - e.clientY];
+    }, true);
+    document.addEventListener("mousemove", function (e) {
+        if (dragonDebug.moving) {
+            e.preventDefault();
+            document.getElementById("dragon-debug").style.left = e.clientX + dragonDebug.offset[0] + "px";
+            document.getElementById("dragon-debug").style.top = e.clientY + dragonDebug.offset[1] + "px";
+        }
+    }, true);
+    document.addEventListener("mouseup", function (e) {
+        dragonDebug.moving = false;
+    }, true);
+
+</script>

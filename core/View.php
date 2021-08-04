@@ -196,10 +196,8 @@ final class View
             else
                 $output = DRAGON_PATH . DS . $viewDirectory . DS . $str;
 
-            if (!file_exists($output)) {
-                \core\Debug::var_dump('File "' . $str . '" not found. It is intentional?');
+            if (!file_exists($output))
                 $output = '';
-            }
         }
 
         return $output;
