@@ -110,7 +110,7 @@ $config = <<<'EOD'
  * allowed variables in mask:
  * %i - integer
  * %d - double (with dot separator)
- * %s - any string
+ * %s - any string (regex [\w\-%]+)
  * 
  * Allowed groups by controller to array
  */

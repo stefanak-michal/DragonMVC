@@ -2,7 +2,7 @@
 
 namespace core;
 
-use core\debug\Generator AS DebugGenerator;
+use core\debug\Generator as DebugGenerator;
 
 /**
  * Router
@@ -27,7 +27,7 @@ final class Router
      *
      * @var array
      */
-    private $routes = array();
+    private $routes = [];
 
     /**
      * @var Router
@@ -55,15 +55,13 @@ final class Router
         $this->loadRoutes();
 
         $this->project_host = Config::gi()->get('project_host');
-        if ( empty($this->project_host) && isset($_SERVER['SERVER_PORT'], $_SERVER['HTTP_HOST']) ) {
-            $this->project_host = ( $_SERVER['SERVER_PORT'] == 443 ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'];
+        if (empty($this->project_host) && isset($_SERVER['SERVER_PORT'], $_SERVER['HTTP_HOST'])) {
+            $this->project_host = ($_SERVER['SERVER_PORT'] == 443 ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'];
         }
-
-        if ( empty($this->project_host) && IS_CLI) {
+        if (empty($this->project_host) && IS_CLI) {
             $this->project_host = 'http://' . php_uname('n');
         }
-
-        if ( empty($this->project_host) ) {
+        if (empty($this->project_host)) {
             trigger_error('Not specified project host', E_USER_WARNING);
         }
         $this->project_host = rtrim($this->project_host, '/') . '/';
@@ -75,9 +73,9 @@ final class Router
      */
     private function loadRoutes()
     {
-        foreach (Config::gi()->get('routes', []) AS $key => $value) {
+        foreach (Config::gi()->get('routes', []) as $key => $value) {
             if (is_array($value)) {
-                foreach ($value AS $mask => $route) {
+                foreach ($value as $mask => $route) {
                     if (is_numeric($mask))
                         $this->routes[] = $key . '/' . $route;
                     else
@@ -109,12 +107,12 @@ final class Router
      */
     public function setSecureHost(bool $secure = true)
     {
-        if ( $secure ) {
-            if ( strpos($this->project_host, 'https') === false ) {
+        if ($secure) {
+            if (strpos($this->project_host, 'https') === false) {
                 $this->project_host = str_replace('http', 'https', $this->project_host);
             }
         } else {
-            if ( strpos($this->project_host, 'https') !== false ) {
+            if (strpos($this->project_host, 'https') !== false) {
                 $this->project_host = str_replace('https', 'http', $this->project_host);
             }
         }
@@ -130,7 +128,7 @@ final class Router
     {
         $uri = $this->project_host;
 
-        if ( is_array($query) && !empty($query) ) {
+        if (is_array($query) && !empty($query)) {
             $uri .= '?' . http_build_query($query);
         }
 
@@ -162,7 +160,7 @@ final class Router
         if (empty($masks))
             trigger_error('No defined route for ' . $controller . '/' . $method, E_USER_WARNING);
 
-        foreach (array_keys($masks) AS $mask) {
+        foreach (array_keys($masks) as $mask) {
             if (is_integer($mask))
                 continue;
 
@@ -200,7 +198,7 @@ final class Router
             return;
 
         $i = 0;
-        while ( preg_match("/%[dis]/", $mask, $match) ) {
+        while (preg_match("/%[dis]/", $mask, $match)) {
             switch ($match[0]) {
                 case '%d':
                     $mask = preg_replace("/%d/", (string)floatval($vars[$i]), $mask, 1);
@@ -228,20 +226,20 @@ final class Router
     public function current(bool $getParams = false): string
     {
         $uri = 'http';
-        if ( $_SERVER['SERVER_PORT'] != 80 ) {
+        if ($_SERVER['SERVER_PORT'] != 80) {
             $uri .= 's';
         }
 
         $uri .= '://';
         $uri .= $_SERVER['SERVER_NAME'];
 
-        if ( !in_array($_SERVER['SERVER_PORT'], array(80, 443)) ) {
+        if (!in_array($_SERVER['SERVER_PORT'], [80, 443])) {
             $uri .= ':' . $_SERVER['SERVER_PORT'];
         }
 
         $uri .= $_SERVER['REQUEST_URI'];
 
-        if ( !$getParams AND strpos($uri, '?') !== false ) {
+        if (!$getParams and strpos($uri, '?') !== false) {
             $uri = substr($uri, 0, strpos($uri, '?'));
         }
 
@@ -257,8 +255,8 @@ final class Router
      */
     public function redirect(string $uri, string $message = '', int $code = 302)
     {
-        if ( !empty($uri) ) {
-            if ( !empty($message) ) {
+        if (!empty($uri)) {
+            if (!empty($message)) {
                 setcookie('message', $message, time() + 60, '/');
             }
 
@@ -266,8 +264,8 @@ final class Router
             Debug::timer('Controller logic');
             Debug::timer('afterMethod');
             DebugGenerator::generate();
-            
-            if ( DRAGON_DEBUG ) {
+
+            if (DRAGON_DEBUG) {
                 header('Content-Type: text/html');
                 echo (new View('elements/debug/backtrace', [
                     'bt' => debug_backtrace(),
@@ -293,7 +291,7 @@ final class Router
     {
         $output = array();
 
-        foreach ( $this->routes AS $mask => $route ) {
+        foreach ($this->routes as $mask => $route) {
             $output = $this->match($path, $mask, $route);
             if (!empty($output))
                 break;
@@ -314,18 +312,23 @@ final class Router
     {
         $output = [];
 
-        $res = preg_match("/^" . str_replace('/', '\/', is_integer($mask) ? ($route . '((?=/)(.*))?') : str_replace(array('%i', '%s', '%d'), array('(-?\d+)', '([\w\-]+)', '(-?[\d\.]+)'), $mask)) . "$/i", $path, $vars);
+        if (!is_integer($mask))
+            $mask = str_replace(['%i', '%s', '%d'], ['(-?\d+)', '([\w\-%]+)', '(-?[\d\.]+)'], $mask);
 
-        if ( $res ) {
+        $pattern = "/^";
+        $pattern .= str_replace('/', '\/', is_integer($mask) ? ($route . '((?=/)(.*))?') : $mask);
+        $pattern .= "$/i";
+
+        if (preg_match($pattern, $path, $vars)) {
             $uri = preg_split("/[\\/]/", $route, -1, PREG_SPLIT_NO_EMPTY);
-            $output = array(
+            $output = [
                 'method' => array_pop($uri),
                 'controller' => $uri,
-                'vars' => array()
-            );
+                'vars' => []
+            ];
 
-            if ( is_integer($mask) ) {
-                if ( !empty($vars[1]) ) {
+            if (is_integer($mask)) {
+                if (!empty($vars[1])) {
                     $output['vars'] = preg_split("/[\\/]/", $vars[1], -1, PREG_SPLIT_NO_EMPTY);
                 }
             } else {
