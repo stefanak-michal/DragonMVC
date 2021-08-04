@@ -149,9 +149,10 @@ class Homepage implements IController
     public function afterMethod()
     {
         $content = \Core\View::gi()->render();
-        \core\Debug::timer("afterMethod");
         $pos = strrpos($content, "</body>");
-        echo substr_replace($content, \core\debug\Generator::onsite(), $pos, 0);
+        if (IS_WORKSPACE && $pos !== false)
+            $content = substr_replace($content, \core\Debug::onsite(), $pos, 0);
+        echo $content;
     }
 }
 ');
