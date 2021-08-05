@@ -128,6 +128,9 @@ final class Dragon
      */
     private function trySetView(array $cmv)
     {
+        if (is_array($cmv['controller']) && reset($cmv['controller']) == 'controllers')
+            array_shift($cmv['controller']);
+        
         $possibleViewFile = [
             implode('/', $cmv['controller']) . '/' . $cmv['method'],
             strtolower(implode('/', $cmv['controller'])) . '/' . $cmv['method'],
