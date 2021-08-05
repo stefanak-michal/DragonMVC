@@ -202,8 +202,6 @@ class Email
             $prEmail = \core\Config::gi()->get('project_email');
 
             $mailer = new PHPMailer(true);
-            $mailer->CharSet = PHPMailer::CHARSET_UTF8;
-            $mailer->Encoding = PHPMailer::ENCODING_BASE64;
             \core\Config::apply('mailer', $mailer);
 
             $mailer->setFrom($prEmail, $prEmail);
