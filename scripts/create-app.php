@@ -83,22 +83,20 @@ EOD;
 file_put_contents(BASE_PATH . DS . 'index.php', $index);
 
 //config files
-$config = <<<'EOD'
-<?php
-$aConfig = [];
-
-EOD;
-file_put_contents(BASE_PATH . DS . 'config' . DS . 'main.cfg.php', $config);
-file_put_contents(BASE_PATH . DS . 'config' . DS . 'production' . DS . 'main.cfg.php', $config);
-$config = <<<'EOD'
-<?php
+file_put_contents(BASE_PATH . DS . 'config' . DS . 'main.cfg.php', '<?php
 $aConfig = [
-    'defaultController' => 'Homepage',
-    'defaultMethod' => 'index',
+    \'defaultController\' => \'Homepage\',
+    \'defaultMethod\' => \'index\',
 ];
-
-EOD;
-file_put_contents(BASE_PATH . DS . 'config' . DS . 'development' . DS . 'main.cfg.php', $config);
+');
+file_put_contents(BASE_PATH . DS . 'config' . DS . 'production' . DS . 'main.cfg.php', '<?php
+$aConfig = [];
+');
+file_put_contents(BASE_PATH . DS . 'config' . DS . 'development' . DS . 'main.cfg.php', '<?php
+$aConfig = [
+    \'project_host\' => \'http://localhost/' . basename(BASE_PATH) . '\'
+];
+');
 
 //routes
 $config = <<<'EOD'
