@@ -72,6 +72,7 @@ final class Router
     private function loadRoutes()
     {
         foreach (Config::gi()->get('routes', []) as $key => $value) {
+            $key = str_replace('\\', '/', $key);
             if (is_array($value)) {
                 foreach ($value as $mask => $route) {
                     if (is_numeric($mask))
@@ -148,11 +149,10 @@ final class Router
             exit;
 
         $uri = '';
-        $controller = preg_replace('/^[\/\\\]?controllers[\/\\\]/', '', $controller);
         $controller = str_replace('\\', '/', $controller);
-
         $masks = array_filter($this->routes, function ($value) use ($controller, $method) {
-            return strtolower($value) == strtolower($controller . '/' . $method);
+            $value = strtolower($value);
+            return $value == strtolower($controller . '/' . $method) || $value == strtolower('controllers/' . $controller . '/' . $method);
         });
 
         if (empty($masks))
