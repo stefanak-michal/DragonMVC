@@ -156,7 +156,7 @@ class Email
         if (!empty($this->content)) {
             //auto add pictures
             if (preg_match_all(@"/\"cid:([^\"]+)\"/", $this->content, $matches) > 0) {
-                $path = pathinfo($view->getView(), PATHINFO_DIRNAME) . DS . pathinfo($view->getView(), PATHINFO_BASENAME) . DS;
+                $path = pathinfo($view->getView(), PATHINFO_DIRNAME) . DS . pathinfo($view->getView(), PATHINFO_FILENAME) . DS;
                 foreach ($matches[1] as $match) {
                     if (file_exists($path . $match))
                         $this->addPicture($path . $match, $match);
