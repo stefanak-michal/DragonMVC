@@ -229,7 +229,7 @@ final class Debug
                 continue;
 
             $data = file_get_contents($file);
-            preg_match("/URI: <b>([^<]+)/", $data, $match);
+            preg_match("/URI: <b>([^<]*)/", $data, $match);
             preg_match("/(\d+\.\d+)\.html/", $file, $time);
 
             $this->tables[__FUNCTION__][] = [
