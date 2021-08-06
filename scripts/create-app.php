@@ -101,16 +101,15 @@ $aConfig = [
 //routes
 $config = <<<'EOD'
 <?php
-/*
+/**
  * Routes specification
  * 
- * You can specify path mask by key, if you leave it default integer (array increment), it's used route path
  * allowed variables in mask:
  * %i - integer
  * %d - double (with dot separator)
- * %s - any string (regex [\w\-%]+)
- * 
- * Allowed groups by controller to array
+ * %s - any string (default regex [\w\-]+)
+ *
+ * @link https://github.com/stefanak-michal/DragonMVC/wiki/Routing
  */
 $aConfig = [
     'routes' => [
