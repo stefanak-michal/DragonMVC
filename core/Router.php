@@ -74,23 +74,17 @@ final class Router
         foreach (Config::gi()->get('routes', []) as $key => $value) {
             if (is_array($value)) {
                 $key = str_replace('\\', '/', $key);
-                if (strpos($key, 'controllers') === false)
+                if (strpos($key, 'controllers') !== 0)
                     $key = 'controllers/' . $key;
 
-                foreach ($value as $mask => $route) {
-                    if (is_numeric($mask))
-                        $this->routes[] = $key . '/' . $route;
-                    else
-                        $this->routes[$mask] = $key . '/' . $route;
-                }
+                foreach ($value as $mask => $route)
+                    $this->routes[$mask] = $key . '/' . $route;
             } else {
-                if (strpos($value, 'controllers') === false)
+                $value = str_replace('\\', '/', $value);
+                if (strpos($value, 'controllers') !== 0)
                     $value = 'controllers/' . $value;
 
-                if (is_numeric($key))
-                    $this->routes[] = $value;
-                else
-                    $this->routes[$key] = $value;
+                $this->routes[$key] = $value;
             }
         }
     }
@@ -143,7 +137,7 @@ final class Router
     /**
      * Generate URI
      *
-     * @param string $controller
+     * @param string $controller className
      * @param string $method
      * @param array $vars
      * @param array $query
@@ -151,23 +145,19 @@ final class Router
      */
     public function url(string $controller, string $method = 'index', array $vars = [], array $query = []): string
     {
-        if (empty($controller) || empty($method))
+        if (empty($controller) || empty($method) || !class_exists($controller))
             exit;
 
         $uri = '';
         $controller = str_replace('\\', '/', $controller);
         $masks = array_filter($this->routes, function ($value) use ($controller, $method) {
-            $value = strtolower($value);
-            return $value == strtolower($controller . '/' . $method) || $value == strtolower('controllers/' . $controller . '/' . $method);
+            return strtolower($value) == strtolower($controller . '/' . $method);
         });
 
         if (empty($masks))
             trigger_error('No defined route for ' . $controller . '/' . $method, E_USER_WARNING);
 
         foreach (array_keys($masks) as $mask) {
-            if (is_integer($mask))
-                continue;
-
             //check number of defined variables against mask
             if (count($vars) != preg_match_all("/%[dis]/", $mask))
                 continue;
@@ -311,29 +301,22 @@ final class Router
     {
         $output = [];
 
-        if (!is_integer($mask))
-            $mask = str_replace(['%i', '%s', '%d'], ['(-?\d+)', '([\w\-%]+)', '(-?[\d\.]+)'], $mask);
+        $mask = str_replace(['%i', '%s', '%d'], ['(-?\d+)', '(' . \core\Config::gi()->get('routeStringRegex', '[\w\-]+') . ')', '(-?[\d\.]+)'], $mask);
 
         $pattern = "/^";
-        $pattern .= str_replace('/', '\/', is_integer($mask) ? ($route . '((?=/)(.*))?') : $mask);
+        $pattern .= str_replace('/', '\/', $mask);
         $pattern .= "$/i";
 
         if (preg_match($pattern, $path, $vars)) {
-            $uri = preg_split("/[\/\\\]/", $route, -1, PREG_SPLIT_NO_EMPTY);
+            $uri = array_filter(explode('/', $route));
             $output = [
                 'method' => array_pop($uri),
                 'controller' => $uri,
                 'vars' => []
             ];
 
-            if (is_integer($mask)) {
-                if (!empty($vars[1])) {
-                    $output['vars'] = preg_split("/[\\/]/", $vars[1], -1, PREG_SPLIT_NO_EMPTY);
-                }
-            } else {
-                array_shift($vars);
-                $output['vars'] = array_values($vars);
-            }
+            array_shift($vars);
+            $output['vars'] = array_values($vars);
         }
 
         return $output;

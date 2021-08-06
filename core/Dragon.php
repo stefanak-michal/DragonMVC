@@ -46,8 +46,12 @@ final class Dragon
             'vars' => []
         ];
 
-        if (is_string($cmv['controller']))
-            $cmv['controller'] = preg_split("/[\\/]/", $cmv['controller'], -1, PREG_SPLIT_NO_EMPTY);
+        if (is_string($cmv['controller'])) {
+            $cmv['controller'] = str_replace('\\', '/', $cmv['controller']);
+            $cmv['controller'] = array_filter(explode('/', $cmv['controller']));
+            if (reset($cmv['controller']) != 'controllers')
+                array_unshift($cmv['controller'], 'controllers');
+        }
 
         $uri = new URI();
         $uri->fetchUriString();
@@ -105,21 +109,20 @@ final class Dragon
     private function loadController(array $cmv)
     {
         //if we have nothing to do, then quit
-        if (empty($cmv) or empty($cmv['controller']) or empty($cmv['method'])) {
+        if (empty($cmv) or empty($cmv['controller']) or empty($cmv['method']))
             trigger_error('Unresolved controller->method action', E_USER_ERROR);
-            exit;
-        }
-
-        if (!is_array($cmv['controller'])) {
-            $cmv['controller'] = [$cmv['controller']];
-        }
 
         $this->trySetView($cmv);
 
-        $class = $this->buildControllerName($cmv['controller']);
         self::$method = $cmv['method'];
         self::$vars = $cmv['vars'];
-        self::$controller = new $class();
+
+        $last = ucfirst(array_pop($cmv['controller']));
+        $className = "\\" . implode("\\", $cmv['controller']) . "\\" . $last;
+        if (!class_exists($className))
+            trigger_error('Missing class ' . $className, E_USER_ERROR);
+
+        self::$controller = new $className();
     }
 
     /**
@@ -128,8 +131,7 @@ final class Dragon
      */
     private function trySetView(array $cmv)
     {
-        if (is_array($cmv['controller']) && reset($cmv['controller']) == 'controllers')
-            array_shift($cmv['controller']);
+        array_shift($cmv['controller']);
         
         $possibleViewFile = [
             implode('/', $cmv['controller']) . '/' . $cmv['method'],
@@ -148,18 +150,6 @@ final class Dragon
             if (View::gi()->view($viewFile))
                 break;
         }
-    }
-
-    /**
-     * @param array $c
-     * @return string
-     */
-    private function buildControllerName(array $c): string
-    {
-        $last = ucfirst(array_pop($c));
-        if (strtolower(reset($c)) != 'controllers')
-            array_unshift($c, 'controllers');
-        return "\\" . implode("\\", $c) . "\\" . $last;
     }
 
 }
