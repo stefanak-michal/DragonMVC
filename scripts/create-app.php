@@ -113,7 +113,7 @@ $config = <<<'EOD'
  */
 $aConfig = [
     'routes' => [
-        'homepage/index',
+        '/' => 'homepage/index',
     ]
 ];
 
