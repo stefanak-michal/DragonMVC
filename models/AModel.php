@@ -201,14 +201,16 @@ abstract class AModel
      */
     public function read(array $ids = []): array
     {
-        $output = array();
+        $output = [];
 
         if (empty($ids)) {
-            $output = $this->db()->query('SELECT * FROM ' . $this->table);
+            $output = $this->db()->query('SELECT * FROM ' . $this->table) ?? [];
         } elseif (count($ids) == 1) {
-            $output[] = $this->row(reset($ids));
+            $row = $this->row(reset($ids));
+            if (!empty($row))
+                $output[] = $row;
         } else {
-            $output = $this->db()->query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' IN %li', $ids);
+            $output = $this->db()->query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' IN %li', $ids) ?? [];
         }
 
         return \helpers\ArrayUtils::reIndex($output, $this->primary_key);
