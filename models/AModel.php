@@ -314,4 +314,30 @@ abstract class AModel
         }
     }
 
+    /**
+     * Facade for $this->db()->query()
+     * It checks and cast returned values to int/float
+     * @param string $query
+     * @param array $params
+     * @return mixed
+     */
+    protected function query(string $query, array $params = [])
+    {
+        if (empty($params) || count(array_filter(array_keys($params), 'is_int')) == count($params))
+            $result = $this->db()->query($query, ...$params);
+        else
+            $result = $this->db()->query($query, $params);
+
+        foreach ($result as &$row) {
+            foreach ($row as &$value) {
+                if (filter_var($value, FILTER_VALIDATE_INT) !== false)
+                    $value = intval($value);
+                elseif (filter_var($value, FILTER_VALIDATE_FLOAT) !== false)
+                    $value = floatval($value);
+            }
+        }
+
+        return $result;
+    }
+
 }
