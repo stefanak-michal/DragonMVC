@@ -70,9 +70,19 @@ final class Debug
             return;
 
         $exists = file_exists($file);
+        $str = '<div class="collapsable ' . ($exists ? '' : 'red') . '">' . $file . '</div>' . '<div>' . self::backtrace() . '</div>';
+
+        foreach ((self::gi()->tables[__FUNCTION__] ?? []) as $i => $row) {
+            if ($row['file'] == $str) {
+                self::gi()->tables[__FUNCTION__][$i]['hits'] += 1;
+                return;
+            }
+        }
+
         self::gi()->tables[__FUNCTION__][] = [
-            'file' => '<div class="collapsable ' . ($exists ? '' : 'red') . '">' . $file . '</div>' . '<div>' . self::backtrace() . '</div>',
-            'size (bytes)' => $exists ? filesize($file) : 0
+            'file' => $str,
+            'size (bytes)' => $exists ? filesize($file) : 0,
+            'hits' => 1
         ];
     }
 
