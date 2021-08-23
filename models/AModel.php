@@ -74,7 +74,8 @@ abstract class AModel
                     \core\Debug::query($args['query'], $args['explain'] ?? [], [
                         'params' => null,
                         'stats' => '<pre><b>rows:</b> ' . $args['affected'] . '</pre>',
-                        'time (ms)' => $args['runtime']
+                        'time (ms)' => $args['runtime'],
+                        'database' => $this->db()->current_db
                     ]);
                 };
             }
