@@ -1,38 +1,51 @@
 <style>
-  #dragon-debug {
+  #dragon-debug > #dragon-debug-menu {
     position: fixed;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
     z-index: 1000;
     background-color: white;
-    height: auto;
-    max-height: 50%;
-    max-width: 50%;
+    height: 30px;
+    line-height: 30px;
+    max-width: 100%;
     border: 1px solid black;
-    overflow: auto;
+    overflow: hidden;
   }
 
-  #dragon-debug > span {
+  #dragon-debug > #dragon-debug-menu > * {
+    height: 30px;
+    line-height: 30px;
+    display: inline-block;
+  }
+
+  #dragon-debug > #dragon-debug-menu > span {
     padding: 0 5px;
     cursor: pointer;
   }
 
-  #dragon-debug > span:hover {
+  #dragon-debug > #dragon-debug-menu > span:hover {
     background-color: silver;
   }
 
-  #dragon-debug > b {
+  #dragon-debug > #dragon-debug-menu > b {
     padding-right: 10px;
   }
 
-  #dragon-debug-handle {
-    background-color: silver;
-    cursor: move;
-    margin-right: 5px;
-  }
-
   #dragon-debug > table {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background-color: white;
+    height: auto;
+    max-height: 50%;
+    max-width: 100%;
+    width: auto;
+    border: 1px solid black;
+    overflow-y: scroll;
+    overflow-x: auto;
     display: none;
   }
 
@@ -87,11 +100,13 @@
 </style>
 
 <div id="dragon-debug">
-    <span id="dragon-debug-handle">=</span><span id="dragon-debug-close">X</span>
-    <b><?= $cm ?></b>
-    <? foreach ($tabs as $key): ?>
-        <span onclick=" dragonDebug.showTable('<?= $key ?>'); "><?= $key ?> (<?= $counts[$key] ?>)</span>
-    <? endforeach; ?>
+    <div id="dragon-debug-menu">
+        <span id="dragon-debug-close" title="Close toolbar">X</span>
+        <b><?= $cm ?></b>
+        <? foreach ($tabs as $key): ?>
+            <span onclick=" dragonDebug.showTable('<?= $key ?>'); "><?= $key ?> (<?= $counts[$key] ?>)</span>
+        <? endforeach; ?>
+    </div>
     <?= $tables ?>
 </div>
 
@@ -105,9 +120,7 @@
                     e.className = "";
             }
             document.getElementById(key).className = current.className == "active" ? "" : "active";
-        },
-        moving: false,
-        offset: [0, 0]
+        }
     };
 
     for (e of document.getElementById("dragon-debug").getElementsByClassName("collapsable")) {
@@ -119,20 +132,4 @@
     document.getElementById("dragon-debug-close").onclick = function () {
         document.getElementById("dragon-debug").remove();
     }
-
-    document.getElementById("dragon-debug-handle").addEventListener("mousedown", function (e) {
-        dragonDebug.moving = true;
-        dragonDebug.offset = [this.parentElement.offsetLeft - e.clientX, this.parentElement.offsetTop - e.clientY];
-    }, true);
-    document.addEventListener("mousemove", function (e) {
-        if (dragonDebug.moving) {
-            e.preventDefault();
-            document.getElementById("dragon-debug").style.left = e.clientX + dragonDebug.offset[0] + "px";
-            document.getElementById("dragon-debug").style.top = e.clientY + dragonDebug.offset[1] + "px";
-        }
-    }, true);
-    document.addEventListener("mouseup", function (e) {
-        dragonDebug.moving = false;
-    }, true);
-
 </script>
