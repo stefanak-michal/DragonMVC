@@ -281,19 +281,14 @@ class Utils
         if (empty($cmv))
             return;
 
-        $dragon = new \core\Dragon();
-        $reflection = new \ReflectionClass($dragon);
-        $buildControllerName = $reflection->getMethod('buildControllerName');
-        $buildControllerName->setAccessible(true);
-        try {
-            $controllerName = $buildControllerName->invoke($dragon, $cmv['controller']);
-        } catch (\ReflectionException $e) {
-            return;
-        }
+        $last = ucfirst(array_pop($cmv['controller']));
+        $className = "\\" . implode("\\", $cmv['controller']) . "\\" . $last;
+        if (!class_exists($className))
+            trigger_error('Missing class ' . $className, E_USER_ERROR);
 
         $method = $cmv['method'];
         $vars = $cmv['vars'];
-        $controller = new $controllerName();
+        $controller = new $className();
     }
 
     /**
