@@ -180,3 +180,5 @@ RewriteBase /' . basename(BASE_PATH) . '/
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php/$1 [L]');
+
+copy(__DIR__ . DS . '.htaccess', BASE_PATH . DS . 'scripts' . DS . '.htaccess');
