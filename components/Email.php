@@ -29,6 +29,21 @@ class Email
     private $pictures = [];
     private $attachments = [];
     private $content;
+    private $from;
+
+    /**
+     * Set from ..if you won't, the project_email from config will be used
+     * @param string $email
+     * @param string $name
+     * @return $this
+     */
+    public function setFrom(string $email, string $name = ''): Email
+    {
+        if (Validation::isEmail($email)) {
+            $this->from = [$email, $name];
+        }
+        return $this;
+    }
 
     /**
      * Set to
@@ -156,7 +171,7 @@ class Email
         if (!empty($this->content)) {
             //auto add pictures
             if (preg_match_all(@"/\"cid:([^\"]+)\"/", $this->content, $matches) > 0) {
-                $path = pathinfo($view->getView(), PATHINFO_DIRNAME) . DS . pathinfo($view->getView(), PATHINFO_BASENAME) . DS;
+                $path = pathinfo($view->getView(), PATHINFO_DIRNAME) . DS . pathinfo($view->getView(), PATHINFO_FILENAME) . DS;
                 foreach ($matches[1] as $match) {
                     if (file_exists($path . $match))
                         $this->addPicture($path . $match, $match);
@@ -186,6 +201,7 @@ class Email
         $this->bcc = [];
         $this->title = '';
         $this->content = null;
+        $this->from = null;
     }
 
     /**
@@ -198,15 +214,13 @@ class Email
         $output = false;
 
         if (!empty($this->emails)) {
-            $prTitle = \core\Config::gi()->get('project_title');
-            $prEmail = \core\Config::gi()->get('project_email');
-
             $mailer = new PHPMailer(true);
-            $mailer->CharSet = PHPMailer::CHARSET_UTF8;
-            $mailer->Encoding = PHPMailer::ENCODING_BASE64;
             \core\Config::apply('mailer', $mailer);
 
-            $mailer->setFrom($prEmail, $prEmail);
+            if (!empty($this->from))
+                $mailer->setFrom(...$this->from);
+            else
+                $mailer->setFrom(\core\Config::gi()->get('project_email'), \core\Config::gi()->get('project_title'));
 
             foreach ($this->emails as $name => $email)
                 $mailer->addAddress($email, is_numeric($name) ? '' : $name);
@@ -216,8 +230,6 @@ class Email
                 $mailer->addBCC($email, is_numeric($name) ? '' : $name);
             foreach ($this->reply as $name => $email)
                 $mailer->addReplyTo($email, is_numeric($name) ? '' : $name);
-            if (empty($this->reply))
-                $mailer->addReplyTo($prEmail, $prTitle);
 
             $mailer->isHTML(true);
             $mailer->Subject = $this->title;

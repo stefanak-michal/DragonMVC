@@ -43,8 +43,7 @@ class Assets
 
     /**
      * Add assets to load
-     *
-     * @param array $names relative path to css/js asset file in assets directory
+     * @param string ...$names relative path to css/js asset file in assets directory
      */
     public static function add(...$names)
     {
@@ -63,6 +62,19 @@ class Assets
                     \core\Debug::var_dump('Asset file "' . $name . '" not found');
                 }
             }
+        }
+    }
+    
+    /**
+     * Remove assets from load
+     * @param string ...$names relative path to css/js asset file in assets directory
+     */
+    public static function remove(string ...$names)
+    {
+        foreach ($names as $name) {
+            $type = pathinfo($name, PATHINFO_EXTENSION);
+            if (array_key_exists($type, self::$toLoad) && array_key_exists($name, self::$toLoad[$type]))
+                unset(self::$toLoad[$type][$name]);
         }
     }
 

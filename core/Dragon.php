@@ -15,7 +15,7 @@ final class Dragon
 
     /**
      * Called controller
-     * 
+     *
      * @static
      * @var \controllers\IController
      */
@@ -40,48 +40,50 @@ final class Dragon
      */
     public function run()
     {
-        $cmv = array(
+        $cmv = [
             'controller' => Config::gi()->get('defaultController'),
             'method' => Config::gi()->get('defaultMethod'),
-            'vars' => array()
-        );
-        
-        if (is_string($cmv['controller']))
-            $cmv['controller'] = preg_split("/[\\/]/", $cmv['controller'], -1, PREG_SPLIT_NO_EMPTY);
+            'vars' => []
+        ];
+
+        if (is_string($cmv['controller'])) {
+            $cmv['controller'] = str_replace('\\', '/', $cmv['controller']);
+            $cmv['controller'] = array_filter(explode('/', $cmv['controller']));
+            if (reset($cmv['controller']) != 'controllers')
+                array_unshift($cmv['controller'], 'controllers');
+        }
 
         $uri = new URI();
         $uri->fetchUriString();
-        $this->resolveRoute($cmv, (string) $uri);
-        
+        $this->resolveRoute($cmv, (string)$uri);
+
         //must be defined before view->render, sorry for hardcode
-        if ( DRAGON_DEBUG ) {
+        if (DRAGON_DEBUG) {
             header('X-Dragon-Debug: ' . Router::gi()->getHost() . 'tmp/debug/last.html');
         }
 
         //finally we have something to show
         $this->loadController($cmv);
 
-        if ( method_exists(self::$controller, 'beforeMethod') ) {
+        if (method_exists(self::$controller, 'beforeMethod')) {
             Debug::timer('beforeMethod');
             self::$controller->beforeMethod();
             Debug::timer('beforeMethod');
         }
 
-        if ( method_exists(self::$controller, self::$method) ) {
+        if (method_exists(self::$controller, self::$method)) {
             Debug::timer('Controller logic');
-            call_user_func_array(array(self::$controller, self::$method), self::$vars);
+            self::$controller->{self::$method}(...self::$vars);
             Debug::timer('Controller logic');
         }
 
-        if ( method_exists(self::$controller, 'afterMethod') ) {
+        if (method_exists(self::$controller, 'afterMethod')) {
             Debug::timer('afterMethod');
             self::$controller->afterMethod();
             Debug::timer('afterMethod');
         }
-        
-        \core\debug\Generator::generate();
     }
-    
+
     /**
      * @param array $cmv
      * @param string $path
@@ -89,39 +91,38 @@ final class Dragon
      */
     private function resolveRoute(array &$cmv, string $path)
     {
-        if ( empty($path) )
+        if (empty($path))
             return;
-            
+
         $founded = Router::gi()->findRoute($path);
-        if ( !empty($founded) ) {
+        if (!empty($founded)) {
             $cmv = $founded;
         } else {
             //append uri parts as variables for method invocation
             $cmv['vars'] = explode('/', $path);
         }
     }
-    
+
     /**
      * @param array $cmv [controller, method, vars]
      */
     private function loadController(array $cmv)
     {
         //if we have nothing to do, then quit
-        if ( empty($cmv) OR empty($cmv['controller']) OR empty($cmv['method']) ) {
+        if (empty($cmv) or empty($cmv['controller']) or empty($cmv['method']))
             trigger_error('Unresolved controller->method action', E_USER_ERROR);
-            exit;
-        }
-
-        if ( !is_array($cmv['controller']) ) {
-            $cmv['controller'] = array($cmv['controller']);
-        }
 
         $this->trySetView($cmv);
 
-        $class = $this->buildControllerName($cmv['controller']);
         self::$method = $cmv['method'];
         self::$vars = $cmv['vars'];
-        self::$controller = new $class();
+
+        $last = ucfirst(array_pop($cmv['controller']));
+        $className = "\\" . implode("\\", $cmv['controller']) . "\\" . $last;
+        if (!class_exists($className))
+            trigger_error('Missing class ' . $className, E_USER_ERROR);
+
+        self::$controller = new $className();
     }
 
     /**
@@ -130,6 +131,8 @@ final class Dragon
      */
     private function trySetView(array $cmv)
     {
+        array_shift($cmv['controller']);
+        
         $possibleViewFile = [
             implode('/', $cmv['controller']) . '/' . $cmv['method'],
             strtolower(implode('/', $cmv['controller'])) . '/' . $cmv['method'],
@@ -147,21 +150,6 @@ final class Dragon
             if (View::gi()->view($viewFile))
                 break;
         }
-    }
-
-    /**
-     * @param array $c
-     * @return string
-     */
-    private function buildControllerName(array $c): string
-    {
-        $last = ucfirst(array_pop($c));
-        $name = '';
-        if (count($c) > 0)
-            $name = implode("\\", $c) . "\\";
-        $name .= $last;
-
-        return "\\" . 'controllers' . "\\" . $name;
     }
 
 }

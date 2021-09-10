@@ -34,6 +34,12 @@ final class View
     private static $instance;
 
     /**
+     * Call after any render (view or layout). It should return modified content.
+     * @var callable (string renderedFile, string content): string
+     */
+    public static $afterRender;
+
+    /**
      * View constructor.
      * @param string $view
      * @param array $vars
@@ -77,7 +83,7 @@ final class View
      */
     public function getView(): string
     {
-        return $this->view;
+        return (string)$this->view;
     }
 
     /**
@@ -89,6 +95,15 @@ final class View
     {
         $this->layout = $this->path((string)$layout);
         return !empty($this->layout);
+    }
+
+    /**
+     * Get resolved layout filepath
+     * @return string
+     */
+    public function getLayout(): string
+    {
+        return (string)$this->layout;
     }
 
     /**
@@ -138,6 +153,9 @@ final class View
         foreach ( $this->vars as $key => $variable )
             unset(${$key});
 
+        if (is_callable(self::$afterRender))
+            $content = call_user_func(self::$afterRender, $this->view, $content);
+
         if (!empty($this->layout))
             $content = $this->layouted($content);
 
@@ -164,6 +182,9 @@ final class View
         //after render clean up memory
         foreach ( $this->vars as $key => $variable )
             unset(${$key});
+
+        if (is_callable(self::$afterRender))
+            $html = call_user_func(self::$afterRender, $this->layout, $html);
 
         return $html;
     }
@@ -196,10 +217,8 @@ final class View
             else
                 $output = DRAGON_PATH . DS . $viewDirectory . DS . $str;
 
-            if (!file_exists($output)) {
-                \core\Debug::var_dump('File "' . $str . '" not found. It is intentional?');
+            if (!file_exists($output))
                 $output = '';
-            }
         }
 
         return $output;

@@ -83,22 +83,43 @@ EOD;
 file_put_contents(BASE_PATH . DS . 'index.php', $index);
 
 //config files
-$config = <<<'EOD'
-<?php
-$aConfig = [];
-
-EOD;
-file_put_contents(BASE_PATH . DS . 'config' . DS . 'main.cfg.php', $config);
-file_put_contents(BASE_PATH . DS . 'config' . DS . 'production' . DS . 'main.cfg.php', $config);
-$config = <<<'EOD'
-<?php
+file_put_contents(BASE_PATH . DS . 'config' . DS . 'main.cfg.php', '<?php
 $aConfig = [
-    'defaultController' => 'Homepage',
-    'defaultMethod' => 'index',
+    \'defaultController\' => \'Homepage\',
+    \'defaultMethod\' => \'index\',
+];
+');
+file_put_contents(BASE_PATH . DS . 'config' . DS . 'production' . DS . 'main.cfg.php', '<?php
+$aConfig = [];
+');
+file_put_contents(BASE_PATH . DS . 'config' . DS . 'development' . DS . 'main.cfg.php', '<?php
+$aConfig = [
+    \'project_host\' => \'http://localhost/' . basename(BASE_PATH) . '\'
+];
+');
+
+//routes
+$config = <<<'EOD'
+<?php
+/**
+ * Routes specification
+ * 
+ * allowed variables in mask:
+ * %i - integer
+ * %d - double (with dot separator)
+ * %s - any string (default regex [\w\-]+)
+ *
+ * @link https://github.com/stefanak-michal/DragonMVC/wiki/Routing
+ */
+$aConfig = [
+    'routes' => [
+        '/' => 'homepage/index',
+    ]
 ];
 
 EOD;
-file_put_contents(BASE_PATH . DS . 'config' . DS . 'development' . DS . 'main.cfg.php', $config);
+file_put_contents(BASE_PATH . DS . 'config' . DS . 'routes.cfg.php', $config);
+
 
 //controller
 file_put_contents(BASE_PATH . DS . 'controllers' . DS . 'Homepage.php', '<?php
@@ -125,9 +146,10 @@ class Homepage implements IController
     public function afterMethod()
     {
         $content = \Core\View::gi()->render();
-        \core\Debug::timer("afterMethod");
         $pos = strrpos($content, "</body>");
-        echo substr_replace($content, \core\debug\Generator::onsite(), $pos, 0);
+        if (IS_WORKSPACE && $pos !== false)
+            $content = substr_replace($content, \core\Debug::onsite(), $pos, 0);
+        echo $content;
     }
 }
 ');
@@ -158,3 +180,5 @@ RewriteBase /' . basename(BASE_PATH) . '/
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php/$1 [L]');
+
+copy(__DIR__ . DS . '.htaccess', BASE_PATH . DS . 'scripts' . DS . '.htaccess');

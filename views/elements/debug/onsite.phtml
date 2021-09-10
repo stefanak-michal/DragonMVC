@@ -1,0 +1,135 @@
+<style>
+  #dragon-debug > #dragon-debug-menu {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background-color: white;
+    height: 30px;
+    line-height: 30px;
+    max-width: 100%;
+    border: 1px solid black;
+    overflow: hidden;
+  }
+
+  #dragon-debug > #dragon-debug-menu > * {
+    height: 30px;
+    line-height: 30px;
+    display: inline-block;
+  }
+
+  #dragon-debug > #dragon-debug-menu > span {
+    padding: 0 5px;
+    cursor: pointer;
+  }
+
+  #dragon-debug > #dragon-debug-menu > span:hover {
+    background-color: silver;
+  }
+
+  #dragon-debug > #dragon-debug-menu > b {
+    padding-right: 10px;
+  }
+
+  #dragon-debug > table {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background-color: white;
+    height: auto;
+    max-height: 50%;
+    max-width: 100%;
+    width: auto;
+    border: 1px solid black;
+    overflow-y: scroll;
+    overflow-x: auto;
+    display: none;
+  }
+
+  #dragon-debug > table.active {
+    display: block;
+  }
+
+  #dragon-debug > table tr > * {
+    border-bottom: 1px solid silver;
+    border-left: 1px solid silver;
+  }
+
+  #dragon-debug > table tr *:first-child {
+    border-left: 0;
+  }
+
+  #dragon-debug > table tr td {
+    border-bottom: 1px solid silver;
+    padding: 4px 6px;
+  }
+
+  #dragon-debug > table tbody tr:nth-child(even) {
+    background-color: #eee;
+  }
+
+  #dragon-debug > table tbody tr:nth-child(odd) {
+    background-color: white;
+  }
+
+  #dragon-debug > table th {
+    border-bottom: 2px solid black;
+    white-space: nowrap;
+  }
+
+  #dragon-debug > table tfoot tr td {
+    border: 0;
+    margin-top: 4px;
+    color: gray;
+  }
+
+  #dragon-debug > table td div.collapsable {
+    cursor: pointer;
+  }
+
+  #dragon-debug > table td div.collapsable + div {
+    display: none;
+  }
+
+  #dragon-debug > table td div.collapsable + div.active {
+    display: block;
+  }
+</style>
+
+<div id="dragon-debug">
+    <div id="dragon-debug-menu">
+        <span id="dragon-debug-close" title="Close toolbar">X</span>
+        <b><?= $cm ?></b>
+        <? foreach ($tabs as $key): ?>
+            <span onclick=" dragonDebug.showTable('<?= $key ?>'); "><?= $key ?> (<?= $counts[$key] ?>)</span>
+        <? endforeach; ?>
+    </div>
+    <?= $tables ?>
+</div>
+
+
+<script type="application/javascript">
+    dragonDebug = {
+        showTable: function (key) {
+            let current = document.getElementById(key);
+            for (e of document.getElementById("dragon-debug").getElementsByClassName("active")) {
+                if (e != current)
+                    e.className = "";
+            }
+            document.getElementById(key).className = current.className == "active" ? "" : "active";
+        }
+    };
+
+    for (e of document.getElementById("dragon-debug").getElementsByClassName("collapsable")) {
+        e.onclick = function () {
+            this.nextSibling.className = this.nextSibling.className == "active" ? "" : "active";
+        }
+    }
+
+    document.getElementById("dragon-debug-close").onclick = function () {
+        document.getElementById("dragon-debug").remove();
+    }
+</script>
