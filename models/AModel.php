@@ -280,11 +280,11 @@ abstract class AModel
      * @param array $params
      * @return array
      */
-    public function query(string $query, array $params = []): array
+    public function query(string $query, ...$params): array
     {
         $result = null;
         try {
-            $result = $this->db()->query($query, $params);
+            $result = $this->db()->query($query, ...$params);
         } catch (MeekroDBException $e) {
             $this->errorHandler($e);
         }
@@ -297,11 +297,11 @@ abstract class AModel
      * @param array $params
      * @return array
      */
-    public function queryFirstRow(string $query, array $params = []): array
+    public function queryFirstRow(string $query, ...$params): array
     {
         $result = null;
         try {
-            $result = $this->db()->queryFirstRow($query, $params);
+            $result = $this->db()->queryFirstRow($query, ...$params);
         } catch (MeekroDBException $e) {
             $this->errorHandler($e);
         }
