@@ -6,9 +6,11 @@ namespace MeekroDB;
  * Class WhereClause
  *
  * @author Sergey Tsalkov https://github.com/SergeyTsalkov
+ * @author Michal Stefanak
  * @package MeekroDB
  * @see https://meekro.com/docs/whereclause.html
  * @see https://github.com/SergeyTsalkov/meekrodb
+ * @see https://github.com/stefanak-michal/meekrodb
  */
 class WhereClause
 {

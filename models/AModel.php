@@ -56,11 +56,6 @@ abstract class AModel
     private $configKey;
 
     /**
-     * @var array
-     */
-    private static $hookQueue = [];
-
-    /**
      * Construct
      * @param string $configKey
      * @throws MeekroDBException
@@ -81,36 +76,20 @@ abstract class AModel
 
             if (IS_WORKSPACE) {
                 try {
-                    $this->db()->addHook('pre_parse', function ($args) {
-                        $k = strtoupper(explode(' ', $args['query'])[0]);
-                        if (in_array($k, ['SELECT', 'INSERT', 'DELETE', 'UPDATE'])) {
-                            self::$hookQueue[] = $args['args'];
-                        }
-                    });
-
-                    $this->db()->addHook('pre_run', function ($args) {
-                        $k = strtoupper(explode(' ', $args['query'])[0]);
-                        if (in_array($k, ['SELECT', 'INSERT', 'DELETE', 'UPDATE'])) {
-                            self::$hookQueue[] = $this->db()->query('EXPLAIN ' . $args['query']);
-                        }
-                    });
-
                     $this->db()->addHook('post_run', function ($args) {
-                        $params = [];
                         $explain = [];
 
                         $k = strtoupper(explode(' ', $args['query'])[0]);
                         if ($k == 'EXPLAIN')
                             return;
-                        if (in_array($k, ['SELECT', 'INSERT', 'DELETE', 'UPDATE'])) {
-                            $params = array_shift(self::$hookQueue) ?? [];
-                            $explain = array_shift(self::$hookQueue) ?? [];
-                        }
+                        if (in_array($k, ['SELECT', 'INSERT', 'DELETE', 'UPDATE']))
+                            $explain = $this->db()->query('EXPLAIN ' . $args['query']);
 
                         \core\Debug::query($args['query'], $explain, [
-                            'params' => '<pre>' . print_r(reset($params), true) . '</pre>',
+                            'params' => null,
                             'stats' => '<pre><b>rows:</b> ' . ($args['rows'] ?? 0) . '</pre>',
-                            'time (ms)' => $args['runtime']
+                            'time (ms)' => $args['runtime'],
+                            'database' => $this->db()->getCurrentDB()
                         ]);
                     });
                 } catch (MeekroDBException $e) {

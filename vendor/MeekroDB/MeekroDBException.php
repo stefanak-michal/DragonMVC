@@ -6,8 +6,10 @@ namespace MeekroDB;
  * Class MeekroDBException
  *
  * @author Sergey Tsalkov https://github.com/SergeyTsalkov
+ * @author Michal Stefanak
  * @package MeekroDB
  * @see https://github.com/SergeyTsalkov/meekrodb
+ * @see https://github.com/stefanak-michal/meekrodb
  */
 class MeekroDBException extends \Exception
 {

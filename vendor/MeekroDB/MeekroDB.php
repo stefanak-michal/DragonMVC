@@ -15,6 +15,7 @@ use mysqli, mysqli_result;
  * @package MeekroDB
  * @see http://www.meekro.com/docs
  * @see https://github.com/SergeyTsalkov/meekrodb
+ * @see https://github.com/stefanak-michal/meekrodb
  */
 final class MeekroDB
 {
@@ -136,6 +137,15 @@ final class MeekroDB
             $mysqli->close();
         }
         $this->internal_mysql = null;
+    }
+
+    /**
+     * Get currently selected database
+     * @return string
+     */
+    public function getCurrentDB(): string
+    {
+        return $this->current_db;
     }
 
     /**
@@ -830,10 +840,14 @@ final class MeekroDB
         return $queryParts;
     }
 
-    private function parse($query)
+    /**
+     * @param string $query
+     * @param mixed ...$args
+     * @return string
+     * @throws MeekroDBException
+     */
+    public function parse(string $query, ...$args): string
     {
-        $args = func_get_args();
-        array_shift($args);
         $query = trim($query);
 
         if (!$args) return $query;
@@ -903,7 +917,7 @@ final class MeekroDB
         if ($type == 'basic') {
             if (is_object($value)) {
                 if ($value instanceof MeekroDBEval) return $value->text;
-                else if ($value instanceof DateTime) return $this->escape($value->format('Y-m-d H:i:s'));
+                else if ($value instanceof \DateTime) return $this->escape($value->format('Y-m-d H:i:s'));
                 else return $this->escape($value); // use __toString() value for objects, when possible
             }
 
@@ -953,7 +967,7 @@ final class MeekroDB
     {
         if (is_string($ts)) {
             $str = date('Y-m-d H:i:s', strtotime($ts));
-        } else if (is_object($ts) && ($ts instanceof DateTime)) {
+        } else if (is_object($ts) && ($ts instanceof \DateTime)) {
             $str = $ts->format('Y-m-d H:i:s');
         }
 
