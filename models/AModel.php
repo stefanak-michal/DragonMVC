@@ -76,19 +76,22 @@ abstract class AModel
 
             if (IS_WORKSPACE) {
                 try {
-                    $this->db()->addHook('post_run', function ($args) {
+                    $this->db()->addHook('post_run', function ($params) use ($args) {
                         $explain = [];
 
-                        $k = strtoupper(explode(' ', $args['query'])[0]);
+                        $k = strtoupper(explode(' ', $params['query'])[0]);
                         if ($k == 'EXPLAIN')
                             return;
-                        if (in_array($k, ['SELECT', 'INSERT', 'DELETE', 'UPDATE']))
-                            $explain = $this->db()->query('EXPLAIN ' . $args['query']);
+                        if (in_array($k, ['SELECT', 'INSERT', 'DELETE', 'UPDATE'])) {
+                            //create new instance to avoid affecting insertId and affectedRows
+                            $db = new MeekroDB(...$args);
+                            $explain = $db->query('EXPLAIN ' . $params['query']);
+                        }
 
-                        \core\Debug::query($args['query'], $explain, [
+                        \core\Debug::query($params['query'], $explain, [
                             'params' => null,
-                            'stats' => '<pre><b>rows:</b> ' . ($args['rows'] ?? 0) . '</pre>',
-                            'time (ms)' => $args['runtime'],
+                            'stats' => '<pre><b>rows:</b> ' . ($params['rows'] ?? 0) . '</pre>',
+                            'time (ms)' => $params['runtime'],
                             'database' => $this->db()->getCurrentDB()
                         ]);
                     });
