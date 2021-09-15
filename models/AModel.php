@@ -80,10 +80,8 @@ abstract class AModel
                         $explain = [];
 
                         $k = strtoupper(explode(' ', $params['query'])[0]);
-                        if ($k == 'EXPLAIN')
-                            return;
                         if (in_array($k, ['SELECT', 'INSERT', 'DELETE', 'UPDATE'])) {
-                            //create new instance to avoid affecting insertId and affectedRows
+                            //create new instance to avoid affecting insertId and affectedRows, or calling this hook again
                             $db = new MeekroDB(...$args);
                             $explain = $db->query('EXPLAIN ' . $params['query']);
                         }
