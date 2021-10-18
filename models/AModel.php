@@ -107,9 +107,14 @@ abstract class AModel
             return;
 
         $ns = trim(get_class($this), "\\");
-        $parts = explode("\\", $ns);
-        array_shift($parts);
-        $parts = array_map('ucfirst', $parts);
+        if (strpos($ns, "\\")) {
+            $parts = explode("\\", $ns);
+            if (reset($parts) == 'models')
+                array_shift($parts);
+            $parts = array_map('ucfirst', $parts);
+        } else {
+            $parts = [$ns];
+        }
 
         $table = \helpers\Utils::snake_case(implode($parts));
         if (in_array($table, self::$tables[$this->configKey])) {
