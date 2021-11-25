@@ -28,12 +28,6 @@ final class Config
     private $lookUpTables = array();
 
     /**
-     * Array of loaded json files
-     * @var array
-     */
-    private $jsonFiles = [];
-
-    /**
      * Lookuptable file affix
      *
      * @var string
@@ -46,13 +40,6 @@ final class Config
      * @var string
      */
     public static $cfgAffix = '.cfg.php';
-
-    /**
-     * JSON config affix
-     *
-     * @var string
-     */
-    public static $jsonAffix = '.json';
 
     /**
      * @var Config
@@ -77,67 +64,36 @@ final class Config
      */
     public function __construct()
     {
-        //read main config files
-        $this->loadLookuptable('main');
-        $this->loadConfig('main');
-        $this->loadConfig('routes');
-    }
+        $names = [];
 
-    /**
-     * Load lookuptable file
-     *
-     * @param string $name
-     */
-    public function loadLookuptable(string $name)
-    {
-        $this->loadFiles($name . self::$ltAffix, 'lookUpTable', 'lookUpTables');
-    }
-
-    /**
-     * Load config file
-     *
-     * @param string $name
-     */
-    public function loadConfig(string $name)
-    {
-        $this->loadFiles($name . self::$cfgAffix);
-    }
-
-    /**
-     * Load json config
-     *
-     * @param string $file
-     * @param boolean $assoc
-     * @return array
-     */
-    public function getJson(string $file, bool $assoc = true): array
-    {
-        if (array_key_exists($file, $this->jsonFiles))
-            return $this->jsonFiles[$file];
-
-        $filename = BASE_PATH . DS . 'config' . DS . $file . self::$jsonAffix;
-        if (file_exists($filename)) {
-            $content = file_get_contents($filename);
-            $this->jsonFiles[$file] = json_decode($content, $assoc);
-
-            if (json_last_error() != JSON_ERROR_NONE) {
-                $this->jsonFiles[$file] = [];
-            } else {
-                Debug::files($filename);
+        $fn = function (string $file) use ($names) {
+            if (substr($file, -strlen(self::$cfgAffix)) == self::$cfgAffix) {
+                $this->loadFile(pathinfo($file, PATHINFO_BASENAME));
+                $names[] = pathinfo($file, PATHINFO_BASENAME);
+            } elseif (substr($file, -strlen(self::$ltAffix)) == self::$ltAffix) {
+                $this->loadFile(pathinfo($file, PATHINFO_BASENAME), 'lookUpTables');
+                $names[] = pathinfo($file, PATHINFO_BASENAME);
             }
+        };
+
+        foreach (glob(DRAGON_PATH . DS . 'config' . DS . '*.php') as $file) {
+            $fn($file);
         }
 
-        return $this->jsonFiles[$file];
+        foreach (glob(BASE_PATH . DS . 'config' . DS . '*.php') as $file) {
+            if (in_array(pathinfo($file, PATHINFO_BASENAME), $names))
+                continue;
+            $fn($file);
+        }
     }
 
     /**
      * Load config files
      *
      * @param string $path
-     * @param string $variable
      * @param string $objVar
      */
-    private function loadFiles(string $path, string $variable = 'aConfig', string $objVar = 'configVars')
+    private function loadFile(string $path, string $objVar = 'configVars')
     {
         $files = [
             DRAGON_PATH . DS . 'config' . DS . $path,
@@ -151,13 +107,13 @@ final class Config
                 continue;
 
             Debug::files($file);
-            include $file;
 
-            if (!empty($$variable)) {
-                $this->{$objVar} = array_replace_recursive($this->{$objVar}, $$variable);
-            }
-
-            unset($$variable);
+            (function () use ($file, $objVar) {
+                include $file;
+                $defined = get_defined_vars();
+                unset($defined['file'], $defined['objVar']);
+                $this->{$objVar} = array_replace_recursive($this->{$objVar}, reset($defined));
+            })();
         }
     }
 
