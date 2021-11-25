@@ -100,14 +100,22 @@ abstract class AModel
         }
 
         if (!array_key_exists($configKey, self::$tables)) {
-            self::$tables[$configKey] = $this->db()->tableList();
+            try {
+                self::$tables[$configKey] = $this->db()->tableList();
+            } catch (MeekroDBException $e) {
+                $this->errorHandler($e);
+            }
         }
 
         $this->setTableName();
 
         if (empty($this->columns)) {
             if (empty(self::$cachedColumns[get_class($this)])) {
-                self::$cachedColumns[get_class($this)] = array_keys($this->db()->columnList($this->table));
+                try {
+                    self::$cachedColumns[get_class($this)] = array_keys($this->db()->columnList($this->table));
+                } catch (MeekroDBException $e) {
+                    $this->errorHandler($e);
+                }
             }
             $this->columns = self::$cachedColumns[get_class($this)];
 
