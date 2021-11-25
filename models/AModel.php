@@ -2,11 +2,11 @@
 
 namespace models;
 
-use core\Config;
+use MeekroDB\MeekroDB;
 use MeekroDB\MeekroDBException;
 
 /**
- * Model
+ * AModel
  * Base database model with CRUD actions for extending
  *
  * @author Michal Stefanak
@@ -36,7 +36,7 @@ abstract class AModel
 
     /**
      * MeekroDB
-     * @var \MeekroDB\MeekroDB[] [configKey => \MeekroDB\MeekroDB]
+     * @var MeekroDB[] [configKey => MeekroDB]
      */
     private static $db = [];
 
@@ -58,43 +58,84 @@ abstract class AModel
     /**
      * Construct
      * @param string $configKey
+     * @throws MeekroDBException
      */
     public function __construct(string $configKey = 'mysql')
     {
         $this->configKey = $configKey;
 
         if (!array_key_exists($configKey, self::$db)) {
-            self::$db[$configKey] = new \MeekroDB\MeekroDB;
-            \core\Config::apply($configKey, self::$db[$configKey]);
+            $args = [];
+            $config = \core\Config::gi()->get($configKey);
+            $reflection = new \ReflectionClass(MeekroDB::class);
+            foreach ($reflection->getConstructor()->getParameters() as $parameter) {
+                $args[] = array_key_exists($parameter->getName(), $config) ? $config[$parameter->getName()] : null;
+            }
 
-            if (!IS_WORKSPACE) {
-                $this->setDatabaseErrorHandlers();
-            } else {
-                $this->db()->success_handler = function ($args) {
-                    \core\Debug::query($args['query'], $args['explain'] ?? [], [
-                        'params' => null,
-                        'stats' => '<pre><b>rows:</b> ' . $args['affected'] . '</pre>',
-                        'time (ms)' => $args['runtime'],
-                        'database' => $this->db()->current_db
-                    ]);
-                };
+            self::$db[$configKey] = new MeekroDB(...$args);
+
+            if (IS_WORKSPACE) {
+                try {
+                    $this->db()->addHook('post_run', function ($params) use ($args) {
+                        $explain = [];
+
+                        $k = strtoupper(explode(' ', $params['query'])[0]);
+                        if (in_array($k, ['SELECT', 'INSERT', 'DELETE', 'UPDATE'])) {
+                            //create new instance to avoid affecting insertId and affectedRows, or calling this hook again
+                            $db = new MeekroDB(...$args);
+                            $explain = $db->query('EXPLAIN ' . $params['query']);
+                        }
+
+                        \core\Debug::query($params['query'], $explain, [
+                            'params' => null,
+                            'stats' => '<pre><b>rows:</b> ' . ($params['rows'] ?? 0) . '</pre>',
+                            'time (ms)' => $params['runtime'],
+                            'database' => $this->db()->getCurrentDB()
+                        ]);
+                    });
+                } catch (MeekroDBException $e) {
+                    $this->errorHandler($e);
+                }
             }
         }
 
         if (!array_key_exists($configKey, self::$tables)) {
-            self::$tables[$configKey] = $this->db()->tableList();
+            try {
+                self::$tables[$configKey] = $this->db()->tableList();
+            } catch (MeekroDBException $e) {
+                $this->errorHandler($e);
+            }
         }
 
         $this->setTableName();
 
         if (empty($this->columns)) {
             if (empty(self::$cachedColumns[get_class($this)])) {
-                self::$cachedColumns[get_class($this)] = $this->db()->columnList($this->table);
+                try {
+                    self::$cachedColumns[get_class($this)] = array_keys($this->db()->columnList($this->table));
+                } catch (MeekroDBException $e) {
+                    $this->errorHandler($e);
+                }
             }
             $this->columns = self::$cachedColumns[get_class($this)];
 
             if (empty($this->primary_key))
                 $this->primary_key = reset($this->columns);
+        }
+    }
+
+    /**
+     * @param MeekroDBException $e
+     */
+    protected function errorHandler(MeekroDBException $e)
+    {
+        if (IS_WORKSPACE) {
+            \core\Debug::var_dump($e->getMessage());
+        } else {
+            file_put_contents(BASE_PATH . DS . 'tmp' . DS . 'error.log', '[' . date('Y-m-d H:i:s') . '] ' . $e->getMessage() . PHP_EOL, FILE_APPEND);
+            http_response_code(500);
+            echo 'We are sorry. Database error occured.';
+            exit;
         }
     }
 
@@ -133,47 +174,11 @@ abstract class AModel
 
     /**
      * Get database instance
-     * @return \MeekroDB\MeekroDB
+     * @return MeekroDB
      */
-    protected function db(): \MeekroDB\MeekroDB
+    protected function db(): MeekroDB
     {
         return self::$db[$this->configKey];
-    }
-
-    /**
-     * Custom production database error handlers
-     */
-    private function setDatabaseErrorHandlers()
-    {
-        $this->db()->error_handler = function ($params) {
-            $e = new \Exception();
-            $backtrace = preg_split("/[\r\n]+/", strip_tags($e->getTraceAsString()));
-
-            //remove core traces
-            foreach ($backtrace as $key => $line) {
-                if (strpos($line, 'internal function') || strpos($line, 'DB.php')) {
-                    unset($backtrace[$key]);
-                } else {
-                    break;
-                }
-            }
-
-            //remove trace auto increment
-            foreach ($backtrace as &$line) {
-                $line = preg_replace("/^#\d+ /", '', $line);
-            }
-
-            $backtrace = array_slice($backtrace, 0, -2);
-
-            trigger_error(implode(PHP_EOL, $params) . PHP_EOL . implode(PHP_EOL, $backtrace), E_USER_WARNING);
-        };
-
-        $this->db()->nonsql_error_handler = function ($params) {
-            file_put_contents(BASE_PATH . DS . 'tmp' . DS . 'mariadb.log', var_export($params, true), FILE_APPEND);
-            http_response_code(500);
-            echo 'We are sorry. Database error occured.';
-            exit;
-        };
     }
 
     /**
@@ -193,8 +198,12 @@ abstract class AModel
         }
 
         if (!empty($data)) {
-            $this->db()->insert($this->table, $data);
-            return $this->db()->insertId();
+            try {
+                $this->db()->insert($this->table, $data);
+                return $this->db()->insertId();
+            } catch (MeekroDBException $e) {
+                $this->errorHandler($e);
+            }
         }
 
         return 0;
@@ -207,16 +216,14 @@ abstract class AModel
      */
     public function read(array $ids = []): array
     {
-        $output = [];
+        $output = array();
 
         if (empty($ids)) {
-            $output = $this->db()->query('SELECT * FROM ' . $this->table) ?? [];
+            $output = $this->query('SELECT * FROM ' . $this->table);
         } elseif (count($ids) == 1) {
-            $row = $this->row(reset($ids));
-            if (!empty($row))
-                $output[] = $row;
+            $output[] = $this->row(reset($ids));
         } else {
-            $output = $this->db()->query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' IN %li', $ids) ?? [];
+            $output = $this->query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' IN %li', $ids);
         }
 
         return \helpers\ArrayUtils::reIndex($output, $this->primary_key);
@@ -229,10 +236,7 @@ abstract class AModel
      */
     public function row(int $id): array
     {
-        if (empty($id)) {
-            return [];
-        }
-        return $this->db()->queryFirstRow('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', $id) ?? [];
+        return $this->queryFirstRow('SELECT * FROM ' . $this->table . ' WHERE ' . $this->primary_key . ' = %i', $id);
     }
 
     /**
@@ -244,13 +248,16 @@ abstract class AModel
     public function update(int $id, array $data): int
     {
         $data = array_intersect_key($data, array_flip($this->columns));
+        $affected = 0;
 
-        if (!empty($data)) {
+        try {
             $this->db()->update($this->table, $data, $this->primary_key . ' = %i', $id);
-            return $this->db()->affectedRows();
+            $affected = $this->db()->affectedRows();
+        } catch (MeekroDBException $e) {
+            $this->errorHandler($e);
         }
 
-        return 0;
+        return $affected;
     }
 
     /**
@@ -260,12 +267,11 @@ abstract class AModel
     public function replace(array $data)
     {
         $data = array_intersect_key($data, array_flip($this->columns));
-        if (!empty($data)) {
-            try {
+        try {
+            if (!empty($data))
                 $this->db()->insertUpdate($this->table, $data);
-            } catch (MeekroDBException $e) {
-                \core\Debug::var_dump($e->getMessage());
-            }
+        } catch (MeekroDBException $e) {
+            $this->errorHandler($e);
         }
     }
 
@@ -275,7 +281,45 @@ abstract class AModel
      */
     public function delete(int $id)
     {
-        $this->db()->delete($this->table, $this->primary_key . ' = %i', $id);
+        try {
+            $this->db()->delete($this->table, $this->primary_key . ' = %i', $id);
+        } catch (MeekroDBException $e) {
+            $this->errorHandler($e);
+        }
+    }
+
+    /**
+     * Execute query
+     * @param string $query
+     * @param array $params
+     * @return array
+     */
+    public function query(string $query, ...$params): array
+    {
+        $result = null;
+        try {
+            $result = $this->db()->query($query, ...$params);
+        } catch (MeekroDBException $e) {
+            $this->errorHandler($e);
+        }
+        return $result ?? [];
+    }
+
+    /**
+     * Execute query and get first row from result
+     * @param string $query
+     * @param array $params
+     * @return array
+     */
+    public function queryFirstRow(string $query, ...$params): array
+    {
+        $result = null;
+        try {
+            $result = $this->db()->queryFirstRow($query, ...$params);
+        } catch (MeekroDBException $e) {
+            $this->errorHandler($e);
+        }
+        return $result ?? [];
     }
 
     /**
@@ -318,32 +362,6 @@ abstract class AModel
         } catch (MeekroDBException $e) {
             return false;
         }
-    }
-
-    /**
-     * Facade for $this->db()->query()
-     * It checks and cast returned values to int/float
-     * @param string $query
-     * @param array $params
-     * @return mixed
-     */
-    protected function query(string $query, array $params = [])
-    {
-        if (empty($params) || count(array_filter(array_keys($params), 'is_int')) == count($params))
-            $result = $this->db()->query($query, ...$params);
-        else
-            $result = $this->db()->query($query, $params);
-
-        foreach ($result as &$row) {
-            foreach ($row as &$value) {
-                if (filter_var($value, FILTER_VALIDATE_INT) !== false)
-                    $value = intval($value);
-                elseif (filter_var($value, FILTER_VALIDATE_FLOAT) !== false)
-                    $value = floatval($value);
-            }
-        }
-
-        return $result;
     }
 
 }
