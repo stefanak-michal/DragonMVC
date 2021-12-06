@@ -109,7 +109,7 @@ final class Router
                 continue;
 
             $ns = null;
-            $route = null;
+            $routes = [];
             $cls = null;
             foreach (file($file) as $line) {
                 if (strpos($line, 'namespace') !== false) {
@@ -126,14 +126,16 @@ final class Router
 
                 if (strpos($line, '@route') !== false) {
                     $parts = explode(' ', $line);
-                    $route = trim(end($parts));
+                    $parts = array_values(array_filter($parts));
+                    $routes[] = trim($parts[2]);
                     continue;
                 }
 
                 $match = [];
-                if (!empty($route) && !empty($cls) && preg_match("/public function (\w+)/", $line, $match)) {
-                    $this->routes[$route] = $cls . '/' . $match[1];
-                    $route = null;
+                if (!empty($routes) && !empty($cls) && preg_match("/public function (\w+)/", $line, $match)) {
+                    foreach ($routes as $route)
+                        $this->routes[$route] = $cls . '/' . $match[1];
+                    $routes = [];
                 }
             }
         }
@@ -359,14 +361,12 @@ final class Router
 
         if (preg_match($pattern, $path, $vars)) {
             $uri = array_filter(explode('/', $route));
+            array_shift($vars);
             $output = [
                 'method' => array_pop($uri),
                 'controller' => $uri,
-                'vars' => []
+                'vars' => array_values($vars)
             ];
-
-            array_shift($vars);
-            $output['vars'] = array_values($vars);
         }
 
         return $output;
