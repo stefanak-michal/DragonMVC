@@ -88,7 +88,7 @@ abstract class AModel
 
                         \core\Debug::query($params['query'], $explain, [
                             'params' => null,
-                            'stats' => '<pre><b>rows:</b> ' . ($params['rows'] ?? 0) . '</pre>',
+                            'stats' => '<pre><b>rows:</b> ' . ($params['rows'] ?? $params['affected'] ?? 0) . '</pre>',
                             'time (ms)' => $params['runtime'],
                             'database' => $this->db()->getCurrentDB()
                         ]);
