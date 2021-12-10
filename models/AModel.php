@@ -302,7 +302,7 @@ abstract class AModel
         } catch (MeekroDBException $e) {
             $this->errorHandler($e);
         }
-        return $result ?? [];
+        return is_array($result) ? $result : [];
     }
 
     /**
