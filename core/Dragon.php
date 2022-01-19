@@ -82,6 +82,10 @@ final class Dragon
             self::$controller->afterMethod();
             Debug::timer('afterMethod');
         }
+
+        if (DRAGON_DEBUG) {
+            Debug::generate();
+        }
     }
 
     /**

@@ -22,22 +22,31 @@ final class Debug
     /**
      * @var array
      */
-    private $tables = [];
+    private static $tables = [];
     /**
      * @var array
      */
-    private $timers = [];
+    private static $timers = [];
 
     /**
-     * Singleton
-     * @return Debug
+     * @var int
      */
-    public static function gi(): Debug
-    {
-        if (empty(self::$instance))
-            self::$instance = new self();
+    private static $initialized = 0;
 
-        return self::$instance;
+    /**
+     * Initialize
+     * @return bool
+     */
+    private static function init(): bool
+    {
+        if (self::$initialized == 0) {
+            if (!defined('DRAGON_DEBUG'))
+                return false;
+
+            self::$initialized = DRAGON_DEBUG ? 1 : 2;
+        }
+
+        return self::$initialized == 2;
     }
 
     /**
@@ -46,7 +55,7 @@ final class Debug
      */
     public static function var_dump(...$args)
     {
-        if (defined('DRAGON_DEBUG') && !DRAGON_DEBUG)
+        if (self::init())
             return;
 
         if (!empty($args)) {
@@ -55,7 +64,7 @@ final class Debug
                 var_dump($one);
                 $content = ob_get_clean();
 
-                self::gi()->tables[__FUNCTION__][] = ['dump' => '<div class="collapsable">' . $content . '</div>' . '<div>' . self::backtrace() . '</div>'];
+                self::$tables[__FUNCTION__][] = ['dump' => '<div class="collapsable">' . $content . '</div>' . '<div>' . self::backtrace() . '</div>'];
             }
         }
     }
@@ -66,20 +75,20 @@ final class Debug
      */
     public static function files(string $file)
     {
-        if (defined('DRAGON_DEBUG') && !DRAGON_DEBUG)
+        if (self::init())
             return;
 
         $exists = file_exists($file);
         $str = '<div class="collapsable ' . ($exists ? '' : 'red') . '">' . $file . '</div>' . '<div>' . self::backtrace() . '</div>';
 
-        foreach ((self::gi()->tables[__FUNCTION__] ?? []) as $i => $row) {
+        foreach ((self::$tables[__FUNCTION__] ?? []) as $i => $row) {
             if ($row['file'] == $str) {
-                self::gi()->tables[__FUNCTION__][$i]['hits'] += 1;
+                self::$tables[__FUNCTION__][$i]['hits'] += 1;
                 return;
             }
         }
 
-        self::gi()->tables[__FUNCTION__][] = [
+        self::$tables[__FUNCTION__][] = [
             'file' => $str,
             'size (bytes)' => $exists ? filesize($file) : 0,
             'hits' => 1
@@ -92,17 +101,17 @@ final class Debug
      */
     public static function timer(string $key)
     {
-        if (defined('DRAGON_DEBUG') && !DRAGON_DEBUG)
+        if (self::init())
             return;
 
-        if (!isset(self::gi()->timers[$key])) {
-            self::gi()->timers[$key] = microtime(true);
+        if (!isset(self::$timers[$key])) {
+            self::$timers[$key] = microtime(true);
         } else {
-            self::gi()->tables[__FUNCTION__][] = [
+            self::$tables[__FUNCTION__][] = [
                 'key' => '<div class="collapsable">' . $key . '</div>' . '<div>' . self::backtrace() . '</div>',
-                'time (msec)' => sprintf('%f', (microtime(true) - self::gi()->timers[$key]) * 1000)
+                'time (msec)' => sprintf('%f', (microtime(true) - self::$timers[$key]) * 1000)
             ];
-            unset(self::gi()->timers[$key]);
+            unset(self::$timers[$key]);
         }
     }
 
@@ -114,9 +123,8 @@ final class Debug
      */
     public static function query(string $query, array $hidden = [], array $otherColumns = [])
     {
-        if (defined('DRAGON_DEBUG') && !DRAGON_DEBUG) {
+        if (self::init())
             return;
-        }
 
         $query = '<div class="collapsable">' . $query . '</div>';
 
@@ -148,7 +156,7 @@ final class Debug
             $query .= $html;
         }
 
-        self::gi()->tables[__FUNCTION__][] = array_merge(['query' => $query], $otherColumns);
+        self::$tables[__FUNCTION__][] = array_merge(['query' => $query], $otherColumns);
     }
 
     /**
@@ -157,53 +165,56 @@ final class Debug
      */
     private static function backtrace(): string
     {
-        $backtrace = (new Exception)->getTraceAsString();
-        $backtrace = preg_split("/[\r\n]+/", strip_tags($backtrace));
-        $backtrace = array_slice($backtrace, 2);
-        for ($i = 0; $i < count($backtrace); $i++) {
-            $backtrace[$i] = preg_replace('/^#\d+/', '#' . $i, $backtrace[$i]);
+        $values = [];
+        foreach (debug_backtrace(2) as $i => $entry) {
+            $line = '#' . $i . ' ';
+            if (array_key_exists('file', $entry))
+                $line .= $entry['file'] . '(' . $entry['line'] . '): ';
+            if (array_key_exists('class', $entry))
+                $line .= $entry['class'] . $entry['type'];
+            $line .= $entry['function'];
+            $values[] = $line;
         }
-        return implode('<br>', $backtrace);
+        return '<pre>' . implode('<br>', $values) . '</pre>';
     }
 
 
     /**
      * Generate debug html file from collected data
      */
-    private function generate()
+    public static function generate()
     {
-        if (defined('DRAGON_DEBUG') && !DRAGON_DEBUG) {
-            return;
-        }
-
-        $this->updateHistory();
-        foreach (array_keys($this->timers) as $key)
+        self::updateHistory();
+        foreach (array_keys(self::$timers) as $key)
             self::timer($key);
 
         $time = microtime(true);
 
         $counts = [];
-        foreach ($this->tables as $key => $table)
+        foreach (self::$tables as $key => $table)
             $counts[$key] = count($table);
 
         $html = (new View('/views/elements/debug/report', [
-            'uri' => $_SERVER['REQUEST_URI'] ?? null,
-            'cm' => Dragon::$controller instanceof \controllers\IController ? get_class(Dragon::$controller) . '->' . Dragon::$method : null,
+            'uri' => IS_CLI ? $GLOBALS['_SERVER']['SCRIPT_NAME'] : ($_SERVER['REQUEST_URI'] ?? ''),
+            'cm' => Dragon::$controller instanceof \controllers\IController ? get_class(Dragon::$controller) . '->' . Dragon::$method : '',
             'time' => date('Y-m-d H:i:s', $time) . substr($time, strpos($time, '.')),
             'last' => Router::gi()->getHost() . 'tmp/debug/last.html',
-            'tabs' => array_keys($this->tables),
+            'tabs' => array_keys(self::$tables),
             'counts' => $counts,
-            'tables' => $this->htmlTables()
+            'tables' => self::htmlTables()
         ]))->render();
 
         $filename = $time . '.html';
         file_put_contents(BASE_PATH . DS . 'tmp' . DS . 'debug' . DS . $filename, $html);
         file_put_contents(BASE_PATH . DS . 'tmp' . DS . 'debug' . DS . 'last.html', $html);
 
-        $this->tables = [];
+        self::$tables = [];
     }
 
-    private function updateHistory()
+    /**
+     * Clean up tmp debug files
+     */
+    private static function updateHistory()
     {
         $path = BASE_PATH . DS . 'tmp' . DS . 'debug' . DS;
         if (!file_exists($path)) {
@@ -224,15 +235,15 @@ final class Debug
             }
         }
 
-        $this->history($files);
+        self::history($files);
     }
 
     /**
      * @param array $files
      */
-    private function history(array $files)
+    private static function history(array $files)
     {
-        $this->tables[__FUNCTION__] = [];
+        self::$tables[__FUNCTION__] = [];
 
         foreach ($files as $file) {
             if (strpos($file, 'last.html') > 0)
@@ -242,7 +253,7 @@ final class Debug
             preg_match("/URI: <b>([^<]*)/", $data, $match);
             preg_match("/(\d+\.\d+)\.html/", $file, $time);
 
-            $this->tables[__FUNCTION__][] = [
+            self::$tables[__FUNCTION__][] = [
                 'URI' => $match[1],
                 'date' => date('Y-m-d H:i:s', $time[1]) . substr($time[1], strpos($time[1], '.')),
                 '' => '<a href="' . Router::gi()->getHost() . 'tmp/debug/' . $time[1] . '.html" target="_blank">view</a>'
@@ -250,12 +261,17 @@ final class Debug
         }
     }
 
-    private function htmlTables(string $class = 'active'): string
+    /**
+     * Generate HTML tables
+     * @param string $class
+     * @return string
+     */
+    private static function htmlTables(string $class = 'active'): string
     {
         $output = '';
 
         //tabs with tables
-        foreach ($this->tables as $key => $table) {
+        foreach (self::$tables as $key => $table) {
             if (empty($table))
                 continue;
 
@@ -322,25 +338,20 @@ final class Debug
      */
     public static function onsite(): string
     {
-        self::gi()->updateHistory();
-        foreach (array_keys(self::gi()->timers) as $key)
+        self::updateHistory();
+        foreach (array_keys(self::$timers) as $key)
             self::timer($key);
 
         $counts = [];
-        foreach (self::gi()->tables as $key => $table)
+        foreach (self::$tables as $key => $table)
             $counts[$key] = count($table);
 
         return (new View('/views/elements/debug/onsite', [
             'cm' => str_replace("controllers\\", '', get_class(Dragon::$controller)) . '->' . Dragon::$method,
-            'tabs' => array_keys(self::gi()->tables),
+            'tabs' => array_keys(self::$tables),
             'counts' => $counts,
-            'tables' => self::gi()->htmlTables('')
+            'tables' => self::htmlTables('')
         ]))->render();
-    }
-
-    public function __destruct()
-    {
-        $this->generate();
     }
 
 }

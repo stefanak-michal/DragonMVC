@@ -21,7 +21,7 @@ if (!defined('DRAGON_PATH')) {
     define('DRAGON_PATH', __DIR__);
 }
 
-require_once 'core' . DS . 'autoload.php';
+require_once __DIR__ . DS . 'autoload.php';
 
 if (!defined('IS_WORKSPACE')) {
     $workspace = false;

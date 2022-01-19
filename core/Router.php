@@ -308,7 +308,7 @@ final class Router
 
             if (DRAGON_DEBUG) {
                 header('Content-Type: text/html');
-                echo (new View('elements/debug/backtrace', [
+                echo (new View('/views/elements/debug/backtrace', [
                     'bt' => debug_backtrace(),
                     'url' => $uri,
                     'code' => $code,
