@@ -10,8 +10,14 @@
 * Autoloader with vendor support
 * CLI support
 * PHP >= 7.1
-  
-Check wiki for more informations.
-  
-  
+
 _Logo designed by Freepik.com_
+
+## How to start
+
+1. Clone or download this repository
+2. Open cmd/bash in root directory and execute `php -f scripts/create-app.php ../new-app`
+3. Now your application with basic hierarchy is ready in directory `new-app` next to framework directory
+3. Open http://localhost/new-app in your browser and you will see page with `Hello new-app!`
+
+Check [wiki](https://github.com/stefanak-michal/DragonMVC/wiki) for more informations.
