@@ -13,7 +13,7 @@ use MeekroDB\MeekroDBException;
  * @link https://github.com/stefanak-michal/DragonMVC
  * @package models
  */
-abstract class AModel
+abstract class MySQL
 {
     /**
      * Table name
@@ -58,7 +58,6 @@ abstract class AModel
     /**
      * Construct
      * @param string $configKey
-     * @throws MeekroDBException
      */
     public function __construct(string $configKey = 'mysql')
     {

@@ -82,10 +82,6 @@ final class Dragon
             self::$controller->afterMethod();
             Debug::timer('afterMethod');
         }
-
-        if (DRAGON_DEBUG) {
-            Debug::generate();
-        }
     }
 
     /**
@@ -153,6 +149,13 @@ final class Dragon
         foreach ($possibleViewFile as $viewFile) {
             if (View::gi()->view($viewFile))
                 break;
+        }
+    }
+
+    public function __destruct()
+    {
+        if (DRAGON_DEBUG) {
+            Debug::generate();
         }
     }
 

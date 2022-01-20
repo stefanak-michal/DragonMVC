@@ -53,53 +53,47 @@ final class Config
      */
     public static function gi(): Config
     {
-        if (self::$instance == null)
+        if (!(self::$instance instanceof self)) {
             self::$instance = new Config();
+
+            $names = [];
+            $fn = function (string $file) use (&$names) {
+                if (substr($file, -strlen(self::$cfgAffix)) == self::$cfgAffix) {
+                    self::$instance->loadFile(pathinfo($file, PATHINFO_BASENAME));
+                    $names[] = pathinfo($file, PATHINFO_BASENAME);
+                } elseif (substr($file, -strlen(self::$ltAffix)) == self::$ltAffix) {
+                    self::$instance->loadFile(pathinfo($file, PATHINFO_BASENAME), 'lookUpTables');
+                    $names[] = pathinfo($file, PATHINFO_BASENAME);
+                }
+            };
+
+            foreach (glob(DRAGON_PATH . DS . 'config' . DS . '*.php') as $file) {
+                $fn($file);
+            }
+
+            foreach (glob(BASE_PATH . DS . 'config' . DS . '*.php') as $file) {
+                if (in_array(pathinfo($file, PATHINFO_BASENAME), $names))
+                    continue;
+                $fn($file);
+            }
+        }
 
         return self::$instance;
     }
 
     /**
-     * Construct
-     */
-    public function __construct()
-    {
-        $names = [];
-
-        $fn = function (string $file) use ($names) {
-            if (substr($file, -strlen(self::$cfgAffix)) == self::$cfgAffix) {
-                $this->loadFile(pathinfo($file, PATHINFO_BASENAME));
-                $names[] = pathinfo($file, PATHINFO_BASENAME);
-            } elseif (substr($file, -strlen(self::$ltAffix)) == self::$ltAffix) {
-                $this->loadFile(pathinfo($file, PATHINFO_BASENAME), 'lookUpTables');
-                $names[] = pathinfo($file, PATHINFO_BASENAME);
-            }
-        };
-
-        foreach (glob(DRAGON_PATH . DS . 'config' . DS . '*.php') as $file) {
-            $fn($file);
-        }
-
-        foreach (glob(BASE_PATH . DS . 'config' . DS . '*.php') as $file) {
-            if (in_array(pathinfo($file, PATHINFO_BASENAME), $names))
-                continue;
-            $fn($file);
-        }
-    }
-
-    /**
      * Load config files
      *
-     * @param string $path
+     * @param string $filename
      * @param string $objVar
      */
-    private function loadFile(string $path, string $objVar = 'configVars')
+    private function loadFile(string $filename, string $objVar = 'configVars')
     {
-        $files = [
-            DRAGON_PATH . DS . 'config' . DS . $path,
-            DRAGON_PATH . DS . 'config' . DS . (IS_WORKSPACE ? 'development' : 'production') . DS . $path,
-            BASE_PATH . DS . 'config' . DS . $path,
-            BASE_PATH . DS . 'config' . DS . (IS_WORKSPACE ? 'development' : 'production') . DS . $path
+            $files = [
+            DRAGON_PATH . DS . 'config' . DS . $filename,
+            DRAGON_PATH . DS . 'config' . DS . (IS_WORKSPACE ? 'development' : 'production') . DS . $filename,
+            BASE_PATH . DS . 'config' . DS . $filename,
+            BASE_PATH . DS . 'config' . DS . (IS_WORKSPACE ? 'development' : 'production') . DS . $filename
         ];
 
         foreach ($files as $file) {
