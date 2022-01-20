@@ -89,7 +89,7 @@ final class Config
      */
     private function loadFile(string $filename, string $objVar = 'configVars')
     {
-            $files = [
+        $files = [
             DRAGON_PATH . DS . 'config' . DS . $filename,
             DRAGON_PATH . DS . 'config' . DS . (IS_WORKSPACE ? 'development' : 'production') . DS . $filename,
             BASE_PATH . DS . 'config' . DS . $filename,
