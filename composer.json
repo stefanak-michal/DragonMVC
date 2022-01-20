@@ -1,0 +1,33 @@
+{
+    "name": "stefanak-michal/dragonmvc",
+    "description": "PHP MVC framework. Simple, fast and lightweight.",
+    "keywords": ["php", "mvc", "framework"],
+    "homepage": "https://github.com/stefanak-michal/DragonMVC",
+    "type": "project",
+    "readme": "README.md",
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=7.1.0"
+    },
+    "support": {
+        "issues": "https://github.com/stefanak-michal/DragonMVC/issues",
+        "source": "https://github.com/stefanak-michal/DragonMVC"
+    },
+    "funding": [
+        {
+            "type": "paypal",
+            "url": "https://www.paypal.me/MichalStefanak"
+        }
+    ],
+    "authors": [
+        {
+            "name": "Michal Stefanak",
+            "role": "Developer",
+            "homepage": "https://www.linkedin.com/in/michalstefanak/"
+        }
+    ],
+    "suggest": {
+        "stefanak-michal/bolt": "Bolt protocol library over TCP socket needed for Neo4j."
+    }
+}
