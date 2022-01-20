@@ -12,7 +12,9 @@ use Exception;
 /**
  * Class for Neo4j bolt driver
  * Wrapper for Bolt to cover basic functionality
+ *
  * @author Michal Stefanak
+ * @link https://github.com/stefanak-michal/DragonMVC
  * @link https://github.com/neo4j-php/Bolt
  */
 class Neo4j
