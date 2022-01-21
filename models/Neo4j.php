@@ -133,16 +133,20 @@ class Neo4j
                     continue;
                 }
 
-                $tmp = filter_var($param, FILTER_VALIDATE_INT, ['flags' => null]);
-                if ($tmp !== false) {
-                    $param = $tmp;
-                    continue;
+                if (preg_match("/^[1-9]\d*$/", $param)) {
+                    $tmp = filter_var($param, FILTER_VALIDATE_INT, ['flags' => null]);
+                    if ($tmp !== false) {
+                        $param = $tmp;
+                        continue;
+                    }
                 }
 
-                $tmp = filter_var($param, FILTER_VALIDATE_FLOAT);
-                if ($tmp !== false) {
-                    $param = $tmp;
-                    continue;
+                if (preg_match("/^\d*\.\d+$/", $param)) {
+                    $tmp = filter_var($param, FILTER_VALIDATE_FLOAT);
+                    if ($tmp !== false) {
+                        $param = $tmp;
+                        continue;
+                    }
                 }
             }
         }
