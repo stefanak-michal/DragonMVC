@@ -93,7 +93,6 @@ class Neo4j
      */
     public static function query(string $query, array $params = []): array
     {
-        self::checkParams($params);
         self::updateQueryParameters($query, $params);
 
         $run = $all = null;
@@ -115,37 +114,6 @@ class Neo4j
         return !empty($all) ? array_map(function ($element) use ($run) {
             return array_combine($run['fields'], $element);
         }, $all) : [];
-    }
-
-
-    /**
-     * Check and update query parameters
-     * @param array $params
-     */
-    private static function checkParams(array &$params)
-    {
-        foreach ($params as &$param) {
-            if (is_array($param)) {
-                self::checkParams($param);
-            } elseif (is_string($param)) {
-                if (strlen($param) == 0) {
-                    $param = null;
-                    continue;
-                }
-
-                $tmp = filter_var($param, FILTER_VALIDATE_INT, ['flags' => null]);
-                if ($tmp !== false) {
-                    $param = $tmp;
-                    continue;
-                }
-
-                $tmp = filter_var($param, FILTER_VALIDATE_FLOAT);
-                if ($tmp !== false) {
-                    $param = $tmp;
-                    continue;
-                }
-            }
-        }
     }
 
     /**
