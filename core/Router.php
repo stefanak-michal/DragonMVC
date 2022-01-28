@@ -28,6 +28,11 @@ final class Router
     private $routes = [];
 
     /**
+     * @var array
+     */
+    private $masksCache = [];
+
+    /**
      * @var Router
      */
     private static $instance;
@@ -202,14 +207,7 @@ final class Router
 
         $uri = '';
         $controller = str_replace('\\', '/', $controller);
-        $masks = array_filter($this->routes, function ($value) use ($controller, $method) {
-            return strtolower($value) == strtolower($controller . '/' . $method);
-        });
-
-        if (empty($masks))
-            trigger_error('No defined route for ' . $controller . '/' . $method, E_USER_WARNING);
-
-        foreach (array_keys($masks) as $mask) {
+        foreach ($this->getMasks($controller, $method) as $mask) {
             //check number of defined variables against mask
             if (count($vars) != preg_match_all("/%[dis]/", $mask))
                 continue;
@@ -261,6 +259,24 @@ final class Router
 
             $i++;
         }
+    }
+
+    /**
+     * Get cached masks for requested controller/method
+     * Method url can be called so many times and caching this improves performance
+     * @param string $controller
+     * @param string $method
+     * @return array
+     */
+    private function getMasks(string $controller, string $method)
+    {
+        if (empty($this->masksCache)) {
+            foreach ($this->routes as $mask => $value) {
+                $this->masksCache[$value][] = $mask;
+            }
+        }
+
+        return $this->masksCache[$controller . '/' . $method] ?? [];
     }
 
     /**

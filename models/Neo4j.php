@@ -174,10 +174,7 @@ class Neo4j
         if (empty($data)) {
             return [];
         }
-        $key = key($data[0]);
-        return array_map(function ($element) use ($key) {
-            return $element[$key];
-        }, $data);
+        return array_column($data, key($data[0]));
     }
 
     /**

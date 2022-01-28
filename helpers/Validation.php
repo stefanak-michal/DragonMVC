@@ -34,16 +34,26 @@ class Validation
     }
 
     /**
-     * Replace all empty strings with null
+     * Sanitize values to proper data types
      * @param array $data
      */
-    public static function nullify(array &$data)
+    public static function sanitize(array &$data)
     {
-        foreach ($data as &$value) {
-            if ($value === '')
-                $value = null;
-            elseif ($value === 'true' || $value === 'false')
-                $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        foreach ($data as &$entry) {
+            if (is_string($entry)) {
+                if (strlen($entry) == 0)
+                    $entry = null;
+                elseif ($entry == 'true')
+                    $entry = true;
+                elseif ($entry == 'false')
+                    $entry = false;
+                elseif (preg_match("/^(\d|[1-9]\d+)$/", $entry))
+                    $entry = intval($entry);
+                elseif (preg_match("/^\d*\.\d+$/", $entry))
+                    $entry = floatval($entry);
+            } elseif (is_array($entry)) {
+                self::sanitize($entry);
+            }
         }
     }
 
