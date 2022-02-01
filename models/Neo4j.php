@@ -69,6 +69,21 @@ class Neo4j
                     \core\Config::gi()->get('neo4j_user'),
                     \core\Config::gi()->get('neo4j_pass')
                 ));
+                
+                if (IS_WORKSPACE) {
+                    self::$logHandler = function (string $query, array $params = [], int $executionTime = 0, array $statistics = []) {
+                        $st = '';
+                        foreach (array_filter($statistics) as $key => $value) {
+                            $st .= '<b>' . $key . ':</b> ' . $value . '<br>';
+                        }
+
+                        \core\Debug::query($query, array_slice(debug_backtrace(2), 2), [
+                            'params' => !empty($params) ? '<pre>' . print_r($params, true) . '</pre>' : '',
+                            'stats' => !empty($st) ? '<pre>' . $st . '</pre>' : '',
+                            'time (ms)' => $executionTime
+                        ]);
+                    };
+                }
 
                 register_shutdown_function(function () {
                     try {
