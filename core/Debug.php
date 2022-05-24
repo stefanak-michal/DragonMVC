@@ -251,11 +251,11 @@ final class Debug
 
             $data = file_get_contents($file);
             preg_match("/URI: <b>([^<]*)/", $data, $match);
-            preg_match("/(\d+\.\d+)\.html/", $file, $time);
+            preg_match("/(\d+(\.\d+)?)\.html/", $file, $time);
 
             self::$tables[__FUNCTION__][] = [
                 'URI' => $match[1],
-                'date' => date('Y-m-d H:i:s', $time[1]) . substr($time[1], strpos($time[1], '.')),
+                'date' => date('Y-m-d H:i:s', $time[1]) . ($time[2] ?? ''),
                 '' => '<a href="' . Router::gi()->getHost() . 'tmp/debug/' . $time[1] . '.html" target="_blank">view</a>'
             ];
         }
