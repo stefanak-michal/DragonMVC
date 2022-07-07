@@ -155,7 +155,7 @@ final class Config
     public function lt(string $dotSeparatedKeys)
     {
         if (empty($dotSeparatedKeys))
-            return false;
+            return null;
 
         $output = array();
 
@@ -165,7 +165,7 @@ final class Config
             } elseif (is_array($output) && array_key_exists($key, $output)) {
                 $output = $output[$key];
             } else {
-                return false;
+                return null;
             }
         }
 
