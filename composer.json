@@ -9,7 +9,10 @@
     "minimum-stability": "stable",
     "require": {
         "php": ">=7.1.0",
-        "ext-curl": "*"
+        "ext-curl": "*",
+        "stefanak-michal/meekrodb": "^3",
+        "stefanak-michal/bolt": "^3",
+        "phpmailer/phpmailer": "^6"
     },
     "support": {
         "issues": "https://github.com/stefanak-michal/DragonMVC/issues",
@@ -27,8 +30,5 @@
             "role": "Developer",
             "homepage": "https://www.linkedin.com/in/michalstefanak/"
         }
-    ],
-    "suggest": {
-        "stefanak-michal/bolt": "Bolt protocol library over TCP socket needed for Neo4j."
-    }
+    ]
 }

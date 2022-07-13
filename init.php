@@ -24,6 +24,8 @@ if (!defined('DRAGON_PATH')) {
 require_once __DIR__ . DS . 'autoload.php';
 if (file_exists(BASE_PATH . DS . 'vendor' . DS . 'autoload.php'))
     require_once BASE_PATH . DS . 'vendor' . DS . 'autoload.php';
+if (file_exists(DRAGON_PATH . DS . 'vendor' . DS . 'autoload.php'))
+    require_once DRAGON_PATH . DS . 'vendor' . DS . 'autoload.php';
 
 if (!defined('IS_WORKSPACE')) {
     $workspace = false;
