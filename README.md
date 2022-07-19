@@ -9,7 +9,7 @@
 * Simple file names conventions
 * Autoloader with vendor support
 * CLI support
-* PHP >= 7.1
+* PHP >= 7.4
 
 _Logo designed by Freepik.com_
 
