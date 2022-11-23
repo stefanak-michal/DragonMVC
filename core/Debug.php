@@ -129,7 +129,7 @@ final class Debug
         $query = '<div class="collapsable">' . $query . '</div>';
 
         if (!empty($hidden)) {
-            $html = '<div><table cellspacing="0">';
+            $html = '<div><table style=" border-spacing: 0; ">';
 
             if (is_array(reset($hidden))) {
                 $html .= '<thead><tr>';
@@ -197,14 +197,14 @@ final class Debug
         $html = (new View('/views/elements/debug/report', [
             'uri' => IS_CLI ? $GLOBALS['_SERVER']['SCRIPT_NAME'] : ($_SERVER['REQUEST_URI'] ?? ''),
             'cm' => Dragon::$controller instanceof \controllers\IController ? get_class(Dragon::$controller) . '->' . Dragon::$method : '',
-            'time' => date('Y-m-d H:i:s', $time) . substr($time, strpos($time, '.')),
+            'time' => \DateTime::createFromFormat('U.u', sprintf('%.4f', $time))->format('Y-m-d H:i:s.u'),
             'last' => Router::gi()->getHost() . 'tmp/debug/last.html',
             'tabs' => array_keys(self::$tables),
             'counts' => $counts,
             'tables' => self::htmlTables()
         ]))->render();
 
-        $filename = $time . '.html';
+        $filename = sprintf('%.4f', $time) . '.html';
         file_put_contents(BASE_PATH . DS . 'tmp' . DS . 'debug' . DS . $filename, $html);
         file_put_contents(BASE_PATH . DS . 'tmp' . DS . 'debug' . DS . 'last.html', $html);
 
@@ -255,7 +255,7 @@ final class Debug
 
             self::$tables[__FUNCTION__][] = [
                 'URI' => $match[1],
-                'date' => date('Y-m-d H:i:s', $time[1]) . ($time[2] ?? ''),
+                'date' => \DateTime::createFromFormat('U.u', $time[1])->format('Y-m-d H:i:s.u'),
                 '' => '<a href="' . Router::gi()->getHost() . 'tmp/debug/' . $time[1] . '.html" target="_blank">view</a>'
             ];
         }
